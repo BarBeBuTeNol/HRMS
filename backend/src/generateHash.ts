@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 
 async function run() {
-  const plain = "123456";  // รหัสผ่านที่อยากแปลง
+  const plain = "123456";
   try {
     const hashed = await bcrypt.hash(plain, 10);
     console.log("Plain:", plain);

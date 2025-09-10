@@ -16,7 +16,7 @@
 .chart-left,
 .chart-right {
   flex: 1;
-  background-color: white;
+  background-color: rgb(36, 35, 35);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -24,7 +24,7 @@
 }
 
 .chart-right {
-  border-left: 2px solid #e0e0e0;
+  border-left: 2px solid #000000;
 }
 
 /* Responsive Layout */

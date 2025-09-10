@@ -6,7 +6,7 @@
   overflow-y:auto;
   padding:2rem;
   box-sizing:border-box;
-  background:#121212;
+  background:#171529;
   color:#e0e0e0;
   font-family:'Segoe UI',sans-serif;
 }
@@ -73,4 +73,19 @@ h1{
   .noti-main{margin-left:0;width:100vw;padding:1rem;}
   .noti-summary{flex-direction:column;align-items:flex-start;}
   .noti-date{margin-top:.3rem;}
+}
+
+.approve-btn {
+  margin-top: 8px;
+  padding: 6px 12px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.3s;
+}
+.approve-btn:hover {
+  background-color: #45a049;
 }

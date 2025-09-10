@@ -25,6 +25,8 @@ import TestSidebarNotification from "./assets/pages/pageHead/TestNoti/TestSideba
 import HeadLeaveStats from "./assets/pages/pageHead/HeadLeaveStats/HeadLeaveStats";
 import EmployeeProgress from './assets/pages/pageHead/EmployeeProgress/EmployeeProgress';
 import AddWorkPage from './assets/pages/pageHead/Addwork/AddWorkPage';
+import HeadTeamLeaveHistory from './assets/pages/pageHead/HeadTeamLeaveHistory/HeadTeamLeaveHistory';
+
 
 function App() {
   return (
@@ -58,6 +60,8 @@ function App() {
       <Route path="/test-sidebar" element={<TestSidebarNotification />} />
       <Route path="/head/leave-stats" element={<HeadLeaveStats />} />
       <Route path="/head/employee/:id/add-work" element={<AddWorkPage />} />
+      <Route path="/head/team-leave-history" element={<HeadTeamLeaveHistory />} />
+
     </Routes>
   );
 }

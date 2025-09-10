@@ -12,28 +12,60 @@ const HeadSidebar = ({ unreadCount = 0 }) => {
 
       <nav className="sidebar-menu">
         <ul>
-          <li onClick={() => navigate("/head/dashboard")}>🏠 Dashboard</li>
-          <li onClick={() => navigate("/head/profile")}>👤 ข้อมูลส่วนตัว</li>
-          <li onClick={() => navigate("/head/employee-list")}>👥 ทีมงาน</li>
-          <li onClick={() => navigate("/head/request-leave")}>📝 ยื่นขอลา</li>
-          <li onClick={() => navigate("/head/leave-approvals")}>✅ อนุมัติการลา</li>
-          <li onClick={() => navigate("/head/delegate-shift")}>🔄 มอบหมายงานแทน</li>
-          <li onClick={() => navigate("/head/schedule")}>📅 จัดตารางการทำงาน</li>
+          <li>
+            <NavLink to="/head/dashboard" className={({ isActive }) => (isActive ? "active" : "")}>
+              🏠 Dashboard
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/head/profile" className={({ isActive }) => (isActive ? "active" : "")}>
+              👤 ข้อมูลส่วนตัว
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/head/employee-list" className={({ isActive }) => (isActive ? "active" : "")}>
+              👥 ทีมงาน
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/head/request-leave" className={({ isActive }) => (isActive ? "active" : "")}>
+              📝 ยื่นขอลา
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/head/leave-approvals" className={({ isActive }) => (isActive ? "active" : "")}>
+              ✅ อนุมัติการลา
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/head/delegate-shift" className={({ isActive }) => (isActive ? "active" : "")}>
+              🔄 มอบหมายงานแทน
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/head/schedule" className={({ isActive }) => (isActive ? "active" : "")}>
+              📅 จัดตารางการทำงาน
+            </NavLink>
+          </li>
 
           <li>
-            <NavLink
-              to="/head/leave-stats"
-              className={({ isActive }) => (isActive ? "active" : "")}
-            >
+            <NavLink to="/head/leave-stats" className={({ isActive }) => (isActive ? "active" : "")}>
               <FaChartPie /> <span>สถิติการลา</span>
             </NavLink>
           </li>
 
-          <li onClick={() => navigate("/head/notifications")}>
-            🔔 แจ้งเตือน
-            {unreadCount > 0 && (
-              <span className="notif-badge">{unreadCount}</span>
-            )}
+          {/* ✅ เมนูใหม่ */}
+          <li>
+            <NavLink to="/head/team-leave-history" className={({ isActive }) => (isActive ? "active" : "")}>
+              📄 ประวัติการลาของทีม
+            </NavLink>
+          </li>
+
+          <li>
+            <NavLink to="/head/notifications" className={({ isActive }) => (isActive ? "active" : "")}>
+              🔔 แจ้งเตือน
+              {unreadCount > 0 && <span className="notif-badge">{unreadCount}</span>}
+            </NavLink>
           </li>
 
           <li className="logout" onClick={() => navigate("/login")}>

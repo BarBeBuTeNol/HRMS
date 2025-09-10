@@ -1,62 +1,71 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import './LeaveRequestsForHead.css';
-import HeadSidebar from '../../../Component/Head/HeadSidebar';
-
-
-const mockLeaveRequests = [
-  {
-    id: 'req001',
-    employeeName: 'สมชาย ใจดี',
-    department: 'บัญชี',
-    leaveType: 'ลาพักร้อน',
-    startDate: '2025-07-01',
-    endDate: '2025-07-03',
-    reason: 'ไปเที่ยวกับครอบครัว',
-    status: 'pending',
-  },
-  {
-    id: 'req002',
-    employeeName: 'สมหญิง สายตรง',
-    department: 'บัญชี',
-    leaveType: 'ลาป่วย',
-    startDate: '2025-07-05',
-    endDate: '2025-07-06',
-    reason: 'ปวดหัวมาก',
-    status: 'pending',
-  },
-];
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import "./LeaveRequestsForHead.css";
+import HeadSidebar from "../../../Component/Head/HeadSidebar";
 
 const LeaveRequestsForHead = () => {
-  console.log("LeaveRequestsForHead loaded");
   const [selectedRequest, setSelectedRequest] = useState(null);
-  const [requests, setRequests] = useState(mockLeaveRequests);
+  const [requests, setRequests] = useState([]);
   const navigate = useNavigate();
 
-  const handleApprove = (id) => {
-    setRequests((prev) =>
-      prev.map((req) =>
-        req.id === id ? { ...req, status: 'approved' } : req
-      )
-    );
-    setSelectedRequest(null);
+  const headId = localStorage.getItem("userId"); // ✅ userId ของหัวหน้า
+
+  useEffect(() => {
+    fetchRequests();
+  }, []);
+
+  const fetchRequests = async () => {
+    try {
+      const res = await axios.get(
+        `http://localhost:5000/api/leave-requests/for-head/${headId}`
+      );
+      setRequests(res.data);
+    } catch (err) {
+      console.error("❌ Error fetching requests:", err);
+    }
   };
 
-  const handleReject = (id) => {
-    setRequests((prev) =>
-      prev.map((req) =>
-        req.id === id ? { ...req, status: 'rejected' } : req
-      )
-    );
-    setSelectedRequest(null);
+  const handleApprove = async (id) => {
+    try {
+      await axios.put(`http://localhost:5000/api/leave-requests/${id}/status`, {
+        status: "approved",
+      });
+      setRequests((prev) =>
+        prev.map((req) =>
+          req.id === id ? { ...req, status: "approved" } : req
+        )
+      );
+      setSelectedRequest(null);
+    } catch (err) {
+      console.error("❌ Approve failed:", err);
+    }
+  };
+
+  const handleReject = async (id) => {
+    try {
+      await axios.put(`http://localhost:5000/api/leave-requests/${id}/status`, {
+        status: "rejected",
+      });
+      setRequests((prev) =>
+        prev.map((req) =>
+          req.id === id ? { ...req, status: "rejected" } : req
+        )
+      );
+      setSelectedRequest(null);
+    } catch (err) {
+      console.error("❌ Reject failed:", err);
+    }
   };
 
   return (
-    
     <div className="leave-request-container">
-      <HeadSidebar/>
-        
-      <button className="btn-back" onClick={() => navigate('/head/dashboard')}>
+      <HeadSidebar />
+
+      <button
+        className="btn-back"
+        onClick={() => navigate("/head/dashboard")}
+      >
         ← กลับแดชบอร์ด
       </button>
 
@@ -78,16 +87,18 @@ const LeaveRequestsForHead = () => {
               <tr key={req.id}>
                 <td>{req.employeeName}</td>
                 <td>{req.leaveType}</td>
-                <td>{req.startDate} - {req.endDate}</td>
+                <td>
+                  {req.startDate} - {req.endDate}
+                </td>
                 <td className={`status ${req.status}`}>
-                  {req.status === 'pending'
-                    ? 'รอดำเนินการ'
-                    : req.status === 'approved'
-                    ? 'อนุมัติแล้ว'
-                    : 'ไม่อนุมัติ'}
+                  {req.status === "pending"
+                    ? "รอดำเนินการ"
+                    : req.status === "approved"
+                    ? "อนุมัติแล้ว"
+                    : "ไม่อนุมัติ"}
                 </td>
                 <td>
-                  {req.status === 'pending' && (
+                  {req.status === "pending" && (
                     <button
                       className="btn-view"
                       onClick={() => setSelectedRequest(req)}
@@ -105,15 +116,36 @@ const LeaveRequestsForHead = () => {
       {selectedRequest && (
         <div className="leave-detail">
           <h3>รายละเอียดคำขอลา</h3>
-          <p><strong>ชื่อ:</strong> {selectedRequest.employeeName}</p>
-          <p><strong>แผนก:</strong> {selectedRequest.department}</p>
-          <p><strong>ประเภทการลา:</strong> {selectedRequest.leaveType}</p>
-          <p><strong>วันที่ลา:</strong> {selectedRequest.startDate} ถึง {selectedRequest.endDate}</p>
-          <p><strong>เหตุผล:</strong> {selectedRequest.reason}</p>
+          <p>
+            <strong>ชื่อ:</strong> {selectedRequest.employeeName}
+          </p>
+          <p>
+            <strong>แผนก:</strong> {selectedRequest.department}
+          </p>
+          <p>
+            <strong>ประเภทการลา:</strong> {selectedRequest.leaveType}
+          </p>
+          <p>
+            <strong>วันที่ลา:</strong> {selectedRequest.startDate} ถึง{" "}
+            {selectedRequest.endDate}
+          </p>
+          <p>
+            <strong>เหตุผล:</strong> {selectedRequest.reason}
+          </p>
 
           <div className="detail-buttons">
-            <button className="btn-approve" onClick={() => handleApprove(selectedRequest.id)}>✅ อนุมัติ</button>
-            <button className="btn-reject" onClick={() => handleReject(selectedRequest.id)}>❌ ไม่อนุมัติ</button>
+            <button
+              className="btn-approve"
+              onClick={() => handleApprove(selectedRequest.id)}
+            >
+              ✅ อนุมัติ
+            </button>
+            <button
+              className="btn-reject"
+              onClick={() => handleReject(selectedRequest.id)}
+            >
+              ❌ ไม่อนุมัติ
+            </button>
             <button onClick={() => setSelectedRequest(null)}>🔙 กลับ</button>
           </div>
         </div>

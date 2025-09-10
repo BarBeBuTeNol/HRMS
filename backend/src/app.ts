@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import pool from "./config/db"; 
-import userRoutes from "./routes/userRoutes";  // ✅ import
+import userRoutes from "./routes/userRoutes"; 
 
 dotenv.config();
 

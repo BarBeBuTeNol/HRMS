@@ -1,0 +1,76 @@
+.history-main {
+  flex: 1;
+  margin-left: 240px;
+  padding: 16px;                 /* ลด padding */
+  width: calc(100vw - 240px);
+  height: 100vh;
+  background: #fff;
+  overflow-y: auto;
+  box-sizing: border-box;
+  font-size: 14px;               /* ✅ ลดขนาดตัวอักษร */
+  line-height: 1.4;              /* ✅ เว้นบรรทัด */
+}
+.header-actions h1{
+  color: rgb(67, 66, 66);
+
+  
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08); /* เงาเบาลง */
+}
+
+.history-table th,
+.history-table td {
+  padding: 8px 10px;             /* ✅ ลด padding */
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb; /* สีอ่อนลง */
+}
+
+.history-table th {
+  background: #1e3a8a;
+  color: white;
+  font-weight: 600;
+  font-size: 13px;              /* ✅ หัวตารางเล็กลง */
+}
+
+.history-table td {
+  font-size: 13px;
+}
+
+.status.pending {
+  color: #f59e0b; /* orange-500 */
+  font-weight: 600;
+}
+.status.approved {
+  color: #10b981; /* green-500 */
+  font-weight: 600;
+}
+.status.rejected {
+  color: #ef4444; /* red-500 */
+  font-weight: 600;
+}
+.header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.export-btn {
+  background: #16a34a;   /* เขียว */
+  color: white;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s ease;
+}
+
+.export-btn:hover {
+  background: #15803d;
+}
+
