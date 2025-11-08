@@ -1,0 +1,511 @@
+/* ---------- Root & Layout ---------- */
+.decide-chro-root {
+  display: flex;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  margin-left: 280px; /* รองรับ Sidebar แบบ fixed กว้าง ~280px */
+}
+
+.decide-chro-content {
+  flex: 1;
+  padding: 32px;
+  overflow-y: auto;
+  /* กำหนดความกว้างให้พอดี FHD/จอใหญ่ */
+  max-width: 1760px;
+  margin: 0 auto;
+}
+
+/* ---------- Header ---------- */
+.decide-chro-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 20px 28px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.decide-chro-title-section {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.decide-chro-icon {
+  font-size: 2.2rem;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-8px); }
+  60% { transform: translateY(-4px); }
+}
+
+.decide-chro-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+  letter-spacing: 0.3px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.25);
+}
+
+/* Stats summary */
+.decide-chro-stats {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.decide-chro-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(255,255,255,0.18);
+  padding: 12px 16px;
+  border-radius: 14px;
+  min-width: 90px;
+  border: 1px solid rgba(255,255,255,0.25);
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+
+.decide-chro-stat:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.18);
+}
+
+.decide-chro-stat-number {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+}
+
+.decide-chro-stat-label {
+  font-size: .85rem;
+  color: rgba(255,255,255,0.85);
+  font-weight: 600;
+}
+
+/* ---------- Controls (Search / Filters / View / Quick actions) ---------- */
+.decide-chro-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin: 18px 0 24px;
+  background: rgba(255,255,255,0.12);
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.25);
+  backdrop-filter: blur(10px);
+}
+
+.decide-chro-controls-left,
+.decide-chro-controls-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.decide-chro-input,
+.decide-chro-select {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 2px solid #e0e4ee;
+  background: #fff;
+  font-size: 0.95rem;
+  min-width: 220px;
+  color: #000;
+  transition: border .2s ease, box-shadow .2s ease;
+}
+
+.decide-chro-input:focus,
+.decide-chro-select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 6px 18px rgba(102, 126, 234, 0.25);
+}
+
+/* View toggle */
+.decide-chro-view-toggle {
+  display: inline-flex;
+  background: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.decide-chro-view-btn {
+  background: transparent;
+  border: none;
+  padding: 10px 14px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  transition: background .2s ease, transform .2s ease;
+}
+
+.decide-chro-view-btn:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.decide-chro-view-btn.active {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+/* Quick buttons */
+.decide-chro-quick-btn {
+  border: none;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .2s ease, box-shadow .2s ease;
+  color: #fff;
+}
+
+.decide-chro-quick-btn:active { transform: translateY(1px); }
+
+.decide-chro-quick-btn-readall {
+  background: linear-gradient(135deg, #4facfe, #00f2fe);
+  box-shadow: 0 6px 18px rgba(79,172,254,0.35);
+}
+
+.decide-chro-quick-btn-clear {
+  background: linear-gradient(135deg, #ff9a9e, #fecfef);
+  box-shadow: 0 6px 18px rgba(255,154,158,0.35);
+}
+
+/* ---------- Grid view ---------- */
+.decide-chro-requests {
+  display: grid;
+  gap: 22px;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+}
+
+.decide-chro-card {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(15px);
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  transition: transform .25s ease, box-shadow .25s ease, opacity .25s ease;
+  animation: slideInUp .6s ease-out;
+  position: relative;
+}
+
+.decide-chro-card.unread {
+  border-left: 4px solid #ffd93d;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.decide-chro-card.read {
+  border-left: 4px solid #6bcf7f;
+  opacity: 0.95;
+}
+
+.decide-chro-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 46px rgba(0, 0, 0, 0.25);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+@keyframes slideInUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.decide-chro-card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+}
+
+.decide-chro-employee-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+}
+
+.decide-chro-avatar {
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+  flex-shrink: 0;
+}
+
+.decide-chro-employee-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 2px 0;
+  line-height: 1.3;
+}
+
+.decide-chro-employee-id {
+  font-size: 0.9rem;
+  color: rgba(255,255,255,0.8);
+  margin: 0;
+}
+
+/* Type badge (no inline style) */
+.type-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.25);
+  white-space: nowrap;
+}
+
+.type-leave        { background: linear-gradient(135deg, #ff6b6b, #ff8e8e); }
+.type-announcement { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+.type-alert        { background: linear-gradient(135deg, #ffd93d, #ffe066); color: #1a1a1a; }
+.type-general      { background: linear-gradient(135deg, #6bcf7f, #8ee4a2); }
+
+/* Card body */
+.decide-chro-card-body { display: flex; flex-direction: column; gap: 16px; }
+
+.decide-chro-info-grid { display: grid; gap: 10px; }
+
+.decide-chro-info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.decide-chro-info-item:last-child { border-bottom: none; }
+
+.decide-chro-info-label {
+  font-size: 0.92rem;
+  color: rgba(255,255,255,0.85);
+  font-weight: 600;
+  min-width: 120px;
+}
+
+.decide-chro-info-value {
+  font-size: 0.95rem;
+  color: #fff;
+  font-weight: 500;
+  text-align: right;
+  flex: 1;
+}
+
+/* สถานะ (badge + จุดสีหน้าข้อความ) */
+.decide-chro-status-section { display: flex; justify-content: center; margin: 10px 0; }
+
+.decide-chro-status {
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.badge-approved { background: linear-gradient(135deg, #10b981, #059669); }
+.badge-rejected { background: linear-gradient(135deg, #ef4444, #dc2626); }
+.badge-read     { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+.badge-unread   { background: linear-gradient(135deg, #ffd93d, #ffe066); color: #1a1a1a; }
+
+.status-dot::before {
+  content: "●";
+  margin-right: 8px;
+  font-size: 0.8rem;
+  vertical-align: middle;
+}
+.status-approved::before { color: #10b981; }
+.status-rejected::before { color: #ef4444; }
+.status-read::before     { color: #4facfe; }
+.status-unread::before   { color: #ffd93d; }
+
+/* Actions */
+.decide-chro-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.decide-chro-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform .2s ease, box-shadow .2s ease;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+  color: #fff;
+}
+
+.decide-chro-btn:hover { transform: translateY(-2px); }
+
+.decide-chro-btn-approve { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+.decide-chro-btn-reject  { background: linear-gradient(135deg, #fa709a, #fee140); }
+.decide-chro-btn-read    { background: linear-gradient(135deg, #667eea, #764ba2); }
+.decide-chro-btn-delete  { background: linear-gradient(135deg, #ff9a9e, #fecfef); }
+
+.decide-chro-btn-icon { font-size: 1.05rem; }
+
+/* ---------- List view ---------- */
+.decide-chro-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.decide-chro-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-left: 4px solid #ffd93d;
+  padding: 12px 14px;
+  border-radius: 14px;
+  backdrop-filter: blur(10px);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.decide-chro-row.read { border-left-color: #6bcf7f; }
+
+.decide-chro-row:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.18);
+}
+
+.row-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.row-main { min-width: 0; }
+.row-title {
+  color: #fff;
+  font-weight: 800;
+  font-size: 1rem;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.row-sub { color: rgba(255,255,255,0.85); font-size: .9rem; }
+
+.row-right { display: flex; align-items: center; gap: 12px; }
+
+.row-status {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 800;
+  font-size: 0.85rem;
+  color: #fff;
+}
+.row-status.badge-approved { background: linear-gradient(135deg, #10b981, #059669); }
+.row-status.badge-rejected { background: linear-gradient(135deg, #ef4444, #dc2626); }
+.row-status.badge-read     { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+.row-status.badge-unread   { background: linear-gradient(135deg, #ffd93d, #ffe066); color: #1a1a1a; }
+
+.row-actions { display: inline-flex; gap: 6px; }
+.mini-btn {
+  border: none;
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  display: grid; place-items: center;
+  font-size: 0.95rem;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.mini-btn:hover { transform: translateY(-1px); }
+
+.mini-btn.approve { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+.mini-btn.reject  { background: linear-gradient(135deg, #fa709a, #fee140); color: #1a1a1a; }
+.mini-btn.read    { background: linear-gradient(135deg, #667eea, #764ba2); }
+.mini-btn.delete  { background: linear-gradient(135deg, #ff9a9e, #fecfef); }
+
+/* ---------- Loading & Empty ---------- */
+.decide-chro-loading {
+  display: grid;
+  place-items: center;
+  gap: 16px;
+  height: 420px;
+}
+.decide-chro-spinner {
+  width: 54px; height: 54px;
+  border: 4px solid rgba(255,255,255,0.28);
+  border-top: 4px solid #fff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.decide-chro-loading p {
+  color: rgba(255,255,255,0.9);
+  font-weight: 700;
+}
+
+.decide-chro-empty {
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  padding: 80px 20px;
+  text-align: center;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 18px;
+  backdrop-filter: blur(12px);
+}
+.decide-chro-empty-icon { font-size: 3rem; opacity: 0.85; }
+.decide-chro-empty h3 { color: #fff; margin: 0; }
+.decide-chro-empty p  { color: rgba(255,255,255,0.85); margin: 0; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1280px) {
+  .decide-chro-content { max-width: 1180px; }
+  .decide-chro-requests { grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); }
+}
+
+@media (max-width: 1024px) {
+  .decide-chro-root { margin-left: 0; } /* ปิด margin-left เมื่อจอแคบ (sidebar อาจเป็น overlay) */
+  .decide-chro-controls { flex-direction: column; align-items: stretch; }
+  .decide-chro-stats { justify-content: center; }
+}
+
+@media (max-width: 768px) {
+  .decide-chro-content { padding: 20px; }
+  .decide-chro-header { flex-direction: column; gap: 14px; text-align: center; }
+  .decide-chro-requests { grid-template-columns: 1fr; }
+  .decide-chro-input, .decide-chro-select { min-width: unset; width: 100%; }
+  .decide-chro-controls-left, .decide-chro-controls-right { width: 100%; justify-content: center; }
+}
+
+@media (max-width: 480px) {
+  .decide-chro-title { font-size: 1.6rem; }
+  .decide-chro-content { padding: 16px; }
+  .decide-chro-stat { min-width: 76px; padding: 10px 12px; }
+  .type-badge { font-size: 0.8rem; }
+  .row-title { white-space: normal; }
+}

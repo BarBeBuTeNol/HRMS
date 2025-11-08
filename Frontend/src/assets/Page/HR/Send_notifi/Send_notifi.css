@@ -1,0 +1,207 @@
+/* Layout */
+.sendnoti-root {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sendnoti-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 0;
+}
+
+/* Card */
+.sendnoti-card {
+  background: rgba(36, 40, 59, 0.98);
+  border-radius: 24px;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.25);
+  padding: 40px 48px 36px 48px;
+  min-width: 480px;
+  max-width: 700px;
+  width: 100%;
+  color: #eaeaea;
+  position: relative;
+  animation: fadeInUp 0.7s cubic-bezier(.39,.575,.56,1.000);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.sendnoti-card.wide {
+  max-width: 700px;
+  min-width: 480px;
+}
+.sendnoti-card:hover {
+  box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.35);
+  transform: translateY(-2px) scale(1.01);
+}
+
+@keyframes fadeInUp {
+  0% { opacity: 0; transform: translateY(40px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.sendnoti-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+  justify-content: center;
+}
+.sendnoti-header-icon {
+  font-size: 2.2rem;
+  filter: drop-shadow(0 2px 6px #23294655);
+  animation: bellShake 1.2s cubic-bezier(.36,.07,.19,.97) both;
+}
+@keyframes bellShake {
+  0% { transform: rotate(0); }
+  10% { transform: rotate(-10deg); }
+  20% { transform: rotate(12deg); }
+  30% { transform: rotate(-10deg); }
+  40% { transform: rotate(9deg); }
+  50% { transform: rotate(-6deg); }
+  60% { transform: rotate(5deg); }
+  70% { transform: rotate(-2deg); }
+  80% { transform: rotate(1deg); }
+  100% { transform: rotate(0); }
+}
+.sendnoti-title {
+  font-size: 2.1rem;
+  font-weight: 700;
+  color: #a3bffa;
+  letter-spacing: 1px;
+  margin: 0;
+}
+.sendnoti-divider {
+  width: 100%;
+  height: 2.5px;
+  background: linear-gradient(90deg, #4f8cff 0%, #6a82fb 100%);
+  border-radius: 2px;
+  margin: 16px 0 24px 0;
+  opacity: 0.7;
+}
+
+/* Form */
+.sendnoti-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.sendnoti-row {
+  display: flex;
+  gap: 24px;
+}
+.sendnoti-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.sendnoti-form label {
+  font-size: 1rem;
+  color: #b8c1ec;
+  margin-bottom: 4px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+.sendnoti-form input,
+.sendnoti-form select,
+.sendnoti-form textarea {
+  background: #232946;
+  color: #eaeaea;
+  border: 1.5px solid #393e6e;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 1rem;
+  outline: none;
+  transition: border 0.2s, box-shadow 0.2s, background 0.2s;
+  margin-bottom: 4px;
+  box-shadow: 0 1px 4px #23294622;
+}
+.sendnoti-form input:focus,
+.sendnoti-form select:focus,
+.sendnoti-form textarea:focus {
+  border: 1.5px solid #a3bffa;
+  box-shadow: 0 0 0 2px #a3bffa33;
+  background: #232946ee;
+}
+.sendnoti-form select {
+  cursor: pointer;
+}
+.sendnoti-form textarea {
+  resize: vertical;
+  min-height: 80px;
+  max-height: 200px;
+}
+.sendnoti-btn {
+  background: linear-gradient(90deg, #4f8cff 0%, #6a82fb 100%);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 13px 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-top: 8px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px #23272f33;
+  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  letter-spacing: 0.5px;
+}
+.sendnoti-btn-icon {
+  font-size: 1.2em;
+  margin-right: 2px;
+  transition: transform 0.2s;
+}
+.sendnoti-btn:hover {
+  background: linear-gradient(90deg, #6a82fb 0%, #4f8cff 100%);
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 4px 16px #23294655;
+}
+.sendnoti-btn:hover .sendnoti-btn-icon {
+  transform: translateX(4px) scale(1.15) rotate(-8deg);
+}
+.sendnoti-success {
+  margin-top: 18px;
+  color: #7fffd4;
+  background: #232946cc;
+  border-radius: 8px;
+  padding: 10px 0;
+  text-align: center;
+  font-weight: 600;
+  letter-spacing: 1px;
+  animation: fadeInUp 0.5s;
+  font-size: 1.08rem;
+}
+/* Scrollbar minimal */
+.sendnoti-form textarea::-webkit-scrollbar {
+  width: 6px;
+  background: #232946;
+}
+.sendnoti-form textarea::-webkit-scrollbar-thumb {
+  background: #393e6e;
+  border-radius: 6px;
+}
+/* Responsive */
+@media (max-width: 900px) {
+  .sendnoti-card, .sendnoti-card.wide {
+    min-width: unset;
+    max-width: 98vw;
+    padding: 24px 8px;
+  }
+  .sendnoti-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+@media (max-width: 600px) {
+  .sendnoti-card, .sendnoti-card.wide {
+    min-width: unset;
+    max-width: 99vw;
+    padding: 16px 2vw;
+  }
+  .sendnoti-content {
+    padding: 8px 0;
+  }
+}

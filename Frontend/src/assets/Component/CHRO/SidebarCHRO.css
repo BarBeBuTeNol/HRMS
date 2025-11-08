@@ -1,0 +1,202 @@
+/* Sidebar CHRO Styles */
+.sidebar-chro {
+    width: 280px;
+    height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px 0;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    left: 0;
+    top: 0;
+    overflow-y: auto;
+    z-index: 1000;
+    transition: transform 0.3s ease-in-out;
+}
+
+/* Sidebar closed state */
+.sidebar-chro.closed {
+    transform: translateX(-100%);
+}
+
+/* Toggle button styles */
+.sidebar-toggle {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1001;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebar-toggle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.sidebar-toggle:active {
+    transform: scale(0.95);
+}
+
+/* Adjust toggle button position when sidebar is closed */
+.sidebar-chro.closed + .sidebar-toggle {
+    left: 20px;
+}
+
+/* Adjust toggle button position when sidebar is open */
+.sidebar-chro:not(.closed) + .sidebar-toggle {
+    left: 300px;
+}
+
+.sidebar-chro-header {
+    text-align: center;
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 20px;
+}
+
+.sidebar-chro-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.sidebar-chro-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 0 15px;
+}
+
+.sidebar-chro-button {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    position: relative;
+    overflow: hidden;
+}
+
+.sidebar-chro-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.sidebar-chro-button:hover::before {
+    left: 100%;
+}
+
+.sidebar-chro-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateX(5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar-chro-button:active {
+    transform: translateX(2px) scale(0.98);
+}
+
+.sidebar-chro-icon {
+    font-size: 1.2rem;
+    min-width: 24px;
+    text-align: center;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .sidebar-chro {
+        width: 100%;
+        height: auto;
+        position: relative;
+        padding: 15px 0;
+    }
+    
+    .sidebar-chro-nav {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+    }
+    
+    .sidebar-chro-button {
+        flex: 1;
+        min-width: 150px;
+        justify-content: center;
+    }
+}
+
+/* Animation for button entrance */
+.sidebar-chro-button {
+    animation: slideInLeft 0.5s ease-out;
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Stagger animation for buttons */
+.sidebar-chro-button:nth-child(1) { animation-delay: 0.1s; }
+.sidebar-chro-button:nth-child(2) { animation-delay: 0.2s; }
+.sidebar-chro-button:nth-child(3) { animation-delay: 0.3s; }
+.sidebar-chro-button:nth-child(4) { animation-delay: 0.4s; }
+
+/* Focus styles for accessibility */
+.sidebar-chro-button:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.5);
+    outline-offset: 2px;
+}
+
+/* Custom scrollbar for sidebar */
+.sidebar-chro::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar-chro::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+.sidebar-chro::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+}
+
+.sidebar-chro::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}

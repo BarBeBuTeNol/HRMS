@@ -1,0 +1,1125 @@
+/* MainHR Dashboard - Modern Soft Dark Theme */
+body.mainhr-body {
+  background: #23272f;
+  color: #e0e0e0;
+  font-family: 'Fira Code', monospace;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+.mainhr-root {
+  display: flex;
+  min-height: 100vh;
+  background: #23272f;
+}
+.mainhr-wrapper {
+  flex: 1;
+  padding: 32px 0 0 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Header */
+.mainhr-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #23272f;
+  border-bottom: 1.5px solid #31343b;
+  padding: 0 32px 18px 32px;
+  margin-bottom: 18px;
+}
+.mainhr-title {
+  font-size: 2.1rem;
+  color: #90caf9;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: 1.5px;
+}
+.mainhr-subtitle {
+  color: #a5d6a7;
+  font-size: 1.08rem;
+  font-weight: 400;
+  margin-top: 4px;
+  display: block;
+}
+.mainhr-user {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  color: #e0e0e0;
+  font-weight: 600;
+}
+.mainhr-logout-btn {
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 22px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.mainhr-logout-btn:hover {
+  background: #145ea8;
+}
+
+/* Navigation */
+.mainhr-nav {
+  display: flex;
+  gap: 0;
+  background: #23272f;
+  border-bottom: 2px solid #31343b;
+  padding: 0;
+  margin-bottom: 24px;
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+.mainhr-nav::-webkit-scrollbar {
+  display: none;
+}
+.mainhr-nav button {
+  background: none;
+  border: none;
+  color: #e0e0e0;
+  font-size: 1.08rem;
+  font-weight: 600;
+  padding: 16px 32px;
+  border-radius: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  min-width: 140px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-bottom: 3px solid transparent;
+}
+.mainhr-nav button:hover {
+  background: rgba(144, 202, 249, 0.1);
+  color: #90caf9;
+  border-bottom-color: #90caf9;
+}
+.mainhr-nav button.active {
+  background: linear-gradient(135deg, #1976d2 0%, #90caf9 100%);
+  color: #fff;
+  border-bottom-color: #90caf9;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3);
+}
+.mainhr-nav-icon {
+  font-size: 1.2rem;
+  display: inline-block;
+}
+
+.mainhr-main {
+  flex: 1;
+  padding: 0 32px 32px 32px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Metrics Row */
+.mainhr-metrics-row {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 32px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.mainhr-metric-card {
+  background: #2d313a;
+  border-radius: 14px;
+  padding: 22px 30px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 160px;
+  flex: 1 1 160px;
+  border: 2px solid #90caf9;
+  color: #fff;
+  font-size: 1.1rem;
+  box-shadow: 0 2px 12px #90caf930;
+}
+.mainhr-metric-card span {
+  font-size: 1.7rem;
+  margin-right: 8px;
+  color: #90caf9;
+}
+.mainhr-metric-card h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #fff;
+  font-weight: 800;
+}
+.mainhr-metric-card p {
+  margin: 0;
+  color: #a5d6a7;
+  font-weight: 600;
+  font-size: 1.01rem;
+}
+
+/* Dashboard Flex (Charts & Activities) */
+.mainhr-dashboard-flex {
+  display: flex;
+  gap: 28px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+.mainhr-chart-box, .mainhr-activity-box {
+  background: #2d313a;
+  border-radius: 12px;
+  padding: 18px 24px;
+  flex: 1 1 260px;
+  min-width: 220px;
+  border: 2.5px solid #a5d6a7;
+  color: #e0e0e0;
+  box-shadow: 0 4px 18px #90caf930;
+  margin-bottom: 18px;
+}
+.mainhr-chart-box h3, .mainhr-activity-box h3 {
+  color: #90caf9;
+  font-weight: 700;
+  font-size: 1.08rem;
+  margin-bottom: 10px;
+}
+
+/* Chart Bar Example */
+.mainhr-leave-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 16px;
+  background: #23272f;
+  border-radius: 8px;
+  padding: 8px 14px;
+  border: 1.5px solid #a5d6a7;
+  box-shadow: 0 1px 6px #a5d6a730;
+}
+.mainhr-leave-bar-row span:first-child {
+  min-width: 60px;
+  color: #a5d6a7;
+  font-weight: 700;
+  font-size: 1.01rem;
+}
+.mainhr-leave-bar-bg {
+  background: #2d313a;
+  border-radius: 7px;
+  width: 120px;
+  height: 16px;
+  overflow: hidden;
+  margin: 0 8px;
+  border: 2px solid #90caf9;
+}
+.mainhr-leave-bar-fill.sick { background: linear-gradient(90deg, #90caf9 60%, #1976d2 100%); }
+.mainhr-leave-bar-fill.personal { background: linear-gradient(90deg, #a5d6a7 60%, #388e3c 100%); }
+.mainhr-leave-bar-fill.other { background: linear-gradient(90deg, #e0e0e0 60%, #bdbdbd 100%); }
+.mainhr-leave-bar-row span:last-child {
+  min-width: 32px;
+  color: #fff;
+  font-weight: 700;
+  text-align: right;
+}
+
+/* Activity List */
+.mainhr-activity-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.mainhr-activity-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #23272f;
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #e0e0e0;
+  font-size: 1rem;
+}
+.mainhr-activity-icon {
+  font-size: 1.2rem;
+  color: #90caf9;
+}
+.mainhr-activity-time {
+  color: #a5d6a7;
+  font-size: 0.95rem;
+  margin-left: auto;
+}
+
+/* Employees */
+.mainhr-employees-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.mainhr-employees-header h2 {
+  color: #90caf9;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0;
+}
+.mainhr-employees-header input {
+  color: #e0e0e0;
+  background: #23272f;
+  border: 2px solid #a5d6a7;
+  border-radius: 7px;
+  padding: 8px 12px;
+  font-size: 1rem;
+  font-family: inherit;
+}
+.mainhr-employees-header input::placeholder {
+  color: #a5d6a7;
+  opacity: 1;
+}
+.mainhr-employees-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+.mainhr-employee-card {
+  background: #2d313a;
+  border-radius: 10px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 180px;
+  flex: 1 1 180px;
+  border: 2px solid #90caf9;
+  color: #e0e0e0;
+  box-shadow: 0 2px 12px #a5d6a730;
+}
+.mainhr-employee-avatar {
+  font-size: 1.5rem;
+  background: #23272f;
+  border-radius: 50%;
+  padding: 8px 12px;
+  color: #90caf9;
+  font-weight: 700;
+}
+.mainhr-employee-name {
+  color: #e0e0e0;
+  font-size: 1.08rem;
+  font-weight: 700;
+}
+.mainhr-employee-role {
+  color: #a5d6a7;
+  font-size: 0.98rem;
+  font-weight: 600;
+}
+.mainhr-employee-id {
+  color: #90caf9;
+  font-size: 0.98rem;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .mainhr-wrapper, .mainhr-main {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  .mainhr-header {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  .mainhr-nav button {
+    min-width: 120px;
+    padding: 14px 24px;
+    font-size: 1.05rem;
+  }
+}
+@media (max-width: 900px) {
+  .mainhr-metrics-row, .mainhr-dashboard-flex, .mainhr-employees-grid {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .mainhr-chart-box, .mainhr-activity-box, .mainhr-employee-card, .mainhr-metric-card {
+    min-width: unset;
+    width: 100%;
+  }
+  .mainhr-metric-card, .mainhr-chart-box, .mainhr-activity-box, .mainhr-employee-card {
+    border-width: 2.5px;
+  }
+}
+@media (max-width: 600px) {
+  .mainhr-wrapper, .mainhr-main, .mainhr-header, .mainhr-nav {
+    padding-left: 2vw;
+    padding-right: 2vw;
+  }
+  .mainhr-metrics-row, .mainhr-dashboard-flex, .mainhr-employees-grid {
+    gap: 7px;
+  }
+}
+
+.mainhr-input, .mainhr-select, .mainhr-textarea {
+  color: #e0e0e0;
+  background: #23272f;
+  border: 1.5px solid #31343b;
+  border-radius: 7px;
+  padding: 8px 12px;
+  font-size: 1rem;
+  font-family: inherit;
+}
+.mainhr-input::placeholder, .mainhr-textarea::placeholder {
+  color: #a5d6a7;
+  opacity: 1;
+}
+.mainhr-label {
+  color: #e0e0e0;
+  font-weight: 600;
+  margin-bottom: 4px;
+  display: block;
+}
+
+/* Animation */
+@keyframes mainhr-fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes mainhr-slideIn {
+  from { transform: translateY(40px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* --- ปรับปรุงกรอบและพื้นหลังให้ไม่มีสีขาว และเพิ่มความโดดเด่น --- */
+
+.mainhr-metric-card, .mainhr-employee-card, .mainhr-chart-box, .mainhr-activity-box {
+  background: #23272f;
+  border: 2.5px solid #90caf9;
+  color: #e0e0e0;
+  box-shadow: 0 2px 12px #1976d250;
+  transition: box-shadow 0.2s, border-color 0.2s, transform 0.15s;
+}
+.mainhr-metric-card:hover, .mainhr-employee-card:hover, .mainhr-chart-box:hover, .mainhr-activity-box:hover {
+  border-color: #a5d6a7;
+  box-shadow: 0 4px 18px #a5d6a770;
+  transform: translateY(-2px) scale(1.02);
+}
+
+/* ปรับ modal ให้ไม่มีสีขาว */
+.mainhr-modal-content {
+  background: #23272f;
+  border: 2.5px solid #90caf9;
+  color: #e0e0e0;
+  box-shadow: 0 4px 18px #1976d250;
+  animation: mainhr-slideIn 0.25s;
+}
+.mainhr-modal-content h3 {
+  color: #90caf9;
+}
+
+/* ปุ่มที่กดได้ (action button) */
+.mainhr-button, .mainhr-view-btn, .mainhr-edit-btn, .mainhr-delete-btn, .mainhr-cancel-btn, .mainhr-logout-btn {
+  background: linear-gradient(90deg, #1976d2 60%, #90caf9 100%);
+  color: #fff;
+  border: 2px solid #90caf9;
+  border-radius: 8px;
+  padding: 10px 28px;
+  font-size: 1.08rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px #1976d250;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.1s;
+  outline: none;
+}
+.mainhr-button:hover, .mainhr-view-btn:hover, .mainhr-edit-btn:hover, .mainhr-delete-btn:hover, .mainhr-cancel-btn:hover, .mainhr-logout-btn:hover {
+  background: linear-gradient(90deg, #388e3c 60%, #a5d6a7 100%);
+  color: #23272f;
+  border-color: #a5d6a7;
+  transform: translateY(-2px) scale(1.04);
+}
+
+/* ปรับ input ให้ไม่มีสีขาว */
+.mainhr-input, .mainhr-select, .mainhr-textarea {
+  color: #e0e0e0;
+  background: #23272f;
+  border: 2px solid #a5d6a7;
+  border-radius: 7px;
+  padding: 8px 12px;
+  font-size: 1rem;
+  font-family: inherit;
+}
+.mainhr-input::placeholder, .mainhr-textarea::placeholder {
+  color: #a5d6a7;
+  opacity: 1;
+}
+
+/* กรอบ leave-bar, chart bar */
+.mainhr-leave-bar-bg {
+  background: #2d313a;
+  border-radius: 7px;
+  width: 120px;
+  height: 16px;
+  overflow: hidden;
+  margin: 0 8px;
+  border: 2px solid #90caf9;
+}
+.mainhr-leave-bar-fill.sick { background: linear-gradient(90deg, #90caf9 60%, #1976d2 100%); }
+.mainhr-leave-bar-fill.personal { background: linear-gradient(90deg, #a5d6a7 60%, #388e3c 100%); }
+.mainhr-leave-bar-fill.other { background: linear-gradient(90deg, #bdbdbd 60%, #31343b 100%); }
+
+/* เพิ่มความเด่นให้กล่องที่กดได้ (เช่น employee-card) */
+.mainhr-employee-card {
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.mainhr-employee-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  border: 2px solid transparent;
+  transition: border-color 0.2s;
+}
+.mainhr-employee-card:hover::after {
+  border-color: #a5d6a7;
+}
+
+/* Responsive ปรับกรอบให้เด่นในจอเล็ก */
+@media (max-width: 900px) {
+  .mainhr-metric-card, .mainhr-chart-box, .mainhr-activity-box, .mainhr-employee-card, .mainhr-modal-content {
+    border-width: 2.5px;
+  }
+}
+
+/* --- Modern Dashboard Redesign --- */
+.mainhr-dashboard-content {
+  animation: mainhr-fadeIn 0.7s;
+  padding: 0 0 24px 0;
+}
+.mainhr-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 28px;
+  margin-bottom: 36px;
+}
+.mainhr-metric-card {
+  background: rgba(36, 40, 50, 0.85);
+  border-radius: 18px;
+  box-shadow: 0 4px 24px #90caf950, 0 1.5px 8px #23272f80;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 28px 24px;
+  position: relative;
+  overflow: hidden;
+  border: none;
+  transition: transform 0.18s, box-shadow 0.18s;
+  backdrop-filter: blur(6px);
+}
+.mainhr-metric-card:hover {
+  transform: translateY(-4px) scale(1.04);
+  box-shadow: 0 8px 32px #90caf9cc, 0 2px 12px #23272f99;
+}
+.mainhr-metric-icon {
+  font-size: 2.7rem;
+  color: #fff;
+  background: linear-gradient(135deg, #90caf9 60%, #1976d2 100%);
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 12px #1976d250;
+}
+.mainhr-metric-users .mainhr-metric-icon { background: linear-gradient(135deg, #90caf9 60%, #1976d2 100%); }
+.mainhr-metric-leave .mainhr-metric-icon { background: linear-gradient(135deg, #a5d6a7 60%, #388e3c 100%); }
+.mainhr-metric-sick .mainhr-metric-icon { background: linear-gradient(135deg, #fbc02d 60%, #ff9800 100%); }
+.mainhr-metric-absent .mainhr-metric-icon { background: linear-gradient(135deg, #e57373 60%, #b71c1c 100%); }
+.mainhr-metric-card h3 {
+  margin: 0 0 2px 0;
+  font-size: 2.1rem;
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+.mainhr-metric-card p {
+  margin: 0;
+  color: #a5d6a7;
+  font-weight: 600;
+  font-size: 1.08rem;
+}
+
+.mainhr-dashboard-flex {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+.mainhr-leave-chart-box {
+  flex: 1 1 320px;
+  background: rgba(36, 40, 50, 0.85);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px #a5d6a750;
+  padding: 28px 24px 18px 24px;
+  margin-bottom: 18px;
+  min-width: 320px;
+  backdrop-filter: blur(6px);
+}
+.mainhr-leave-chart-box h3 {
+  color: #90caf9;
+  font-size: 1.18rem;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+.mainhr-leave-progress-circles {
+  display: flex;
+  gap: 28px;
+  justify-content: center;
+  align-items: flex-end;
+}
+.mainhr-leave-circle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 16px;
+  padding: 12px 10px 10px 10px;
+  box-shadow: 0 2px 12px #90caf930;
+  min-width: 90px;
+  position: relative;
+  animation: mainhr-fadeIn 0.7s;
+}
+.mainhr-leave-circle svg {
+  margin-bottom: 2px;
+  transform: rotate(-90deg);
+}
+.mainhr-leave-circle strong {
+  font-size: 1.5rem;
+  color: #fff;
+  font-weight: 800;
+}
+.mainhr-leave-circle span {
+  color: #a5d6a7;
+  font-size: 1.01rem;
+  font-weight: 600;
+}
+.mainhr-leave-circle.mainhr-sick svg circle { stroke: #90caf9; }
+.mainhr-leave-circle.mainhr-personal svg circle { stroke: #a5d6a7; }
+.mainhr-leave-circle.mainhr-other svg circle { stroke: #bdbdbd; }
+
+.mainhr-activity-timeline {
+  flex: 1 1 320px;
+  background: rgba(36, 40, 50, 0.85);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px #90caf950;
+  padding: 28px 24px 18px 24px;
+  margin-bottom: 18px;
+  min-width: 320px;
+  backdrop-filter: blur(6px);
+}
+.mainhr-activity-timeline h3 {
+  color: #90caf9;
+  font-size: 1.18rem;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+.mainhr-timeline-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.mainhr-timeline-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  position: relative;
+  padding-left: 8px;
+  animation: mainhr-slideIn 0.7s;
+}
+.mainhr-timeline-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 24px;
+  top: 36px;
+  width: 2px;
+  height: calc(100% - 36px);
+  background: linear-gradient(180deg, #90caf9 0%, #23272f 100%);
+  opacity: 0.5;
+}
+.mainhr-timeline-icon {
+  font-size: 1.7rem;
+  background: #23272f;
+  color: #90caf9;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px #90caf930;
+  margin-top: 2px;
+}
+.mainhr-timeline-content {
+  flex: 1;
+  background: rgba(255,255,255,0.04);
+  border-radius: 10px;
+  padding: 8px 14px;
+  box-shadow: 0 1px 6px #a5d6a730;
+}
+.mainhr-timeline-message {
+  color: #e0e0e0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+.mainhr-timeline-time {
+  color: #a5d6a7;
+  font-size: 0.97rem;
+  margin-top: 2px;
+}
+
+@media (max-width: 1100px) {
+  .mainhr-metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .mainhr-dashboard-flex {
+    flex-direction: column;
+    gap: 18px;
+  }
+  .mainhr-nav button {
+    min-width: 130px;
+    padding: 15px 26px;
+  }
+}
+@media (max-width: 700px) {
+  .mainhr-metrics-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .mainhr-leave-chart-box, .mainhr-activity-timeline {
+    min-width: unset;
+    padding: 18px 6vw 12px 6vw;
+  }
+  .mainhr-leave-progress-circles {
+    flex-direction: column;
+    gap: 18px;
+  }
+  .mainhr-nav button {
+    min-width: 90px;
+    padding: 11px 16px;
+    font-size: 0.98rem;
+  }
+  .mainhr-nav-icon {
+    font-size: 1.05rem;
+  }
+}
+
+/* --- Employees Section Modern --- */
+.mainhr-employees-content {
+  animation: mainhr-fadeIn 0.7s;
+  padding-bottom: 24px;
+}
+.mainhr-employees-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+.mainhr-search-filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.mainhr-search-input {
+  background: rgba(36, 40, 50, 0.85);
+  border: 2px solid #90caf9;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 1.08rem;
+  color: #e0e0e0;
+  outline: none;
+  transition: border-color 0.18s;
+}
+.mainhr-search-input:focus {
+  border-color: #a5d6a7;
+}
+.mainhr-employees-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 22px;
+}
+.mainhr-employee-card {
+  background: rgba(36, 40, 50, 0.92);
+  border-radius: 16px;
+  box-shadow: 0 4px 18px #90caf950;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  position: relative;
+  cursor: pointer;
+  border: none;
+  transition: transform 0.18s, box-shadow 0.18s;
+  backdrop-filter: blur(4px);
+  min-width: 0;
+  animation: mainhr-fadeIn 0.7s;
+}
+.mainhr-employee-card:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 8px 32px #90caf9cc;
+}
+.mainhr-employee-avatar {
+  font-size: 2.1rem;
+  background: linear-gradient(135deg, #90caf9 60%, #1976d2 100%);
+  color: #fff;
+  border-radius: 50%;
+  width: 54px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  box-shadow: 0 2px 8px #1976d250;
+}
+.mainhr-employee-details h4 {
+  margin: 0 0 2px 0;
+  font-size: 1.18rem;
+  color: #fff;
+  font-weight: 700;
+}
+.mainhr-employee-id, .mainhr-employee-role, .mainhr-employee-dept {
+  margin: 0;
+  color: #a5d6a7;
+  font-size: 1.01rem;
+  font-weight: 600;
+}
+.mainhr-employee-status {
+  margin-left: auto;
+}
+.mainhr-status-badge {
+  background: linear-gradient(90deg, #a5d6a7 60%, #388e3c 100%);
+  color: #23272f;
+  border-radius: 8px;
+  padding: 4px 14px;
+  font-size: 0.98rem;
+  font-weight: 700;
+  box-shadow: 0 1px 4px #a5d6a750;
+}
+.mainhr-employee-empty {
+  grid-column: 1/-1;
+  text-align: center;
+  color: #e57373;
+  font-size: 1.15rem;
+  font-weight: 700;
+  padding: 32px 0 18px 0;
+}
+
+/* --- Leave/Attendance Table Modern --- */
+.mainhr-leave-content {
+  animation: mainhr-fadeIn 0.7s;
+  padding-bottom: 24px;
+}
+.mainhr-leave-table-section {
+  background: rgba(36, 40, 50, 0.92);
+  border-radius: 16px;
+  box-shadow: 0 4px 18px #a5d6a750;
+  padding: 18px 0 8px 0;
+  margin-top: 18px;
+  overflow-x: auto;
+}
+.mainhr-leave-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 1.08rem;
+  color: #e0e0e0;
+}
+.mainhr-leave-table th, .mainhr-leave-table td {
+  padding: 12px 16px;
+  text-align: left;
+}
+.mainhr-leave-table th {
+  background: #23272f;
+  color: #90caf9;
+  font-weight: 800;
+  font-size: 1.09rem;
+  border-bottom: 2.5px solid #90caf9;
+}
+.mainhr-leave-table tr {
+  transition: background 0.15s;
+}
+.mainhr-leave-table tr:hover {
+  background: #31343b;
+}
+.mainhr-leave-usercell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.mainhr-leave-avatar {
+  font-size: 1.1rem;
+  background: linear-gradient(135deg, #90caf9 60%, #1976d2 100%);
+  color: #fff;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  box-shadow: 0 1px 4px #1976d250;
+}
+.mainhr-leave-badge {
+  display: inline-block;
+  min-width: 32px;
+  text-align: center;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 1.01rem;
+  padding: 4px 0;
+  color: #fff;
+}
+.mainhr-leave-badge.mainhr-sick { background: linear-gradient(90deg, #90caf9 60%, #1976d2 100%); }
+.mainhr-leave-badge.mainhr-personal { background: linear-gradient(90deg, #a5d6a7 60%, #388e3c 100%); }
+.mainhr-leave-badge.mainhr-absent { background: linear-gradient(90deg, #e57373 60%, #b71c1c 100%); }
+
+/* --- Activities Timeline Full --- */
+.mainhr-timeline-list-full {
+  margin-top: 18px;
+  background: rgba(36, 40, 50, 0.92);
+  border-radius: 16px;
+  box-shadow: 0 4px 18px #90caf950;
+  padding: 18px 0 8px 0;
+}
+
+@media (max-width: 900px) {
+  .mainhr-employees-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}
+
+/* --- Employee Modal Modern --- */
+.mainhr-modal-employee {
+  max-width: 1000px;
+  width: 96vw;
+  background: rgba(36, 40, 50, 0.97);
+  border-radius: 22px;
+  box-shadow: 0 8px 40px #90caf980, 0 2px 12px #23272f99;
+  padding: 0 0 24px 0;
+  position: relative;
+  animation: mainhr-fadeIn 0.5s;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+  border: 2.5px solid #90caf9;
+}
+.mainhr-modal-avatar-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: linear-gradient(135deg, #23272f 60%, #31343b 100%);
+  padding: 32px 0 18px 0;
+  border-radius: 22px 22px 0 0;
+  box-shadow: 0 2px 12px #90caf930;
+}
+.mainhr-modal-avatar {
+  font-size: 2.7rem;
+  background: linear-gradient(135deg, #90caf9 60%, #1976d2 100%);
+  color: #fff;
+  border-radius: 50%;
+  width: 82px;
+  height: 82px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  box-shadow: 0 4px 18px #1976d250;
+  margin-bottom: 10px;
+}
+.mainhr-modal-name {
+  font-size: 1.35rem;
+  color: #fff;
+  font-weight: 800;
+  margin-bottom: 2px;
+}
+.mainhr-modal-role {
+  color: #a5d6a7;
+  font-size: 1.08rem;
+  font-weight: 700;
+}
+.mainhr-modal-divider {
+  width: 100%;
+  height: 2.5px;
+  background: linear-gradient(90deg, #90caf9 0%, #a5d6a7 100%);
+  margin: 0 0 18px 0;
+  opacity: 0.18;
+}
+.mainhr-modal-info {
+  padding: 0 28px 0 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.mainhr-modal-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.08rem;
+  color: #e0e0e0;
+  font-weight: 600;
+  padding: 4px 0;
+}
+.mainhr-modal-label {
+  color: #90caf9;
+  font-weight: 700;
+  min-width: 110px;
+  text-align: right;
+}
+.mainhr-modal-btn-group {
+  display: flex;
+  gap: 10px;
+  margin: 18px 0 0 0;
+  justify-content: flex-end;
+}
+.mainhr-modal-form {
+  padding: 0 28px 0 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.mainhr-modal-form label {
+  color: #a5d6a7;
+  font-weight: 600;
+  margin-bottom: 2px;
+  display: block;
+}
+.mainhr-modal-form input, .mainhr-modal-form select {
+  width: 100%;
+  color: #e0e0e0;
+  background: #23272f;
+  border: 2px solid #a5d6a7;
+  border-radius: 7px;
+  padding: 8px 12px;
+  font-size: 1rem;
+  font-family: inherit;
+  margin-bottom: 8px;
+}
+.mainhr-modal-form input:focus, .mainhr-modal-form select:focus {
+  border-color: #90caf9;
+}
+.mainhr-modal-error {
+  color: #e57373;
+  background: #23272f;
+  border-radius: 8px;
+  padding: 7px 12px;
+  margin-top: 8px;
+  font-size: 1.01rem;
+  font-weight: 700;
+}
+.mainhr-modal-confirm {
+  background: #e7f1ff;
+  color: #23272f;
+  border-radius: 10px;
+  padding: 14px 12px 10px 12px;
+  margin-top: 14px;
+  font-size: 1.01rem;
+  font-weight: 600;
+  box-shadow: 0 1px 6px #90caf930;
+}
+.mainhr-modal-confirm-edit {
+  background: #e7f1ff;
+}
+.mainhr-modal-confirm-delete {
+  background: #f8d7da;
+}
+.mainhr-modal-confirm input {
+  width: 100%;
+  margin: 8px 0 0 0;
+  padding: 7px 10px;
+  border-radius: 7px;
+  border: 2px solid #90caf9;
+  font-size: 1rem;
+  background: #fff;
+  color: #23272f;
+}
+@media (max-width: 600px) {
+  .mainhr-modal-employee {
+    max-width: 100vw;
+    padding: 0 0 12px 0;
+  }
+  .mainhr-modal-info, .mainhr-modal-form {
+    padding: 0 4vw 0 4vw;
+  }
+}
+
+.mainhr-modal-form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.mainhr-modal-form-row {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 0;
+}
+.mainhr-modal-form-row label {
+  flex: 1 1 0;
+  margin-bottom: 0;
+}
+.mainhr-modal-btn-group-right {
+  justify-content: flex-end;
+}
+@media (max-width: 700px) {
+  .mainhr-modal-form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+}
+
+/* --- Edit Form Modal Custom Styles --- */
+.mainhr-editform-modal {
+  max-width: 700px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding: 32px 32px 24px 32px;
+}
+.mainhr-editform-title {
+  text-align: center;
+  margin-bottom: 24px;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #90caf9;
+}
+.mainhr-editform-label {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 1.08rem;
+  color: #e0e0e0;
+  font-weight: 600;
+}
+.mainhr-editform-input {
+  font-size: 1.08rem;
+  padding: 12px 16px;
+}
+.mainhr-editform-btn-group {
+  margin-top: 28px;
+  display: flex;
+  gap: 18px;
+  justify-content: flex-end;
+}
+.mainhr-editform-btn {
+  font-size: 1.08rem;
+  padding: 12px 32px;
+}
