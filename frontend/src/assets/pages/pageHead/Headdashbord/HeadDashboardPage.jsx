@@ -2,7 +2,6 @@
 import React from 'react';
 import HeadSidebar from '../../../Component/Head/HeadSidebar';
 import ProfilePopover from '../../../Component/common/ProfilePopover/ProfilePopover'; // ✅ ใช้ไฟล์รวมใหม่
-import '../../../../App.css';
 import dayjs from 'dayjs';
 import './HeadDashboardPage.css';
 
@@ -11,15 +10,6 @@ const HeadDashboard = () => {
   const handleLogout = () => {
     localStorage.clear(); // เคลียร์ token/user
     window.location.href = '/login'; // กลับไปหน้า login
-  };
-
-  // ✅ ดึงข้อมูลหัวหน้าจาก localStorage (ถ้าไม่มี ใช้ค่า default)
-  const headUser = JSON.parse(localStorage.getItem('user')) || {
-    name: 'นายธนพล จักกลาง',
-    position: 'หัวหน้าแผนก',
-    department: 'ฝ่ายผลิต',
-    teamCount: 12,
-    profilePic: '/default.jpg',
   };
 
   // ✅ ข้อมูลวันลา (mock หรือจะดึงจาก backend ก็ได้)

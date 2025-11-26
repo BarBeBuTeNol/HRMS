@@ -14,25 +14,24 @@ const EmployeeList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // ✅ ดึงข้อมูล user จาก localStorage
   let headUser = null;
   try {
-    headUser = JSON.parse(localStorage.getItem('user'));
+    headUser = JSON.parse(localStorage.getItem('currentUser')); // <-- ใช้ currentUser
   } catch (e) {
-    console.warn('⚠️ localStorage.user parse error', e);
+    console.warn('⚠️ localStorage.currentUser parse error', e);
   }
 
-  const headId = headUser?.id || null;
+  const departmentId = headUser?.department_id || null;
 
   useEffect(() => {
-    if (!headId) {
-      setError('❌ ไม่พบข้อมูลหัวหน้า');
+    if (!departmentId) {
+      setError('❌ ไม่พบข้อมูลแผนกหัวหน้า');
       setLoading(false);
       return;
     }
 
     api
-      .get(`/api/users/head/${headId}/employees`)
+      .get(`/api/users/head/employees?departmentId=${departmentId}`) // <-- ส่ง departmentId เป็น query
       .then((res) => {
         console.log("✅ employees from API:", res.data);
         setEmployees(res.data || []);
@@ -42,7 +41,7 @@ const EmployeeList = () => {
         setError('โหลดข้อมูลพนักงานไม่สำเร็จ');
       })
       .finally(() => setLoading(false));
-  }, [headId]);
+  }, [departmentId]);
 
   const filteredEmployees = employees.filter((emp) => {
     const keyword = searchTerm.toLowerCase();
@@ -87,12 +86,13 @@ const EmployeeList = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
           />
-          <button className="btn-export" onClick={handleExport}>📥 Export Excel</button>
+          <button className="btn-export" onClick={handleExport}>Export Excel</button>
         </div>
 
         <table className="emp-table">
           <thead>
             <tr>
+              <th>ลำดับที่</th>
               <th>รหัสพนักงาน</th>
               <th>ชื่อ</th>
               <th>ตำแหน่ง</th>
@@ -102,9 +102,10 @@ const EmployeeList = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredEmployees.map((emp) => (
+            {filteredEmployees.map((emp, index) => (
               <tr key={emp.id}>
-                <td>{emp.id}</td>
+                <td>{index + 1}</td>  
+                <td>{emp.employee_code || emp.id}</td>
                 <td
                   className="link-name"
                   onClick={() => navigate(`/head/employee/${emp.id}`)}

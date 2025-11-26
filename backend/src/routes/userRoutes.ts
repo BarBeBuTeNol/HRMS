@@ -56,12 +56,9 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-/** ───────── GET /api/users/head/:headId/employees ───────── 
- * ดึงพนักงานในแผนกเดียวกับหัวหน้า
- */
-router.get("/head/:headId/employees", async (req, res) => {
-  const headId = Number(req.params.headId);
-  if (!headId) return res.status(400).json({ error: "Invalid head id" });
+router.get("/head/employees", async (req, res) => {
+  const departmentId = Number(req.query.departmentId);
+  if (!departmentId) return res.status(400).json({ error: "Missing departmentId" });
 
   try {
     const [rows] = await pool.query<RowDataPacket[]>(
@@ -75,21 +72,19 @@ router.get("/head/:headId/employees", async (req, res) => {
       LEFT JOIN prefixes p  ON u.prefix_id = p.id
       LEFT JOIN roles r     ON u.role_id = r.id
       LEFT JOIN departments d ON u.department_id = d.id
-      WHERE u.department_id = (
-        SELECT department_id FROM users WHERE id = ?
-      )
-      AND u.role_id = 5
+      WHERE u.department_id = ?
       ORDER BY u.id ASC
       `,
-      [headId]
+      [departmentId]
     );
 
     res.json(rows);
   } catch (err) {
-    console.error("❌ Error fetching employees by head:", err);
+    console.error("❌ Error fetching employees by department:", err);
     res.status(500).json({ error: "DB error" });
   }
 });
+
 
 /** ───────── GET /api/users/employee/:id/detail ───────── 
  * ดึงข้อมูลรายละเอียดพนักงานแบบเต็ม

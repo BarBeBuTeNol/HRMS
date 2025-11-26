@@ -24,7 +24,7 @@ const HeadSidebar = ({ unreadCount = 0 }) => {
           </li>
           <li>
             <NavLink to="/head/employee-list" className={({ isActive }) => (isActive ? "active" : "")}>
-              👥 ทีมงาน
+              👥 รายชื่อพนักงาน
             </NavLink>
           </li>
           <li>

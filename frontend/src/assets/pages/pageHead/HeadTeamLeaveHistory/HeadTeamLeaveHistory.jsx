@@ -35,6 +35,12 @@ const handleExportExcel = () => {
       leave.endDate
     ).toLocaleDateString("th-TH")}`,
     เหตุผล: leave.reason,
+    ส่งคำขอลาเมื่อ: leave.createdAt
+      ? new Date(leave.createdAt).toLocaleString("th-TH", {
+          dateStyle: "short",
+          timeStyle: "short",
+        })
+      : "—",
     สถานะ:
       leave.status === "pending"
         ? "รอดำเนินการ"
@@ -51,6 +57,7 @@ const handleExportExcel = () => {
   const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
   saveAs(blob, `leave_history_${new Date().toISOString().split("T")[0]}.xlsx`);
 };
+
 
 
   return (
@@ -77,6 +84,7 @@ const handleExportExcel = () => {
       <th>ประเภทการลา</th>
       <th>วันที่ลา</th>
       <th>เหตุผล</th>
+      <th>ส่งตำขอลาเมื่อวันที่</th>
       <th>สถานะ</th>
     </tr>
   </thead>
@@ -93,6 +101,7 @@ const handleExportExcel = () => {
           {new Date(leave.endDate).toLocaleDateString("th-TH")}
         </td>
         <td>{leave.reason}</td>
+        <td>{leave.updatedAt ? new Date(leave.updatedAt).toLocaleDateString("th-TH") : "—"}</td>
         <td className={`status ${leave.status}`}>
           {leave.status === "pending"
             ? "รอดำเนินการ"

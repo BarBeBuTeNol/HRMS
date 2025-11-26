@@ -1,82 +1,188 @@
+/* ==================== Layout & Page ==================== */
 .layout-container {
   display: flex;
-  min-height: 100vh;
-  background: #f9f9f9;
-  color: #111;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
 }
 
 .main-content {
   flex: 1;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  min-width: 0; /* สำคัญสำหรับ layout calendar */
+  background: linear-gradient(180deg, #0f172a, #1e293b);
+  padding: 20px 30px;
+  overflow-x: auto;
+  color: white;
 }
 
 .page-title {
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-bottom: 1rem;
+  font-size: 2rem;
+  text-align: center;
+  color: #7dd3fc;
+  margin-bottom: 20px;
 }
 
+/* ==================== Button Group ==================== */
 .button-group {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  justify-content: center;
+  margin-bottom: 15px;
 }
 
-.btn-notify,
-.btn-day-clear,
-.btn-clear-all {
-  padding: 0.5rem 1.2rem;
+.btn-notify {
+  background-color: #4fc3f7;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: 0.2s;
+}
+
+.btn-notify:disabled {
+  background-color: #555;
+  cursor: not-allowed;
+}
+
+/* ==================== Table ==================== */
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: auto;
+  background: white;
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0px 0px 10px rgba(0,0,0,0.3);
+}
+
+.schedule-table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 1200px;
+  background: white;
+}
+
+.schedule-table th,
+.schedule-table td {
+  border: 1px solid #ddd;
+  text-align: center;
+  padding: 8px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.schedule-table th {
+  background-color: #0288d1;
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.emp-name {
+  font-weight: bold;
+  background-color: #e3f2fd;
+  color: #0f172a;
+}
+
+/* ==================== Cell Style ==================== */
+.cell {
+  cursor: pointer;
+  transition: background-color 0.2s;
+  height: 40px;
+}
+
+.cell:hover {
+  background-color: #f1f1f1;
+}
+
+.shift-morning {
+  background-color: #a5d6a7 !important;
+}
+.shift-evening {
+  background-color: #90caf9 !important;
+}
+.shift-night {
+  background-color: #ffcc80 !important;
+}
+.shift-none {
+  background-color: #fff;
+}
+
+.delete-day-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  margin-left: 4px;
+  color: #ff6b6b;
+  transition: 0.2s;
+}
+.delete-day-btn:hover {
+  color: red;
+}
+
+/* ==================== Popup ==================== */
+.shift-dialog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.shift-box {
+  background: white;
+  padding: 25px;
+  border-radius: 16px;
+  min-width: 320px;
+  text-align: center;
+  color: black;
+}
+
+.dialog-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.dialog-buttons button {
+  padding: 6px 12px;
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  font-weight: 500;
+  transition: 0.2s;
 }
 
-.btn-day-clear {
-  background: #f39c12;
-  color: #fff;
+.dialog-buttons button:first-child {
+  background-color: #4caf50;
+  color: white;
 }
 
-.btn-clear-all {
-  background: #e74c3c;
-  color: #fff;
+.dialog-buttons button:last-child {
+  background-color: #f44336;
+  color: white;
 }
-
-.schedule-container {
+.month-year-selector {
   display: flex;
-  gap: 1rem;
-  flex: 1;
-  min-height: 0;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
-.employee-sidebar {
-  width: 200px;
-  background: #f0f0f0;
-  padding: 1rem;
+.month-year-selector select {
+  padding: 6px 12px;
   border-radius: 8px;
-  height: 75vh;
-  overflow-y: auto;
-}
-
-.emp-card {
-  background: white;
   border: 1px solid #ccc;
-  padding: 8px;
-  margin-bottom: 8px;
-  cursor: grab;
-  border-radius: 6px;
-  font-weight: 600;
-  user-select: none;
-  color: #000;
+  font-size: 16px;
+  cursor: pointer;
 }
 
-.calendar-container {
-  flex: 1;
-  min-width: 0;
-  height: 75vh;
-  display: flex;
-  flex-direction: column;
-}

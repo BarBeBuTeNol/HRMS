@@ -8,6 +8,11 @@ import profileRoutes from "./routes/profileRoutes";
 import leaveRoutes from "./routes/leaveRoutes";
 import notificationRoutes from "./routes/notificationRoutes"; 
 import leaveHistoryRoutes from "./routes/leaveHistoryRoutes";
+import employeeRoutes from "./routes/employeeRoutes";
+import workScheduleRoutes from "./routes/workScheduleRoutes";
+import taskAssignmentRoutes from "./routes/taskAssignmentRoutes";
+import shiftAssignmentRoutes from "./routes/shiftAssignmentRoutes";
+console.log("DEBUG shiftAssignmentRoutes >>>", shiftAssignmentRoutes);
 
 dotenv.config();
 
@@ -30,6 +35,10 @@ app.use("/api/users", profileRoutes);   // จัดการ profile ของ 
 app.use("/api/leave-requests", leaveRoutes); // ✅ ปรับให้เฉพาะ leave
 app.use("/api/notifications", notificationRoutes); // ✅ สำหรับแจ้งเตือน
 app.use("/api/leave-history", leaveHistoryRoutes); // ✅ สำหรับประวัติการลา
+app.use("/api/employees", employeeRoutes); // ✅ สำหรับดึงพนักงานในแผนก
+app.use("/api/work-schedules", workScheduleRoutes); // ✅ สำหรับจัดการตารางเวร
+app.use("/api", taskAssignmentRoutes); // ✅ สำหรับจัดการมอบหมายงาน
+app.use("/api", shiftAssignmentRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () =>

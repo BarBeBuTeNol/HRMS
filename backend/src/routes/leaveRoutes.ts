@@ -16,7 +16,7 @@ router.post("/", async (req, res) => {
       [user_id, leave_type, start_date, end_date, reason]
     );
 
-    // 2) ดึงข้อมูลพนักงาน
+    // 2) ดึงข้อมูลพนักงานหรกำ
     const [[emp]]: any = await pool.query(
       `SELECT u.first_name, u.last_name, u.department_id
        FROM users u
@@ -59,6 +59,7 @@ router.post("/", async (req, res) => {
   }
 });
 
+
 // GET: ประวัติการลาตาม user_id
 router.get("/:userId", async (req, res) => {
   try {
@@ -77,7 +78,6 @@ router.get("/:userId", async (req, res) => {
   }
 });
 
-// GET: คำขอลาของพนักงานในแผนก (เฉพาะ pending)
 router.get("/for-head/:headId", async (req, res) => {
   try {
     const { headId } = req.params;

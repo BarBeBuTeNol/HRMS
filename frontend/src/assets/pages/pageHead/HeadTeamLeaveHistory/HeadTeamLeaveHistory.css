@@ -4,7 +4,7 @@
   padding: 16px;                 /* ลด padding */
   width: calc(100vw - 240px);
   height: 100vh;
-  background: #fff;
+  background: #fff;   
   overflow-y: auto;
   box-sizing: border-box;
   font-size: 14px;               /* ✅ ลดขนาดตัวอักษร */

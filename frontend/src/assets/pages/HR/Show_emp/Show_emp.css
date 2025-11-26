@@ -1,0 +1,284 @@
+body, .show-emp-hacker-theme {
+  background: #181a20;
+  color: #7f5af0;
+  min-height: 100vh;
+  font-family: 'Inter', 'Fira Mono', 'Consolas', monospace;
+  letter-spacing: 0.5px;
+}
+
+.show-emp-title {
+  color: #7f5af0;
+  text-shadow: 0 2px 16px #7f5af080;
+  margin: 40px 0 24px 0;
+  font-size: 2.6rem;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-align: center;
+}
+
+.show-emp-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 40px;
+  justify-content: center;
+  padding-bottom: 40px;
+}
+
+.show-emp-empty {
+  color: #ff5252;
+  font-size: 1.4rem;
+  margin: 48px auto;
+  text-align: center;
+}
+
+.show-emp-card {
+  background: #23242b;
+  border-radius: 18px;
+  box-shadow: 0 4px 32px #7f5af040;
+  width: 270px;
+  padding: 32px 20px 24px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.18s, box-shadow 0.18s;
+  border: none;
+}
+
+.show-emp-card:hover {
+  transform: translateY(-6px) scale(1.045);
+  box-shadow: 0 8px 40px #7f5af0cc;
+}
+
+.show-emp-img-box {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid #00e0ff;
+  margin-bottom: 18px;
+  background: #181a20;
+  box-shadow: 0 0 0 4px #23242b;
+}
+
+.show-emp-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.show-emp-info {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.show-emp-id {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #00e0ff;
+  margin-bottom: 6px;
+}
+
+.show-emp-name {
+  font-size: 1.1rem;
+  margin-bottom: 14px;
+  color: #b8b8ff;
+}
+
+.show-emp-view-btn {
+  background: #23242b;
+  color: #00e0ff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 28px;
+  font-size: 1.05rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+  box-shadow: 0 2px 8px #00e0ff20;
+}
+
+.show-emp-view-btn:hover {
+  background: #00e0ff;
+  color: #181a20;
+  box-shadow: 0 4px 16px #00e0ff80;
+}
+
+.show-emp-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(24, 26, 32, 0.96);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+
+.show-emp-modal-content {
+  background: #23242b;
+  border-radius: 18px;
+  box-shadow: 0 8px 48px #7f5af0cc;
+  padding: 44px 36px 28px 36px;
+  min-width: 380px;
+  max-width: 480px;
+  color: #00e0ff;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.show-emp-modal-tabs {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 18px;
+  justify-content: center;
+}
+
+.show-emp-modal-tabs button {
+  background: #181a20;
+  color: #00e0ff;
+  border: none;
+  border-radius: 8px 8px 0 0;
+  padding: 10px 28px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1.05rem;
+  transition: background 0.18s, color 0.18s;
+}
+
+.show-emp-modal-tabs button.active,
+.show-emp-modal-tabs button:hover {
+  background: #00e0ff;
+  color: #181a20;
+}
+
+.show-emp-modal-body {
+  margin-bottom: 18px;
+  font-size: 1.08rem;
+  color: #b8b8ff;
+}
+
+.show-emp-modal-body label {
+  display: block;
+  margin-bottom: 10px;
+  color: #00e0ff;
+  font-weight: 500;
+}
+
+.show-emp-modal-body input {
+  background: #181a20;
+  color: #7f5af0;
+  border: 1.5px solid #7f5af0;
+  border-radius: 6px;
+  padding: 7px 12px;
+  margin-left: 8px;
+  font-size: 1.05rem;
+  margin-bottom: 8px;
+  outline: none;
+  transition: border 0.18s;
+}
+
+.show-emp-modal-body input:focus {
+  border: 1.5px solid #00e0ff;
+}
+
+.show-emp-edit-btn-group {
+  display: flex;
+  gap: 16px;
+  margin-top: 16px;
+  justify-content: center;
+}
+
+.show-emp-modal-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.show-emp-edit-btn,
+.show-emp-delete-btn,
+.show-emp-close-btn {
+  background: #181a20;
+  color: #00e0ff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 28px;
+  font-size: 1.05rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+  box-shadow: 0 2px 8px #00e0ff20;
+}
+
+.show-emp-edit-btn:hover,
+.show-emp-close-btn:hover {
+  background: #00e0ff;
+  color: #181a20;
+  box-shadow: 0 4px 16px #00e0ff80;
+}
+
+.show-emp-delete-btn {
+  color: #ff5252;
+  box-shadow: 0 2px 8px #ff525220;
+}
+
+.show-emp-delete-btn:hover {
+  background: #ff5252;
+  color: #181a20;
+  box-shadow: 0 4px 16px #ff525280;
+}
+
+.show-emp-delete-confirm {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.show-emp-delete-confirm input {
+  background: #181a20;
+  color: #ff5252;
+  border: 1.5px solid #ff5252;
+  border-radius: 6px;
+  padding: 7px 12px;
+  font-size: 1.05rem;
+  outline: none;
+  transition: border 0.18s;
+}
+
+.show-emp-delete-confirm input:focus {
+  border: 1.5px solid #ff5252;
+}
+
+.show-emp-delete-confirm button {
+  background: #ff5252;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 7px 18px;
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+
+.show-emp-delete-confirm button:hover {
+  background: #ff0000;
+}
+
+.show-emp-error {
+  color: #ff5252;
+  margin-top: 8px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.show-emp-hacker-theme ::-webkit-scrollbar {
+  width: 10px;
+  background: #23242b;
+}
+.show-emp-hacker-theme ::-webkit-scrollbar-thumb {
+  background: #7f5af088;
+  border-radius: 6px;
+}

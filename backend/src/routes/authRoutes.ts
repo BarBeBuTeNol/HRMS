@@ -7,6 +7,7 @@ interface UserRow extends RowDataPacket {
   username: string;
   role_id: number;
   password: string;
+  department_id: number; // ✅ เพิ่มเข้ามา
 }
 
 const router = Router();
@@ -19,9 +20,9 @@ router.post("/login", async (req, res) => {
   }
 
   try {
-    // ✅ ดึง user ตาม username มาก่อน
+    // ✅ ดึง user พร้อม department_id
     const [rows] = await pool.query<UserRow[]>(
-      `SELECT id, username, role_id, password
+      `SELECT id, username, role_id, department_id, password
        FROM users
        WHERE username = ?
        LIMIT 1`,
@@ -42,7 +43,8 @@ router.post("/login", async (req, res) => {
     // ✅ ไม่ส่ง password กลับไป
     const { password: _pw, ...safeUser } = user;
 
-    return res.json({ ok: true, user: safeUser });
+    return res.json({ ok: true, user: safeUser }); 
+    // 👆 safeUser จะมี {id, username, role_id, department_id}
   } catch (err) {
     console.error("login error:", err);
     return res.status(500).json({ ok: false, message: "⚠️ Server error" });

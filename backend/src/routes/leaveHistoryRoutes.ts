@@ -8,7 +8,6 @@ router.get("/department/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // หา department ของ user
     const [[user]]: any = await pool.query(
       `SELECT department_id FROM users WHERE id = ?`,
       [userId]
@@ -23,7 +22,9 @@ router.get("/department/:userId", async (req, res) => {
        lr.end_date AS endDate,
        lr.reason,
        lr.status,
-       lr.created_at,
+lr.updated_at AS updatedAt,
+lr.created_at AS createdAt,
+
        u.id AS employeeId,   -- ✅ เพิ่มรหัสพนักงาน
        CONCAT(u.first_name, ' ', u.last_name) AS employeeName,
        r.role_name AS position,

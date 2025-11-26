@@ -1,0 +1,90 @@
+.sidebar-chro {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 220px;
+  height: 100vh;
+  background-color: #2f3542;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s;
+  z-index: 1000;
+}
+
+.sidebar-chro.closed {
+  width: 64px;
+}
+
+.sidebar-chro-header {
+  padding: 20px;
+  text-align: center;
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+.sidebar-chro-username {
+  font-size: 1rem;
+  margin-bottom: 5px;
+}
+
+.sidebar-chro-role {
+  font-size: 0.8rem;
+  color: #a4b0be;
+}
+
+.sidebar-chro-nav {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 0;
+  flex: 1;
+}
+
+.sidebar-chro-button {
+  background: none;
+  border: none;
+  color: #fff;
+  text-align: left;
+  padding: 12px 20px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background 0.2s;
+}
+
+.sidebar-chro-button:hover {
+  background-color: #57606f;
+}
+
+.sidebar-chro-button.logout {
+  margin-top: auto;
+  background-color: #ff4757;
+}
+
+.sidebar-chro-button.logout:hover {
+  background-color: #ff6b81;
+}
+
+.sidebar-chro-spacer {
+  flex: 1;
+}
+
+.sidebar-chro-toggle-btn {
+  position: fixed;
+  top: 18px;
+  left: 220px;
+  width: 36px;
+  height: 36px;
+  background-color: #4f8cff;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 1100;
+  transition: left 0.3s;
+}
+
+.sidebar-chro.closed + .sidebar-chro-toggle-btn {
+  left: 64px;
+}

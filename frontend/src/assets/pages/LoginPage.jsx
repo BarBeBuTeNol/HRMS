@@ -21,27 +21,32 @@ const LoginPage = () => {
       const res = await axios.post('http://localhost:5000/api/auth/login', { username, password });
 
       if (res.data?.ok && res.data?.user) {
-  const user = res.data.user;
+        const user = res.data.user;
 
-  // ✅ เก็บทั้ง object และ userId แยกไว้
-  localStorage.setItem('user', JSON.stringify(user));
-  localStorage.setItem('userId', String(user.id));
+        // ✅ เก็บข้อมูลผู้ใช้ใน localStorage
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        localStorage.setItem('userId', String(user.id));
 
-  // ✅ ส่งไปหน้าตาม role
-  switch (user.role_id) {
-    case 4:
-      navigate('/head/dashboard');
-      break;
-    case 5:
-      navigate('/employee/dashboard');
-      break;
-    default:
-      setError('สิทธิ์ของผู้ใช้ไม่ถูกต้อง');
-  }
-} else {
-  setError(res.data?.message || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
-}
-
+        // ✅ เปลี่ยนหน้า dashboard ตาม role
+        switch (user.role_id) {
+          case 2: // HR
+            navigate('/hr/dashboard', { replace: true });
+            break;
+            case 3: // CHRO
+            navigate('/chro/dashboard', { replace: true });
+            break;
+          case 4: // Head
+            navigate('/head/dashboard', { replace: true });
+            break;
+          case 5: // Employee
+            navigate('/employee/dashboard', { replace: true });
+            break;
+          default:
+            setError('สิทธิ์ของผู้ใช้ไม่ถูกต้อง');
+        }
+      } else {
+        setError(res.data?.message || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+      }
     } catch (err) {
       console.error('Login failed:', err);
       setError('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');

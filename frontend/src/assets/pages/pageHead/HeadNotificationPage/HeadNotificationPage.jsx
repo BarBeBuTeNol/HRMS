@@ -67,13 +67,12 @@ function HeadNotificationPage() {
                   <div className="noti-details">
                     {noti.message}
                     <br />
-<button
-  className="approve-btn"
-  onClick={() => navigate("/head/leave-approvals")}
->
-  ไปหน้าอนุมัติการลา
-</button>
-
+                      <button   
+                        className="approve-btn"
+                        onClick={() => navigate("/head/leave-approvals")}
+                      >
+                        ไปหน้าอนุมัติการลา
+                      </button>
 
                   </div>
                 )}
