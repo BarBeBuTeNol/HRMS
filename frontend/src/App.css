@@ -1,4 +1,11 @@
-/* Layout หลัก */
+:root {
+  --primary-color: #2563eb; /* สีฟ้า */
+  --secondary-color: #10b981; /* สีเขียว */
+  --background-color: #f9fafb; /* สีพื้นหลังอ่อน */
+  --text-color: #111827; /* สีข้อความเข้ม */
+  --border-radius: 8px; /* รัศมีมุม */
+  --box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* เงา */
+}
 .layout-container {
   display: flex;
   min-height: 100vh;
@@ -8,7 +15,7 @@
 /* Sidebar */
 .sidebar {
   width: 240px;
-  background-color: #111827; /* สีน้ำเงินเข้ม/ดำ */
+  background-color: #111827; 
   color: white;
   min-height: 100vh;
   padding: 1rem;
