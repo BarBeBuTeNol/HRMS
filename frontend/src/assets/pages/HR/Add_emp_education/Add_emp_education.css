@@ -1,281 +1,317 @@
-/* Minimal Modern Blue Theme for Add_emp_education */
-.hacker-theme-add-emp-education {
-  background: #b3c7f7;
-  color: #23272f;
-  font-family: 'Fira Mono', 'Consolas', monospace;
-  box-shadow: 0 0 32px #7c99d6a0;
-  border: 2.5px solid #23272f;
-  border-radius: 24px;
-  transition: box-shadow 0.3s;
-  font-size: 1.18rem;
-}
-
-.hacker-theme-add-emp-education .add-emp-education-title {
-  color: #23272f;
-  font-family: inherit;
-  font-size: 2.7rem;
-  letter-spacing: 1.5px;
-  text-align: left;
-  margin-bottom: 28px;
-  font-weight: bold;
-}
-
-.hacker-theme-add-emp-education .add-emp-education-fields label {
-  color: #23272f;
-  font-weight: 600;
-  font-size: 1.25rem;
-  margin-bottom: 4px;
-  letter-spacing: 0.5px;
-}
-
-.hacker-theme-add-emp-education .add-emp-education-fields input[type="text"],
-.hacker-theme-add-emp-education .add-emp-education-fields input[type="file"],
-.hacker-theme-add-emp-education .add-emp-education-fields textarea {
-  background: #eaf1fb;
-  color: #23272f;
-  border: 2px solid #7c99d6;
-  border-radius: 12px;
-  font-family: inherit;
-  font-size: 1.25rem;
-  box-shadow: 0 0 0 #7c99d600;
-  margin-top: 8px;
-  padding: 16px 18px;
-  transition: border 0.2s, box-shadow 0.2s;
-}
-
-.hacker-theme-add-emp-education .add-emp-education-fields input[type="text"]:focus,
-.hacker-theme-add-emp-education .add-emp-education-fields textarea:focus {
-  border: 2.5px solid #23272f;
-  outline: none;
-  box-shadow: 0 0 12px #7c99d680;
-}
-
-.hacker-theme-add-emp-education .add-emp-education-fields input[type="file"] {
-  color-scheme: light;
-  padding: 10px 0;
-  font-size: 1.15rem;
-}
-
-.hacker-theme-add-emp-education .add-emp-education-fields textarea {
-  min-height: 100px;
-  resize: vertical;
-}
-
-.hacker-theme-add-emp-education .add-emp-education-image-box {
-  flex: 0 0 320px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  padding: 24px 0;
-  position: relative;
-}
-
-.hacker-theme-add-emp-education .add-emp-education-emp-image {
-  width: 300px;
-  height: 360px;
-  object-fit: cover;
-  border-radius: 24px;
-  border: 5px solid #23272f;
-  box-shadow:
-    0 0 48px #7c99d6,
-    0 0 0 12px #b3c7f7,
-    0 0 90px 18px #7c99d640;
-  background: #eaf1fb;
-  transition: transform 0.3s, box-shadow 0.3s;
-  filter: grayscale(10%) contrast(1.08);
-}
-
-.hacker-theme-add-emp-education .add-emp-education-emp-image:hover {
-  transform: scale(1.06) rotate(-1.5deg);
-  box-shadow:
-    0 0 90px #7c99d6,
-    0 0 0 18px #b3c7f7,
-    0 0 180px 36px #7c99d680;
-  filter: grayscale(0%) contrast(1.15) brightness(1.08);
-}
-
-.hacker-theme-add-emp-education .add-emp-education-image-box::after {
-  content: "EMPLOYEE";
-  position: static;
-  margin-top: 24px;
-  background: rgba(179,199,247,0.85);
-  color: #23272f;
-  font-size: 1.35rem;
-  font-family: 'Fira Mono', monospace;
-  padding: 4px 28px;
-  border-radius: 14px;
-  letter-spacing: 2px;
-  box-shadow: 0 0 12px #7c99d6;
-  pointer-events: none;
-  opacity: 0.92;
-  z-index: 2;
-  display: block;
-  align-self: center;
-}
-
-.hacker-theme-add-emp-education .add-emp-education-back-btn {
-  background: #eaf1fb;
-  color: #23272f;
-  border: 2px solid #23272f;
-  box-shadow: 0 0 12px #7c99d630;
-  border-radius: 12px;
-  font-family: inherit;
-  font-size: 1.25rem;
-  padding: 16px 38px;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
-  position: relative;
-  overflow: hidden;
-}
-
-.hacker-theme-add-emp-education .add-emp-education-save-btn {
-  background: #7c99d6;
-  color: #fff;
-  border: 2px solid #23272f;
-  box-shadow: 0 0 12px #7c99d6;
-  font-weight: bold;
-  border-radius: 12px;
-  font-family: inherit;
-  font-size: 1.25rem;
-  padding: 16px 38px;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
-}
-
-.hacker-theme-add-emp-education .add-emp-education-save-btn:disabled {
-  background: #b3c7f7;
-  color: #23272f;
-  cursor: default;
-  border: 2px solid #b3c7f7;
-}
-
-/* Ripple effect for buttons */
-.hacker-theme-add-emp-education .add-emp-education-save-btn::after,
-.hacker-theme-add-emp-education .add-emp-education-back-btn::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 0;
-  height: 0;
-  background: rgba(124,153,214,0.18);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  transition: width 0.4s ease, height 0.4s ease, opacity 0.4s;
-  opacity: 0;
-  pointer-events: none;
-  z-index: 1;
-}
-.hacker-theme-add-emp-education .add-emp-education-save-btn:active::after,
-.hacker-theme-add-emp-education .add-emp-education-back-btn:active::after {
-  width: 300px;
-  height: 300px;
-  opacity: 1;
-  transition: 0s;
-}
-
-.hacker-theme-add-emp-education .add-emp-education-button-group {
-  display: flex;
-  justify-content: flex-end;
-  gap: 36px;
-  margin-top: 48px;
-}
+/* Add_emp_education.css - Redesign */
 
 .add-emp-education-container {
+  width: 100%;
   max-width: 1200px;
-  margin: 60px auto;
-  background: #eaf1fb;
-  border-radius: 24px;
-  box-shadow: 0 4px 32px #7c99d6a0;
-  padding: 64px 72px 48px 72px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+/* Header & Step Indicator */
+.education-header {
+  text-align: center;
+  margin-bottom: 2rem;
 }
 
 .add-emp-education-title {
-  text-align: left;
-  margin-bottom: 28px;
+  color: #fff;
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 2px 10px rgba(96, 165, 250, 0.3);
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-.add-emp-education-info-section {
-  display: flex;
-  gap: 72px;
-}
-
-.add-emp-education-image-box {
-  flex: 0 0 320px;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-}
-
-.add-emp-education-emp-image {
-  width: 300px;
-  height: 360px;
-  object-fit: cover;
-  border-radius: 24px;
-  border: 5px solid #23272f;
-}
-
-.add-emp-education-fields {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
-}
-
-.add-emp-education-fields label {
-  display: flex;
-  flex-direction: column;
+.step-indicator {
+  display: inline-block;
+  background: rgba(96, 165, 250, 0.2);
+  color: #60a5fa;
+  padding: 0.3rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
   font-weight: 600;
-  color: #23272f;
+  border: 1px solid rgba(96, 165, 250, 0.3);
 }
 
-.add-emp-education-fields input[type="text"],
-.add-emp-education-fields input[type="file"],
-.add-emp-education-fields textarea {
-  margin-top: 6px;
-  padding: 8px;
-  border: 1px solid #bdbdbd;
-  border-radius: 6px;
-  font-size: 1rem;
-}
-
-.add-emp-education-fields textarea {
-  min-height: 60px;
-  resize: vertical;
-}
-
-.add-emp-education-button-group {
+/* Main Layout */
+.add-emp-education-content {
   display: flex;
-  justify-content: flex-end;
-  gap: 16px;
-  margin-top: 32px;
+  gap: 2rem;
+  align-items: flex-start;
 }
 
-.add-emp-education-back-btn,
-.add-emp-education-save-btn {
-  padding: 10px 28px;
-  border: none;
-  border-radius: 6px;
+/* Left: Image Card */
+.education-image-card {
+  flex: 0 0 280px;
+  background: rgba(30, 41, 59, 0.6);
+  backdrop-filter: blur(12px);
+  padding: 2rem;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.education-image-wrapper {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  margin-bottom: 1.5rem;
+}
+
+.education-emp-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 4px solid #60a5fa;
+  box-shadow: 0 0 25px rgba(96, 165, 250, 0.4);
+}
+
+.education-image-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  color: #64748b;
+  font-size: 3rem;
+}
+
+.emp-id-badges {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.id-badge {
+  background: rgba(15, 23, 42, 0.8);
+  padding: 0.8rem;
+  border-radius: 0.8rem;
+  border-left: 3px solid #60a5fa;
+  display: flex;
+  flex-direction: column;
+}
+
+.id-badge label {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-bottom: 0.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.id-badge span {
+  font-size: 0.95rem;
+  color: #fff;
+  font-weight: 600;
+  font-family: "Courier New", monospace;
+}
+
+/* Right: Form Container */
+.education-form-card {
+  flex: 1;
+  background: rgba(30, 41, 59, 0.6);
+  backdrop-filter: blur(12px);
+  padding: 2rem;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.form-section {
+  margin-bottom: 2rem;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.section-icon {
+  color: #60a5fa;
+}
+
+/* Grid Override */
+.education-fields-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.span-2 {
+  grid-column: span 2;
+}
+
+/* Inputs with Icons */
+.input-group {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #cbd5e1;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 0.8rem 1rem 0.8rem 2.8rem; /* Space for icon */
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.8rem;
+  color: #fff;
+  font-size: 0.95rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  background: rgba(15, 23, 42, 0.9);
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.1);
+}
+
+.form-group input:focus + .input-icon,
+.form-group textarea:focus + .input-icon {
+  color: #60a5fa;
+}
+
+.form-group textarea {
+  min-height: 120px;
+  resize: vertical;
+  padding-left: 1rem; /* No icon for textarea usually, or adjust */
+}
+
+/* File Upload Zone */
+.file-upload-zone {
+  position: relative;
+  border: 2px dashed rgba(96, 165, 250, 0.4);
+  background: rgba(96, 165, 250, 0.05);
+  border-radius: 1rem;
+  padding: 2rem;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.file-upload-zone:hover {
+  background: rgba(96, 165, 250, 0.1);
+  border-color: #60a5fa;
+}
+
+.upload-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  color: #94a3b8;
+}
+
+.upload-icon {
+  font-size: 2rem;
+  color: #60a5fa;
+  margin-bottom: 0.5rem;
+}
+
+.file-name {
+  color: #3ecf8e;
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+/* Actions */
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-back,
+.btn-save {
+  height: 48px;
+  padding: 0 2rem;
+  border-radius: 0.8rem;
+  font-weight: 600;
   font-size: 1rem;
   cursor: pointer;
-  font-weight: 600;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
-.add-emp-education-back-btn {
-  background: #e0e0e0;
-  color: #333;
+.btn-back {
+  background: transparent;
+  color: #94a3b8;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.add-emp-education-save-btn {
-  background: #1976d2;
+.btn-back:hover {
+  background: rgba(255, 255, 255, 0.05);
   color: #fff;
-  transition: background 0.2s;
 }
 
-.add-emp-education-save-btn:disabled {
-  background: #81c784;
-  cursor: default;
+.btn-save {
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+.btn-save:hover {
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+}
+
+@media (max-width: 900px) {
+  .add-emp-education-content {
+    flex-direction: column;
+  }
+
+  .education-image-card,
+  .education-form-card {
+    width: 100%;
+    flex: none;
+  }
+
+  .education-fields-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .span-2 {
+    grid-column: span 1;
+  }
 }

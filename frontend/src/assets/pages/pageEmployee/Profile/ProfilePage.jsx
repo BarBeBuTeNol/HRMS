@@ -1,25 +1,25 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import api from '../../../../services/api';
-import EmployeeSidebar from '../../../Component/Employee/EmployeeSidebar';
-import './ProfilePage.css';
-import picpro from '../../../pic/profile_emp.jpg';
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import api from "../../../../services/api";
+import EmployeeSidebar from "../../../Component/Employee/EmployeeSidebar";
+import "./ProfilePage.css";
+// import picpro from '../../../pic/profile_emp.jpg';
 
 /** หา userId ให้ทนทาน */
 const useUserId = () => {
   const { search } = useLocation();
   const qs = new URLSearchParams(search);
-  const qId = Number(qs.get('userId'));
+  const qId = Number(qs.get("userId"));
   if (!Number.isNaN(qId) && qId > 0) return qId;
 
-  const rawId = localStorage.getItem('userId');
-  if (rawId && rawId !== 'undefined' && rawId !== 'null') {
+  const rawId = localStorage.getItem("userId");
+  if (rawId && rawId !== "undefined" && rawId !== "null") {
     const n = Number(rawId);
     if (!Number.isNaN(n) && n > 0) return n;
   }
 
   try {
-    const rawUser = localStorage.getItem('user');
+    const rawUser = localStorage.getItem("user");
     if (rawUser) {
       const obj = JSON.parse(rawUser);
       const n = Number(obj?.id ?? obj?.user?.id);
@@ -33,13 +33,14 @@ const useUserId = () => {
 };
 
 // helpers
-const has = (v) => v !== null && v !== undefined && String(v).trim() !== '' && v !== '-';
-const val = (v, dash = '-') => (has(v) ? v : dash);
+const has = (v) =>
+  v !== null && v !== undefined && String(v).trim() !== "" && v !== "-";
+const val = (v, dash = "-") => (has(v) ? v : dash);
 const fmtDateTH = (d) => {
-  if (!has(d)) return '-';
+  if (!has(d)) return "-";
   const dt = new Date(d);
-  if (Number.isNaN(dt.getTime())) return '-';
-  return new Intl.DateTimeFormat('th-TH', { dateStyle: 'long' }).format(dt);
+  if (Number.isNaN(dt.getTime())) return "-";
+  return new Intl.DateTimeFormat("th-TH", { dateStyle: "long" }).format(dt);
 };
 
 const Row = ({ label, value, isDate }) =>
@@ -54,44 +55,54 @@ export default function ProfilePage() {
   const userId = useUserId();
 
   const [profile, setProfile] = useState(null);
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   // โหลดโปรไฟล์จาก backend
   useEffect(() => {
     const url = `/api/users/${userId}/profile`;
-    api.get(url)
+    api
+      .get(url)
       .then((res) => {
         setProfile(res.data);
-        setPhone(res.data?.phone || '');
+        setPhone(res.data?.phone || "");
       })
       .catch((err) => {
-        setError(err.response?.data?.error || err.message || 'โหลดข้อมูลโปรไฟล์ไม่สำเร็จ');
+        setError(
+          err.response?.data?.error ||
+            err.message ||
+            "โหลดข้อมูลโปรไฟล์ไม่สำเร็จ"
+        );
       })
       .finally(() => setLoading(false));
   }, [userId]);
 
-  const headerName = useMemo(
-    () => profile?.full_name || '-',
-    [profile]
-  );
+  const headerName = useMemo(() => profile?.full_name || "-", [profile]);
 
-  if (loading) return <div className="loading">⏳ กำลังโหลดข้อมูลโปรไฟล์...</div>;
+  if (loading)
+    return <div className="loading">⏳ กำลังโหลดข้อมูลโปรไฟล์...</div>;
   if (error) return <div className="loading error">❌ {error}</div>;
-  if (!profile) return <div className="loading error">❌ ไม่พบข้อมูลผู้ใช้</div>;
+  if (!profile)
+    return <div className="loading error">❌ ไม่พบข้อมูลผู้ใช้</div>;
 
   return (
     <div className="profile-container">
       <EmployeeSidebar />
       <main className="profile-main">
-        <button className="back-button" onClick={() => navigate(-1)}>← กลับ</button>
+        <button className="back-button" onClick={() => navigate(-1)}>
+          ← กลับ
+        </button>
 
         {/* HEADER */}
         <div className="profile-header">
           <div className="profile-user">
-            <img src={profile.profile_pic || picpro} alt="Profile" className="profile-image" />
+            <img
+              src={profile.profile_pic /* || picpro */}
+              alt="Profile"
+              className="profile-image"
+            />
             <div className="profile-name-block">
               <h2>{headerName}</h2>
               <div className="muted">
@@ -119,7 +130,10 @@ export default function ProfilePage() {
           <h3>ผู้ติดต่อกรณีฉุกเฉิน</h3>
           <Row label="ชื่อ" value={profile.emergencyContact?.name} />
           <Row label="เบอร์โทร" value={profile.emergencyContact?.phone} />
-          <Row label="ความสัมพันธ์" value={profile.emergencyContact?.relation} />
+          <Row
+            label="ความสัมพันธ์"
+            value={profile.emergencyContact?.relation}
+          />
         </section>
 
         {/* SYSTEM INFO */}

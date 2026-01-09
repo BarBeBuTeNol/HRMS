@@ -5,6 +5,10 @@ import { DbUser } from "../types";
 /** POST /api/auth/login  body: {username, password} */
 export const login = async (req: Request, res: Response) => {
   const { username, password } = req.body as { username?: string; password?: string };
+
+  // 🔍 LOG 1: เช็กค่าที่ frontend ส่งมา
+  console.log("LOGIN BODY:", { username, password });
+
   if (!username || !password) {
     return res.status(400).json({ ok: false, message: "username/password is required" });
   }
@@ -21,11 +25,14 @@ export const login = async (req: Request, res: Response) => {
     );
 
     const list = rows as DbUser[];
+
+    // 🔍 LOG 2: เช็กผลลัพธ์จาก DB
+    console.log("DB RESULT:", list);
+
     if (list.length === 0) {
       return res.status(401).json({ ok: false, message: "Invalid credentials" });
     }
 
-    // ตัด password ออกไม่ส่งกลับ
     const { password: _pw, ...user } = list[0];
     return res.json({ ok: true, user });
   } catch (err) {
@@ -33,3 +40,4 @@ export const login = async (req: Request, res: Response) => {
     return res.status(500).json({ ok: false, message: "Server error" });
   }
 };
+

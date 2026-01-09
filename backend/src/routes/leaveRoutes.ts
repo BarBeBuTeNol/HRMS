@@ -60,6 +60,23 @@ router.post("/", async (req, res) => {
 });
 
 
+// GET: Fetch ALL leave requests (For HR)
+router.get("/all", async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT lr.id, lr.leave_type, lr.start_date, lr.end_date, lr.status, lr.reason, lr.created_at,
+              u.first_name, u.last_name
+       FROM leave_requests lr
+       JOIN users u ON lr.user_id = u.id
+       ORDER BY lr.created_at DESC`
+    );
+    res.json(rows);
+  } catch (error: any) {
+    console.error("❌ Error in GET /leave-requests/all:", error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+});
+
 // GET: ประวัติการลาตาม user_id
 router.get("/:userId", async (req, res) => {
   try {

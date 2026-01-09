@@ -1,355 +1,428 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Sidebar_HR from "../../../Component/HR/Sidebar_HR";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  FaPaperPlane,
+  FaCalendarCheck,
+  FaUserClock,
+  FaArrowLeft,
+  FaUser,
+  FaUsers,
+} from "react-icons/fa";
+import HRLayout from "../../../Component/HR/HRLayout";
+import PopupNotification from "../../../Component/popup_notifications/PopupNotification";
 import "./Leave_info.css";
 
 const Leave_info = () => {
   const navigate = useNavigate();
+  const currentHrId = localStorage.getItem("userId");
+  const currentHrUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+
+  const [users, setUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+
+  // Toggle State: false = Self, true = On Behalf
+  const [isOnBehalf, setIsOnBehalf] = useState(false);
+
   const [formData, setFormData] = useState({
-    employeeId: "",
-    leaveDate: new Date().toISOString().split('T')[0], // Set current date
+    user_id: "",
+    leave_type: "",
+    start_date: new Date().toISOString().split("T")[0],
+    end_date: new Date().toISOString().split("T")[0],
     reason: "",
-    employeeName: "",
-    leaveYear: new Date().getFullYear(),
-    attachment: null
   });
+
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [submittedRequest, setSubmittedRequest] = useState(null);
+
+  // Popup State
+  const [popup, setPopup] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info",
+  });
+
+  // Check login
+  useEffect(() => {
+    if (!currentHrId) {
+      alert("Please log in first.");
+      navigate("/login");
+    }
+    fetchUsers();
+  }, [currentHrId, navigate]);
+
+  // Reset form when toggling mode
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      user_id: isOnBehalf ? "" : currentHrId,
+    }));
+    if (!isOnBehalf) {
+      setSearchTerm("");
+      setSelectedUser(null);
+    }
+  }, [isOnBehalf, currentHrId]);
+
+  const fetchUsers = async () => {
+    try {
+      const res = await fetch("/api/users");
+      if (res.ok) {
+        const data = await res.json();
+        const userList = Array.isArray(data) ? data : data.data || [];
+        setUsers(userList);
+        setFilteredUsers(userList);
+      }
+    } catch (err) {
+      console.error("Error fetching users:", err);
+    }
+  };
+
+  const handleSearch = (e) => {
+    const term = e.target.value;
+    setSearchTerm(term);
+    setShowDropdown(true);
+
+    if (term.trim() === "") {
+      setFilteredUsers(users);
+      return;
+    }
+
+    const lowerTerm = term.toLowerCase();
+    const filtered = users.filter((u) => {
+      const fullName = `${u.first_name} ${u.last_name}`.toLowerCase();
+      const empId = u.empId || u.emp_code || String(u.id);
+      return fullName.includes(lowerTerm) || String(empId).includes(lowerTerm);
+    });
+    setFilteredUsers(filtered);
+  };
+
+  const selectUser = (user) => {
+    const empId = user.empId || user.emp_code || user.id;
+    setFormData((prev) => ({ ...prev, user_id: user.id }));
+    setSelectedUser(user);
+    setSearchTerm(`${user.first_name} ${user.last_name} (ID: ${empId})`);
+    setShowDropdown(false);
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    setFormData(prev => ({
-      ...prev,
-      attachment: file
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.user_id) {
+      setPopup({
+        isOpen: true,
+        title: "Error",
+        message: "Please select an employee.",
+        type: "error",
+      });
+      return;
+    }
     setIsSubmitting(true);
-    
-    // Create leave request data
-    const leaveRequest = {
-      ...formData,
-      requestDate: new Date().toISOString(),
-      status: "pending",
-      requestedBy: "HR",
-      approvedBy: "CHRO",
-      requestId: `LR-${Date.now()}`,
-      attachmentName: formData.attachment ? formData.attachment.name : null,
-      attachmentSize: formData.attachment ? formData.attachment.size : null
-    };
-    
-    // Simulate API call to save leave request
-    setTimeout(() => {
-      console.log("Leave request submitted:", leaveRequest);
-      
-      // Save to localStorage for demo purposes (in real app, this would be API call)
-      const existingRequests = JSON.parse(localStorage.getItem("leaveRequests") || "[]");
-      console.log("Existing requests before adding:", existingRequests);
-      
-      existingRequests.push(leaveRequest);
-      localStorage.setItem("leaveRequests", JSON.stringify(existingRequests));
-      
-      // Log the saved data for debugging
-      const savedData = JSON.parse(localStorage.getItem("leaveRequests") || "[]");
-      console.log("All leave requests after saving:", savedData);
-      console.log("Total requests count:", savedData.length);
-      
-      // Dispatch custom event to notify other components
-      window.dispatchEvent(new Event('leaveRequestsUpdated'));
-      
-      // Update HR dashboard statistics
-      const hrStats = JSON.parse(localStorage.getItem("hrStats") || "{}");
-      hrStats.totalLeaveRequests = (hrStats.totalLeaveRequests || 0) + 1;
-      hrStats.pendingRequests = (hrStats.pendingRequests || 0) + 1;
-      localStorage.setItem("hrStats", JSON.stringify(hrStats));
-      
-      // Create notification for CHRO
-      const announcements = JSON.parse(localStorage.getItem("announcements") || "[]");
-      const notification = {
-        id: `NOTIF-${Date.now()}`,
-        type: "leave_request",
-        title: `คำขอการลาใหม่ - ${formData.employeeName}`,
-        message: `มีคำขอการลาจาก HR: ${formData.employeeName} (${formData.employeeId}) วันที่ลา: ${new Date(formData.leaveDate).toLocaleDateString('th-TH')} เหตุผล: ${formData.reason}`,
-        sender: "HR",
-        target: "chro",
-        requestId: leaveRequest.requestId,
-        timestamp: new Date().toISOString(),
-        views: 0,
-        priority: "high",
-        leaveData: {
-          employeeId: formData.employeeId,
-          employeeName: formData.employeeName,
-          leaveDate: formData.leaveDate,
-          leaveYear: formData.leaveYear,
-          reason: formData.reason,
-          attachmentName: formData.attachment ? formData.attachment.name : null
-        }
-      };
-      announcements.unshift(notification);
-      localStorage.setItem("announcements", JSON.stringify(announcements));
-      
+
+    try {
+      // payload now uses the SELECTED user_id, not the logged-in HR id
+      const res = await fetch("/api/leave-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (res.ok) {
+        setPopup({
+          isOpen: true,
+          title: "Success",
+          message: `Leave request submitted successfully for ${
+            isOnBehalf && selectedUser ? selectedUser.first_name : "yourself"
+          }!`,
+          type: "success",
+        });
+        // Auto-redirect handled by PopupNotification component
+        // setTimeout(() => {
+        //   setPopup({ ...popup, isOpen: false });
+        //   navigate("/hr/show-leave");
+        // }, 1500);
+      } else {
+        const errData = await res.json();
+        setPopup({
+          isOpen: true,
+          title: "Submission Failed",
+          message: errData.message || "Failed to submit request",
+          type: "error",
+        });
+      }
+    } catch (err) {
+      console.error("Submission error:", err);
+      setPopup({
+        isOpen: true,
+        title: "Network Error",
+        message: "Could not connect to server. Please try again.",
+        type: "error",
+      });
+    } finally {
       setIsSubmitting(false);
-      setSubmittedRequest(leaveRequest);
-      setShowSuccess(true);
-      
-      // Auto hide success message after 5 seconds
-      setTimeout(() => {
-        setShowSuccess(false);
-        navigate("/show_leave");
-      }, 5000);
-      
-      // Also navigate immediately if user clicks view requests
-      // This ensures the data is properly loaded in Show_leave component
-    }, 2000);
-  };
-
-  const handleCancel = () => {
-    navigate("/mainhr");
-  };
-
-  const handleViewRequests = () => {
-    setShowSuccess(false);
-    // Force reload of leave data when navigating to show_leave
-    localStorage.setItem("forceRefreshLeaveData", "true");
-    console.log("Navigating to show_leave with force refresh");
-    console.log("Current leaveRequests in localStorage:", JSON.parse(localStorage.getItem("leaveRequests") || "[]"));
-    navigate("/show_leave");
+    }
   };
 
   const handleNewRequest = () => {
-    setShowSuccess(false);
-    setSubmittedRequest(null);
-    // Reset form but keep current date and year
+    setSearchTerm("");
+    setSelectedUser(null);
     setFormData({
-      employeeId: "",
-      leaveDate: new Date().toISOString().split('T')[0],
+      user_id: isOnBehalf ? "" : currentHrId,
+      leave_type: "",
+      start_date: new Date().toISOString().split("T")[0],
+      end_date: new Date().toISOString().split("T")[0],
       reason: "",
-      employeeName: "",
-      leaveYear: new Date().getFullYear(),
-      attachment: null
     });
+    setFilteredUsers(users);
   };
 
   return (
-    <div className="leave-info-page">
-      <Sidebar_HR />
-      <div className="leave-info-container">
-        {showSuccess ? (
-          <div className="success-card">
-            <div className="success-icon">✅</div>
-            <h2 className="success-title">ส่งคำขอการลาสำเร็จ!</h2>
-            <div className="success-details">
-              <p><strong>หมายเลขคำขอ:</strong> {submittedRequest?.requestId}</p>
-              <p><strong>ชื่อผู้ลา:</strong> {submittedRequest?.employeeName}</p>
-              <p><strong>รหัสพนักงาน:</strong> {submittedRequest?.employeeId}</p>
-              <p><strong>วันที่ลา:</strong> {new Date(submittedRequest?.leaveDate).toLocaleDateString('th-TH')}</p>
-              <p><strong>ปีที่ลา:</strong> {submittedRequest?.leaveYear}</p>
-              <p><strong>เหตุผลการลา:</strong></p>
-              <div className="reason-display">
-                {submittedRequest?.reason}
-              </div>
-              <p><strong>สถานะ:</strong> รอการอนุมัติจาก CHRO</p>
-              <p><strong>วันที่ส่งคำขอ:</strong> {new Date(submittedRequest?.requestDate).toLocaleDateString('th-TH')}</p>
+    <HRLayout>
+      <div className="leave-wrapper">
+        <PopupNotification
+          isOpen={popup.isOpen}
+          onClose={() => {
+            setPopup({ ...popup, isOpen: false });
+            if (popup.type === "success") {
+              navigate("/hr/show-leave");
+            }
+          }}
+          title={popup.title}
+          message={popup.message}
+          type={popup.type}
+          autoClose={popup.type === "success"}
+          duration={2000}
+        />
+
+        <motion.div
+          className="leave-card form"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.4 }}
+        >
+          <button
+            className="btn-text"
+            style={{
+              position: "absolute",
+              top: "2rem",
+              right: "2rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+            }}
+            onClick={() => navigate("/hr/show-leave")}
+          >
+            <FaArrowLeft className="icon-blue" /> Back to List
+          </button>
+
+          <div className="card-header-compact">
+            <div className="header-icon">
+              <FaPaperPlane style={{ color: "white" }} />
             </div>
-            <div className="success-actions">
-              <button onClick={handleViewRequests} className="btn btn-primary">
-                <span className="btn-icon">👁️</span>
-                ดูรายการคำขอ
-              </button>
-              <button onClick={handleNewRequest} className="btn btn-secondary">
-                <span className="btn-icon">📝</span>
-                ส่งคำขอใหม่
-              </button>
-            </div>
-            <div className="auto-navigate">
-              <p>จะนำคุณไปยังหน้ารายการคำขอในอีก 5 วินาที...</p>
+            <div>
+              <h1 className="header-title">Submit Leave Request</h1>
+              <p style={{ color: "#94a3b8", marginTop: "0.5rem" }}>
+                Fill in the details below to process a leave request.
+              </p>
             </div>
           </div>
-        ) : (
-          <div className="leave-info-card">
-            <div className="leave-info-header">
-              <h1 className="leave-info-title">
-                <span className="leave-icon">📋</span>
-                ส่งคำขอการลา
-              </h1>
-              <p className="leave-info-subtitle">กรุณากรอกข้อมูลการลาของคุณ</p>
-              <div className="approval-workflow">
-                <div className="workflow-step active">
-                  <span className="step-icon">📝</span>
-                  <span className="step-text">HR ส่งคำขอ</span>
-                </div>
-                <div className="workflow-arrow">→</div>
-                <div className="workflow-step">
-                  <span className="step-icon">👑</span>
-                  <span className="step-text">CHRO อนุมัติ</span>
-                </div>
+
+          <form onSubmit={handleSubmit} className="compact-form">
+            {/* Selection Cards */}
+            <label
+              style={{
+                fontSize: "0.9rem",
+                fontWeight: 600,
+                color: "#94a3b8",
+                marginBottom: "1rem",
+                display: "block",
+              }}
+            >
+              Who is this request for?
+            </label>
+            <div className="selection-grid">
+              <div
+                className={`selection-card ${!isOnBehalf ? "active" : ""}`}
+                onClick={() => setIsOnBehalf(false)}
+              >
+                <FaUser className="card-icon" />
+                <span className="card-title">Myself</span>
+                <span className="card-desc">Submit for your own leave</span>
+              </div>
+
+              <div
+                className={`selection-card ${isOnBehalf ? "active" : ""}`}
+                onClick={() => setIsOnBehalf(true)}
+              >
+                <FaUsers className="card-icon" />
+                <span className="card-title">On Behalf</span>
+                <span className="card-desc">Submit for another employee</span>
               </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="leave-info-form">
-              <div className="form-grid">
-                <div className="form-group">
-                  <label htmlFor="employeeId" className="form-label">
-                    <span className="label-icon">🆔</span>
-                    รหัสพนักงาน
-                  </label>
-                  <input
-                    type="text"
-                    id="employeeId"
-                    name="employeeId"
-                    value={formData.employeeId}
-                    onChange={handleInputChange}
-                    className="form-input"
-                    placeholder="กรอกรหัสพนักงาน"
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="employeeName" className="form-label">
-                    <span className="label-icon">👤</span>
-                    ชื่อผู้ลา
-                  </label>
-                  <input
-                    type="text"
-                    id="employeeName"
-                    name="employeeName"
-                    value={formData.employeeName}
-                    onChange={handleInputChange}
-                    className="form-input"
-                    placeholder="กรอกชื่อผู้ลา"
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="leaveDate" className="form-label">
-                    <span className="label-icon">📅</span>
-                    วันที่ลา
-                  </label>
-                  <input
-                    type="date"
-                    id="leaveDate"
-                    name="leaveDate"
-                    value={formData.leaveDate}
-                    onChange={handleInputChange}
-                    className="form-input"
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="leaveYear" className="form-label">
-                    <span className="label-icon">📆</span>
-                    ปีที่ลา
-                  </label>
-                  <input
-                    type="number"
-                    id="leaveYear"
-                    name="leaveYear"
-                    value={formData.leaveYear}
-                    onChange={handleInputChange}
-                    className="form-input"
-                    min={new Date().getFullYear() - 1}
-                    max={new Date().getFullYear() + 1}
-                    required
-                  />
+            {/* Employee Section */}
+            {!isOnBehalf ? (
+              <div className="form-group">
+                <label>Applicant</label>
+                <div className="user-badge">
+                  <div className="user-badge-icon">
+                    <FaUser />
+                  </div>
+                  <div className="user-badge-info">
+                    <h4>
+                      {currentHrUser.first_name} {currentHrUser.last_name}
+                    </h4>
+                    <p>Role: HR Operator (You)</p>
+                  </div>
                 </div>
               </div>
+            ) : (
+              <div className="on-behalf-wrapper">
+                <div
+                  className="form-row-2"
+                  style={{ gap: "2rem", alignItems: "end" }}
+                >
+                  <div className="form-group">
+                    <label>Operator (You)</label>
+                    <div className="user-badge compact">
+                      <div
+                        className="user-badge-icon small"
+                        style={{ background: "#475569" }}
+                      >
+                        <FaUserClock />
+                      </div>
+                      <div className="user-badge-info">
+                        <h4 className="text-sm">{currentHrUser.first_name}</h4>
+                        <p className="text-xs">HR Admin</p>
+                      </div>
+                    </div>
+                  </div>
 
-              <div className="form-group full-width">
-                <label htmlFor="reason" className="form-label">
-                  <span className="label-icon">💭</span>
-                  เหตุผลการลา
-                </label>
-                <textarea
-                  id="reason"
-                  name="reason"
-                  value={formData.reason}
+                  <div
+                    className="form-group search-container"
+                    style={{ flex: 1 }}
+                  >
+                    <label>Select Employee</label>
+                    <div className="input-group-icon">
+                      <input
+                        type="text"
+                        className="input-field with-icon"
+                        placeholder="Type name or ID to search..."
+                        value={searchTerm}
+                        onChange={handleSearch}
+                        onFocus={() => setShowDropdown(true)}
+                      />
+                      {showDropdown && filteredUsers.length > 0 && (
+                        <div className="search-dropdown">
+                          {filteredUsers.map((user) => (
+                            <div
+                              key={user.id}
+                              className="dropdown-item"
+                              onClick={() => selectUser(user)}
+                            >
+                              <span className="item-name">
+                                {user.first_name} {user.last_name}
+                              </span>
+                              <span className="item-id">
+                                ID: {user.empId || user.emp_code || user.id}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Logistics Row: Type + Dates */}
+            <div className="form-row-3">
+              <div className="form-group">
+                <label>Leave Type</label>
+                <select
+                  name="leave_type"
+                  value={formData.leave_type}
                   onChange={handleInputChange}
-                  className="form-textarea"
-                  placeholder="กรอกรายละเอียดเหตุผลการลา..."
-                  rows="4"
+                  className="input-field custom-select"
                   required
+                >
+                  <option value="">Select Type...</option>
+                  <option value="Sick Leave">Sick Leave</option>
+                  <option value="Annual Leave">Annual Leave</option>
+                  <option value="Personal Leave">Personal Leave</option>
+                  <option value="Casual Leave">Casual Leave</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Start Date</label>
+                <input
+                  type="date"
+                  name="start_date"
+                  value={formData.start_date}
+                  onChange={handleInputChange}
+                  required
+                  className="input-field"
                 />
               </div>
-
-              <div className="form-group full-width">
-                <label htmlFor="attachment" className="form-label">
-                  <span className="label-icon">📎</span>
-                  แนบไฟล์ (เอกสารการลาหรือคำจากแพทย์)
-                </label>
-                <div className="file-upload-container">
-                  <input
-                    type="file"
-                    id="attachment"
-                    name="attachment"
-                    onChange={handleFileChange}
-                    className="file-input"
-                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                  />
-                  <label htmlFor="attachment" className="file-upload-label">
-                    <span className="upload-icon">📤</span>
-                    <span className="upload-text">
-                      {formData.attachment ? formData.attachment.name : "เลือกไฟล์"}
-                    </span>
-                  </label>
-                </div>
-                {formData.attachment && (
-                  <div className="file-info">
-                    <span className="file-name">📄 {formData.attachment.name}</span>
-                    <span className="file-size">
-                      ({(formData.attachment.size / 1024 / 1024).toFixed(2)} MB)
-                    </span>
-                  </div>
-                )}
+              <div className="form-group">
+                <label>End Date</label>
+                <input
+                  type="date"
+                  name="end_date"
+                  value={formData.end_date}
+                  onChange={handleInputChange}
+                  required
+                  className="input-field"
+                />
               </div>
+            </div>
 
-              <div className="form-actions">
-                <button
-                  type="button"
-                  onClick={handleCancel}
-                  className="btn btn-secondary"
-                  disabled={isSubmitting}
-                >
-                  <span className="btn-icon">❌</span>
-                  ยกเลิก
-                </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <span className="loading-spinner"></span>
-                      กำลังส่ง...
-                    </>
-                  ) : (
-                    <>
-                      <span className="btn-icon">✅</span>
-                      ส่งคำขอ
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
+            <div className="form-group">
+              <label>Reason</label>
+              <textarea
+                name="reason"
+                value={formData.reason}
+                onChange={handleInputChange}
+                placeholder="Please describe the reason for this leave request..."
+                required
+                className="input-field textarea"
+                style={{ minHeight: "120px" }}
+              />
+            </div>
+
+            <div className="form-actions">
+              <button
+                type="button"
+                onClick={() => navigate("/hr/show-leave")}
+                className="btn-text"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="btn-primary"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Submitting..." : "Submit Request"}
+                <FaCalendarCheck
+                  className="icon-yellow"
+                  style={{ marginLeft: "0.5rem", color: "#fff" }}
+                />
+              </button>
+            </div>
+          </form>
+        </motion.div>
       </div>
-    </div>
+    </HRLayout>
   );
 };
 
-export default Leave_info; 
+export default Leave_info;

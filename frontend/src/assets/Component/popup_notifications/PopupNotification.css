@@ -1,0 +1,231 @@
+/* Scoped Variables for PopupNotification */
+:root {
+  --popup-z-index: 10000;
+  --popup-overlay-bg: rgba(0, 0, 0, 0.4);
+  --popup-bg-color: #ffffff;
+  --popup-text-color: #1f2937;
+  --popup-border-radius: 20px;
+  --popup-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --popup-font-family: "Inter", sans-serif;
+
+  /* Type Colors */
+  --popup-success-color: #10b981;
+  --popup-error-color: #ef4444;
+  --popup-warning-color: #f59e0b;
+  --popup-info-color: #3b82f6;
+
+  --popup-btn-bg: #f3f4f6;
+  --popup-btn-hover: #e5e7eb;
+  --popup-btn-text: #374151;
+}
+
+.notification-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--popup-overlay-bg);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: var(--popup-z-index);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  backdrop-filter: blur(8px);
+}
+
+.notification-popup-overlay.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.notification-popup-content {
+  background-color: var(--popup-bg-color);
+  padding: 2.5rem;
+  border-radius: var(--popup-border-radius);
+  box-shadow: var(--popup-shadow);
+  width: 90%;
+  max-width: 420px;
+  text-align: center;
+  transform: translateY(20px) scale(0.95);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: var(--popup-font-family);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.notification-popup-overlay.open .notification-popup-content {
+  transform: translateY(0) scale(1);
+}
+
+.notification-popup-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1rem;
+  width: 100%;
+}
+
+.popup-icon {
+  width: 72px;
+  height: 72px;
+  margin-bottom: 1.5rem;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+}
+
+.popup-icon.success path {
+  fill: var(--popup-success-color);
+}
+.popup-icon.error path {
+  fill: var(--popup-error-color);
+}
+.popup-icon.warning path {
+  fill: var(--popup-warning-color);
+}
+.popup-icon.info path {
+  fill: var(--popup-info-color);
+}
+
+.notification-popup-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--popup-text-color);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.notification-popup-body {
+  margin-bottom: 2rem;
+  width: 100%;
+}
+
+.notification-popup-body p {
+  margin: 0;
+  font-size: 1rem;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+.notification-popup-footer {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.notification-popup-btn {
+  padding: 0.8rem 2.5rem;
+  border: none;
+  border-radius: 12px;
+  background-color: var(--popup-text-color);
+  color: #ffffff;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 600;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.notification-popup-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+.popup-countdown-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.popup-circular-timer {
+  position: relative;
+  width: 50px;
+  height: 50px;
+}
+
+.popup-circular-timer svg {
+  transform: rotate(90deg) scaleX(-1); /* Start from top, clockwise (inverted scale fixes direction if needed, or check path) */
+  width: 100%;
+  height: 100%;
+}
+
+.popup-circular-timer .circle-bg {
+  fill: none;
+  stroke: rgba(0, 0, 0, 0.1);
+  stroke-width: 3;
+}
+
+.popup-circular-timer .circle {
+  fill: none;
+  stroke: var(--popup-text-color);
+  stroke-width: 3;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.1s linear;
+}
+
+/* Dynamic colors for the timer ring based on popup type */
+.notification-popup-content.success .popup-circular-timer .circle {
+  stroke: var(--popup-success-color);
+}
+.notification-popup-content.error .popup-circular-timer .circle {
+  stroke: var(--popup-error-color);
+}
+.notification-popup-content.warning .popup-circular-timer .circle {
+  stroke: var(--popup-warning-color);
+}
+.notification-popup-content.info .popup-circular-timer .circle {
+  stroke: var(--popup-info-color);
+}
+
+.timer-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--popup-text-color);
+}
+
+.popup-redirect-message {
+  font-size: 0.9rem;
+  color: #6b7280;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.notification-popup-btn:active {
+  transform: translateY(0);
+}
+
+/* Variant-specific button colors */
+.notification-popup-content.success .notification-popup-btn {
+  background-color: var(--popup-success-color);
+}
+.notification-popup-content.error .notification-popup-btn {
+  background-color: var(--popup-error-color);
+}
+.notification-popup-content.warning .notification-popup-btn {
+  background-color: var(--popup-warning-color);
+}
+.notification-popup-content.info .notification-popup-btn {
+  background-color: var(--popup-info-color);
+}

@@ -35,4 +35,8 @@ router.put("/:id/read", async (req, res) => {
   }
 });
 
+// ส่งแจ้งเตือนใหม่ (POST /api/notifications/send)
+import { sendNotification } from "../controllers/notificationController";
+router.post("/send", sendNotification);
+
 export default router;

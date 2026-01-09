@@ -1,3 +1,63 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  /* Modern Dark Theme Palette */
+  --bg-primary: #111827; /* Deep dark background */
+  --bg-secondary: #1f2937; /* Slightly lighter for cards/sidebar */
+  --bg-tertiary: #374151; /* Hover states */
+  --text-primary: #f9fafb; /* Main text */
+  --text-secondary: #9ca3af; /* Subtext */
+  --accent-primary: #3b82f6; /* Primary Blue */
+  --accent-hover: #2563eb; /* Darker Blue */
+  --accent-secondary: #10b981; /* Success Green */
+  --accent-danger: #ef4444; /* Danger Red */
+  --border-color: #374151;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+}
+
+html,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Responsive Base Size for Full HD Optimization */
+@media screen and (min-width: 1366px) {
+  html {
+    font-size: 14px; /* Standardize specific dashboard density */
+  }
+}
+
+@media screen and (min-width: 1920px) {
+  html {
+    font-size: 16px; /* Reset to standard size for Full HD to fill space better */
+  }
+}
+
+/* Global Variables & Utilities */
+:root {
+  /* Form Elements - Consistent sizing */
+  --input-height: 2.75rem; /* Approx 38-42px depending on root */
+  --input-padding-x: 2.5rem; /* Left padding for icons */
+  --input-padding-y: 0.5rem;
+  --radius-md: 0.5rem;
+}

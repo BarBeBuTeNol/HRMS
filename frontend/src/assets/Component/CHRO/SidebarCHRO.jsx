@@ -1,81 +1,130 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import './SidebarCHRO.css';
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import {
+  FaHome,
+  FaCheckDouble,
+  FaUsers,
+  FaClipboardList,
+  FaSignOutAlt,
+  FaBars,
+  FaTimes, // Used for close if needed, but we use toggle
+  FaUserTie, // For CHRO icon
+} from "react-icons/fa";
+import "./SidebarCHRO.css";
 
-const SidebarCHRO = () => {
+const SidebarCHRO = ({ isOpen, toggleSidebar }) => {
   const navigate = useNavigate();
-  const [isOpen, setIsOpen] = useState(true);
+  const location = useLocation();
+  const [currentUser, setCurrentUser] = useState({});
 
-  // ดึงข้อมูล currentUser จาก localStorage
-  const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-  const displayUsername = currentUser.username || 'Guest';
-  const displayRole = currentUser.role || 'CHRO';
-
-  const toggleSidebar = () => {
-    setIsOpen(!isOpen);
-  };
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
+    setCurrentUser(user);
+  }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('currentUser');
-    localStorage.removeItem('token');
-    navigate('/login');
+    if (window.confirm("Are you sure you want to logout?")) {
+      localStorage.removeItem("currentUser");
+      localStorage.removeItem("token");
+      navigate("/login");
+    }
   };
+
+  const navItems = [
+    { label: "Dashboard", path: "/chro/dashboard", icon: <FaHome /> },
+    { label: "Approvals", path: "/chro/decide", icon: <FaCheckDouble /> },
+    {
+      label: "Direct Position",
+      path: "/chro/direct-position",
+      icon: <FaUsers />,
+    },
+    { label: "Audit Logs", path: "/chro/show-log", icon: <FaClipboardList /> },
+  ];
 
   return (
     <>
-      <div className={`sidebar-chro${isOpen ? ' open' : ' closed'}`}>
-        <div className="sidebar-chro-header">
-          <div className="sidebar-chro-username">
-            👤 {displayUsername}
-            <div className="sidebar-chro-role">{displayRole}</div>
+      {/* Mobile Overlay */}
+      <div
+        className={`chro-sidebar-overlay ${isOpen ? "active" : ""}`}
+        onClick={toggleSidebar}
+      />
+
+      <aside className={`chro-sidebar ${isOpen ? "open" : "closed"}`}>
+        {/* Toggle Button (Floating) */}
+        {/* Toggle Button (Floating) */}
+        <button
+          className="chro-toggle-btn"
+          onClick={toggleSidebar}
+          aria-label="Toggle Sidebar"
+        >
+          {isOpen ? <FaBars /> : <FaBars />}
+        </button>
+
+        <div className="chro-sidebar-content">
+          {/* Header / Logo Area */}
+          <div className="chro-logo-section">
+            <div className="chro-logo-icon">
+              <FaUserTie />
+            </div>
+            {isOpen && (
+              <div className="chro-logo-text">
+                <h2>CHRO</h2>
+                <span>Executive Portal</span>
+              </div>
+            )}
+          </div>
+
+          <div className="chro-divider" />
+
+          {/* Navigation */}
+          <nav className="chro-nav-menu">
+            {navItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <button
+                  key={item.path}
+                  className={`chro-nav-item ${isActive ? "active" : ""}`}
+                  onClick={() => navigate(item.path)}
+                  title={!isOpen ? item.label : ""}
+                >
+                  <span className="chro-nav-icon">{item.icon}</span>
+                  {isOpen && (
+                    <span className="chro-nav-label">{item.label}</span>
+                  )}
+                  {isActive && isOpen && (
+                    <div className="chro-active-indicator" />
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+
+          {/* User Profile Footer */}
+          <div className="chro-sidebar-footer">
+            <div className={`chro-user-profile ${isOpen ? "expanded" : ""}`}>
+              <div className="chro-avatar">
+                {currentUser?.firstName?.[0] || "C"}
+              </div>
+              {isOpen && (
+                <div className="chro-user-info">
+                  <div className="chro-user-name">
+                    {currentUser?.firstName || "User"}
+                  </div>
+                  <div className="chro-user-role">CHRO Admin</div>
+                </div>
+              )}
+            </div>
+            <button
+              className="chro-logout-btn"
+              onClick={handleLogout}
+              title="Logout"
+            >
+              <FaSignOutAlt />
+              {isOpen && <span>Logout</span>}
+            </button>
           </div>
         </div>
-
-        <nav className="sidebar-chro-nav">
-          <button
-            className="sidebar-chro-button"
-            onClick={() => navigate('/chro/dashboard')}
-          >
-            <span className="sidebar-chro-icon">🏠</span> Home
-          </button>
-
-          <button
-            className="sidebar-chro-button"
-            onClick={() => navigate('/chro/decide')}
-          >
-            <span className="sidebar-chro-icon">✅</span> อนุมัติ/ปฏิเสธการลา
-          </button>
-
-          <button
-            className="sidebar-chro-button"
-            onClick={() => navigate('/chro/direct-position')}
-          >
-            <span className="sidebar-chro-icon">👥</span> Direct Position
-          </button>
-
-          <button
-            className="sidebar-chro-button"
-            onClick={() => navigate('/chro/show-log')}
-          >
-            <span className="sidebar-chro-icon">📋</span> Show Log
-          </button>
-
-          <div className="sidebar-chro-spacer" />
-
-          <button className="sidebar-chro-button logout" onClick={handleLogout}>
-            🚪 Logout
-          </button>
-        </nav>
-      </div>
-
-      {/* ปุ่ม toggle ขยาย/ย่อ Sidebar */}
-      <button
-        className="sidebar-chro-toggle-btn"
-        onClick={toggleSidebar}
-        aria-label={isOpen ? 'ปิด Sidebar' : 'เปิด Sidebar'}
-      >
-        {isOpen ? '←' : '→'}
-      </button>
+      </aside>
     </>
   );
 };

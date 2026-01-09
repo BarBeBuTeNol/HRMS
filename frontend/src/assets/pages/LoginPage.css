@@ -4,7 +4,9 @@
   margin: 0;
   padding: 0;
 }
-input, textarea, button {
+.login-container input,
+.login-container textarea,
+.login-container button {
   outline: none;
 }
 

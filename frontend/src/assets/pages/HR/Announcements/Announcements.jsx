@@ -1,185 +1,312 @@
 import React, { useEffect, useState } from "react";
-import Sidebar_HR from "../../../Component/HR/Sidebar_HR";
+import { motion, AnimatePresence } from "framer-motion";
+import HRLayout from "../../../Component/HR/HRLayout";
 import "./Announcements.css";
+import axios from "axios";
 
-const ADMIN_CODE = "123456";
+// Helper for relative time (e.g., "2 hours ago")
+const timeAgo = (dateMsg) => {
+  const date = new Date(dateMsg);
+  const now = new Date();
+  const seconds = Math.floor((now - date) / 1000);
+  if (seconds < 60) return "Just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+};
 
 const Announcements = () => {
+  const [activeTab, setActiveTab] = useState("announcements"); // 'announcements' | 'notifications'
   const [announcements, setAnnouncements] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Modal State
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState(null); // 'edit' | 'delete'
-  const [selectedPost, setSelectedPost] = useState(null);
-  const [adminCode, setAdminCode] = useState("");
+  const [selectedItem, setSelectedItem] = useState(null);
   const [editTitle, setEditTitle] = useState("");
   const [editMessage, setEditMessage] = useState("");
-  const [error, setError] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
 
-  useEffect(() => {
-    const data = JSON.parse(localStorage.getItem("announcements") || "[]");
-    setAnnouncements(data);
-  }, []);
+  const userId = localStorage.getItem("userId") || 1; // Fallback to 1 for dev
 
-  // Helper: Save to localStorage
-  const saveAnnouncements = (data) => {
-    setAnnouncements(data);
-    localStorage.setItem("announcements", JSON.stringify(data));
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [annRes, notiRes] = await Promise.all([
+        axios.get("http://localhost:5000/api/announcements"),
+        axios.get(`http://localhost:5000/api/notifications/${userId}`),
+      ]);
+      setAnnouncements(annRes.data);
+      setNotifications(notiRes.data);
+    } catch (err) {
+      console.error("Error fetching data:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Modal open/close
-  const openModal = (type, post) => {
+  useEffect(() => {
+    fetchData();
+  }, [userId]);
+
+  // Handlers for Announcements (Edit/Delete)
+  const handleDeleteAnnouncement = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.delete(
+        `http://localhost:5000/api/announcements/${selectedItem.id}`
+      );
+      fetchData();
+      closeModal();
+    } catch (err) {
+      alert("Failed to delete announcement");
+    }
+  };
+
+  const handleEditAnnouncement = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.put(
+        `http://localhost:5000/api/announcements/${selectedItem.id}`,
+        {
+          title: editTitle,
+          content: editMessage,
+        }
+      );
+      fetchData();
+      closeModal();
+    } catch (err) {
+      alert("Failed to update announcement");
+    }
+  };
+
+  // Handler for Mark as Read (Notifications)
+  const markAsRead = async (id) => {
+    try {
+      await axios.put(`http://localhost:5000/api/notifications/${id}/read`);
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, is_read: 1 } : n))
+      );
+    } catch (err) {
+      console.error("Error marking read:", err);
+    }
+  };
+
+  const openModal = (type, item) => {
     setModalType(type);
-    setSelectedPost(post);
-    setAdminCode("");
-    setError("");
-    setSuccessMsg("");
+    setSelectedItem(item);
     if (type === "edit") {
-      setEditTitle(post.title);
-      setEditMessage(post.message);
+      setEditTitle(item.title);
+      setEditMessage(item.content);
     }
     setShowModal(true);
   };
+
   const closeModal = () => {
     setShowModal(false);
-    setSelectedPost(null);
-    setAdminCode("");
-    setError("");
-    setSuccessMsg("");
-  };
-
-  // Handle Delete
-  const handleDelete = (e) => {
-    e.preventDefault();
-    if (adminCode !== ADMIN_CODE) {
-      setError("รหัสไม่ถูกต้อง");
-      return;
-    }
-    const updated = announcements.filter((item) => item.id !== selectedPost.id);
-    saveAnnouncements(updated);
-    setSuccessMsg("ลบโพสต์สำเร็จ!");
-    setTimeout(() => {
-      closeModal();
-    }, 1000);
-  };
-
-  // Handle Edit
-  const handleEdit = (e) => {
-    e.preventDefault();
-    if (adminCode !== ADMIN_CODE) {
-      setError("รหัสไม่ถูกต้อง");
-      return;
-    }
-    if (!editTitle.trim() || !editMessage.trim()) {
-      setError("กรอกข้อมูลให้ครบ");
-      return;
-    }
-    const updated = announcements.map((item) =>
-      item.id === selectedPost.id
-        ? { ...item, title: editTitle, message: editMessage }
-        : item
-    );
-    saveAnnouncements(updated);
-    setSuccessMsg("แก้ไขโพสต์สำเร็จ!");
-    setTimeout(() => {
-      closeModal();
-    }, 1000);
+    setSelectedItem(null);
   };
 
   return (
-    <div className="ann-root">
-      <Sidebar_HR />
-      <div className="ann-content">
-        <h2 className="ann-title">ประกาศข่าวสารภายในองค์กร</h2>
-        <div className="ann-list">
-          {announcements.length === 0 ? (
-            <div className="ann-empty">ยังไม่มีประกาศข่าวสาร</div>
-          ) : (
-            announcements.map((item) => (
-              <div className="ann-card" key={item.id}>
-                <div className="ann-header">
-                  <span className="ann-icon">📢</span>
-                  <span className="ann-card-title">{item.title}</span>
-                </div>
-                <div className="ann-message">{item.message}</div>
-                <div className="ann-meta">
-                  <span className="ann-sender">จาก: {item.sender}</span>
-                  <span className="ann-time">{item.timestamp}</span>
-                </div>
-                <div className="ann-views">👁️ มีคนเห็นโพสต์นี้ {item.views} คน</div>
-                {/* ปุ่มแก้ไข/ลบ เฉพาะ Admin (mock) */}
-                <div className="ann-actions">
-                  <button className="ann-btn edit" onClick={() => openModal("edit", item)}>
-                    ✏️ แก้ไข
-                  </button>
-                  <button className="ann-btn delete" onClick={() => openModal("delete", item)}>
-                    🗑️ ลบ
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-        {/* Modal สำหรับแก้ไข/ลบ */}
-        {showModal && (
-          <div className="ann-modal-bg" onClick={closeModal}>
-            <div className="ann-modal" onClick={e => e.stopPropagation()}>
-              {modalType === "delete" ? (
-                <form onSubmit={handleDelete} className="ann-modal-form">
-                  <h3>ยืนยันการลบโพสต์</h3>
-                  <div className="ann-modal-msg">ต้องการลบโพสต์นี้ใช่หรือไม่?</div>
-                  <input
-                    type="password"
-                    className="ann-modal-input"
-                    placeholder="กรอกรหัส Admin"
-                    value={adminCode}
-                    onChange={e => setAdminCode(e.target.value)}
-                    autoFocus
-                  />
-                  {error && <div className="ann-modal-error">{error}</div>}
-                  {successMsg && <div className="ann-modal-success">{successMsg}</div>}
-                  <div className="ann-modal-actions">
-                    <button type="button" className="ann-btn cancel" onClick={closeModal}>ยกเลิก</button>
-                    <button type="submit" className="ann-btn delete">ยืนยันลบ</button>
-                  </div>
-                </form>
-              ) : (
-                <form onSubmit={handleEdit} className="ann-modal-form">
-                  <h3>แก้ไขโพสต์</h3>
-                  <input
-                    type="text"
-                    className="ann-modal-input"
-                    placeholder="หัวข้อใหม่"
-                    value={editTitle}
-                    onChange={e => setEditTitle(e.target.value)}
-                    autoFocus
-                  />
-                  <textarea
-                    className="ann-modal-input"
-                    placeholder="เนื้อหาใหม่"
-                    value={editMessage}
-                    onChange={e => setEditMessage(e.target.value)}
-                    rows={3}
-                  />
-                  <input
-                    type="password"
-                    className="ann-modal-input"
-                    placeholder="กรอกรหัส Admin"
-                    value={adminCode}
-                    onChange={e => setAdminCode(e.target.value)}
-                  />
-                  {error && <div className="ann-modal-error">{error}</div>}
-                  {successMsg && <div className="ann-modal-success">{successMsg}</div>}
-                  <div className="ann-modal-actions">
-                    <button type="button" className="ann-btn cancel" onClick={closeModal}>ยกเลิก</button>
-                    <button type="submit" className="ann-btn edit">บันทึก</button>
-                  </div>
-                </form>
-              )}
-            </div>
+    <HRLayout>
+      <div className="ann-wrapper">
+        <motion.div
+          className="ann-header-section"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="ann-title-box">
+            <h2 className="ann-page-title">Company Hub</h2>
+            <p className="ann-subtitle">Stay updated with the latest news</p>
           </div>
-        )}
+
+          <div className="ann-tabs">
+            <button
+              className={`tab-btn ${
+                activeTab === "announcements" ? "active" : ""
+              }`}
+              onClick={() => setActiveTab("announcements")}
+            >
+              📢 Announcements
+            </button>
+            <button
+              className={`tab-btn ${
+                activeTab === "notifications" ? "active" : ""
+              }`}
+              onClick={() => setActiveTab("notifications")}
+            >
+              🔔 Notifications
+              {notifications.some((n) => !n.is_read) && (
+                <span className="badge-dot" />
+              )}
+            </button>
+          </div>
+        </motion.div>
+
+        <div className="ann-content">
+          <AnimatePresence mode="wait">
+            {activeTab === "announcements" ? (
+              <motion.div
+                key="announcements"
+                className="ann-grid"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.3 }}
+              >
+                {announcements.length === 0 && !loading && (
+                  <div className="empty-state">No announcements yet.</div>
+                )}
+                {announcements.map((item) => (
+                  <motion.div
+                    className="ann-card glass-card"
+                    key={item.id}
+                    whileHover={{ y: -5 }}
+                  >
+                    <div className="ann-card-header">
+                      <div className="ann-author">
+                        <div className="avatar-placeholder">
+                          {item.poster_name ? item.poster_name.charAt(0) : "A"}
+                        </div>
+                        <div>
+                          <span className="author-name">
+                            {item.poster_name || "Admin"}
+                          </span>
+                          <span className="post-date">
+                            {timeAgo(item.created_at)}
+                          </span>
+                        </div>
+                      </div>
+                      {item.department_name && (
+                        <span className="dept-badge">
+                          {item.department_name}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="ann-card-body">
+                      <h3 className="ann-post-title">{item.title}</h3>
+                      <p className="ann-post-content">{item.content}</p>
+                    </div>
+
+                    <div className="ann-card-footer">
+                      <button
+                        className="icon-btn edit"
+                        onClick={() => openModal("edit", item)}
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        className="icon-btn trash"
+                        onClick={() => openModal("delete", item)}
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            ) : (
+              <motion.div
+                key="notifications"
+                className="noti-list"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+              >
+                {notifications.length === 0 && !loading && (
+                  <div className="empty-state">No notifications.</div>
+                )}
+                {notifications.map((noti) => (
+                  <motion.div
+                    key={noti.id}
+                    className={`noti-item ${noti.is_read ? "read" : "unread"}`}
+                    onClick={() => markAsRead(noti.id)}
+                    whileHover={{ scale: 1.01 }}
+                  >
+                    <div className="noti-icon">
+                      {noti.is_read ? "📩" : "📫"}
+                    </div>
+                    <div className="noti-content">
+                      <p className="noti-msg">{noti.message}</p>
+                      <span className="noti-time">
+                        {timeAgo(noti.created_at)}
+                      </span>
+                    </div>
+                    {!noti.is_read && <div className="unread-dot" />}
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Modal */}
+        <AnimatePresence>
+          {showModal && (
+            <div className="modal-overlay" onClick={closeModal}>
+              <motion.div
+                className="modal-box glass-modal"
+                onClick={(e) => e.stopPropagation()}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+              >
+                {modalType === "delete" ? (
+                  <div className="confirm-delete">
+                    <h3>Confirm Deletion</h3>
+                    <p>Are you sure you want to delete this announcement?</p>
+                    <div className="modal-actions">
+                      <button onClick={closeModal}>Cancel</button>
+                      <button
+                        className="btn-danger"
+                        onClick={handleDeleteAnnouncement}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <form onSubmit={handleEditAnnouncement} className="edit-form">
+                    <h3>Edit Announcement</h3>
+                    <div className="form-group">
+                      <label>Title</label>
+                      <input
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Content</label>
+                      <textarea
+                        value={editMessage}
+                        onChange={(e) => setEditMessage(e.target.value)}
+                        rows={5}
+                        required
+                      />
+                    </div>
+                    <div className="modal-actions">
+                      <button type="button" onClick={closeModal}>
+                        Cancel
+                      </button>
+                      <button type="submit" className="btn-primary">
+                        Save Changes
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </div>
-    </div>
+    </HRLayout>
   );
 };
 

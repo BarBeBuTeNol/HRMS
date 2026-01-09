@@ -1,55 +1,64 @@
 // src/assets/pages/LoginPage.jsx
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import './LoginPage.css';
-import logoImage from '../pic/logo_hrms.jpg';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import "./LoginPage.css";
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', { username, password });
+      const res = await axios.post("http://localhost:5000/api/auth/login", {
+        username,
+        password,
+      });
 
       if (res.data?.ok && res.data?.user) {
         const user = res.data.user;
 
         // ✅ เก็บข้อมูลผู้ใช้ใน localStorage
-        localStorage.setItem('currentUser', JSON.stringify(user));
-        localStorage.setItem('userId', String(user.id));
+        localStorage.setItem("currentUser", JSON.stringify(user));
+        localStorage.setItem("userId", String(user.id));
 
-        // ✅ เปลี่ยนหน้า dashboard ตาม role
-        switch (user.role_id) {
-          case 2: // HR
-            navigate('/hr/dashboard', { replace: true });
+        // ✅ เปลี่ยนหน้า dashboard ตาม role (ใช้ role_name จาก DB)
+        const roleName = user.role_name || ""; // fallback
+        switch (roleName) {
+          case "HR":
+            navigate("/hr/dashboard", { replace: true });
             break;
-            case 3: // CHRO
-            navigate('/chro/dashboard', { replace: true });
+          case "CHRO":
+          case "Admin": // Admin เข้าหน้าเดียวกับ CHRO
+            navigate("/chro/dashboard", { replace: true });
             break;
-          case 4: // Head
-            navigate('/head/dashboard', { replace: true });
+          case "Head":
+            navigate("/head/dashboard", { replace: true });
             break;
-          case 5: // Employee
-            navigate('/employee/dashboard', { replace: true });
+          case "Employee":
+            navigate("/employee/dashboard", { replace: true });
             break;
           default:
-            setError('สิทธิ์ของผู้ใช้ไม่ถูกต้อง');
+            setError(`สิทธิ์ของผู้ใช้ไม่ถูกต้อง (${roleName})`);
         }
       } else {
-        setError(res.data?.message || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+        setError(res.data?.message || "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง");
       }
     } catch (err) {
-      console.error('Login failed:', err);
-      setError('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+      console.error("Login failed:", err);
+      // ✅ แสดงข้อความจาก backend ถ้ามี
+      if (err.response && err.response.data && err.response.data.message) {
+        setError(err.response.data.message);
+      } else {
+        setError("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์");
+      }
     } finally {
       setLoading(false);
     }
@@ -58,7 +67,7 @@ const LoginPage = () => {
   return (
     <div className="login-container">
       <form className="login-box" onSubmit={handleLogin}>
-        <img src={logoImage} alt="HRMS Logo" className="logo" />
+        {/* <img src={logoImage} alt="HRMS Logo" className="logo" /> */}
         <h2>เข้าสู่ระบบ HRMS</h2>
 
         <input
@@ -80,7 +89,7 @@ const LoginPage = () => {
         {error && <p className="error">{error}</p>}
 
         <button type="submit" disabled={loading}>
-          {loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
+          {loading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
         </button>
       </form>
     </div>

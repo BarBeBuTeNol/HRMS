@@ -1,246 +1,272 @@
+/* Add_user.css - Responsive & Compact */
 .add-user-page {
-  /* Soft blue modern theme for easy reading */
-  --primary-bg: #f5faff;
-  --container-bg: #ffffff;
-  --primary-accent: #3b82f6;
-  --primary-accent-light: #93c5fd;
-  --primary-accent-dark: #1e40af;
-  --danger: #ef4444;
-  --success: #22c55e;
-  --input-bg: #f0f6fb;
-  --input-border: #93c5fd;
-  --input-focus: #3b82f644;
-  --text-main: #1e293b;
-  --text-label: #2563eb;
-  --btn-bg: linear-gradient(90deg, #60a5fa 0%, #3b82f6 100%);
-  --btn-bg-hover: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
-  --btn-text: #fff;
-  --btn-cancel-bg: #f0f6fb;
-  --btn-cancel-text: #3b82f6;
-  --btn-cancel-border: #3b82f6;
-  --box-shadow: 0 6px 32px 0 #3b82f618, 0 1.5px 0 #93c5fd11;
+  width: 100%;
+  min-height: 100vh; /* Allow growth */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem 1rem;
+  box-sizing: border-box;
+  overflow-y: auto; /* Allow scrolling if needed */
 }
-.add-user-page .add-user-container {
-  max-width: 400px;
-  margin: 56px auto 56px auto;
-  padding: 44px 32px 36px 32px;
-  border-radius: 24px;
-  background: var(--container-bg);
-  box-shadow: var(--box-shadow);
-  color: var(--text-main);
-  font-family: 'Quicksand', 'Fira Mono', 'Consolas', monospace;
-  position: relative;
-  overflow: hidden;
-  border: 2px solid var(--primary-accent-light);
-  transition: box-shadow 0.3s, border 0.3s, background 0.3s;
-  animation: popIn 0.7s cubic-bezier(.68,-0.55,.27,1.55);
-}
-@keyframes popIn {
-  0% { transform: scale(0.97) translateY(30px); opacity: 0; }
-  80% { transform: scale(1.03) translateY(-6px); opacity: 1; }
-  100% { transform: scale(1) translateY(0); opacity: 1; }
-}
-.add-user-page .add-user-container:hover {
-  box-shadow: 0 16px 48px 0 #3b82f633, 0 4px 0 #93c5fd33;
-  border: 2px solid var(--primary-accent);
-  background: linear-gradient(120deg, #f5faff 60%, #e0f2fe 100%);
-}
-.add-user-page .add-user-container h2 {
-  font-size: 2.1rem;
-  letter-spacing: 1.5px;
-  margin-bottom: 30px;
-  font-family: 'Quicksand', 'Fira Mono', 'Consolas', monospace;
-  font-weight: 800;
-  color: var(--primary-accent-dark);
-  background: none;
-  text-align: center;
-  text-shadow: 0 2px 8px #3b82f611;
-}
-.add-user-page .form-group {
-  margin-bottom: 22px;
+
+.add-user-container {
+  width: 100%;
+  max-width: 850px; /* Optimal width for readability */
+  background: rgba(30, 41, 59, 0.85); /* Slightly more opaque */
+  backdrop-filter: blur(16px);
+  border-radius: var(--radius-md, 0.5rem);
+  padding: 2rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  color: #f8fafc;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  animation: fadeIn 0.4s ease-out;
   display: flex;
   flex-direction: column;
-  z-index: 1;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.add-user-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.add-user-header h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.add-user-header p {
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+/* Form Grid */
+.add-user-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+/* Center a single input in the grid row */
+.form-group.center-span {
+  grid-column: 1 / -1;
+  width: calc(50% - 0.625rem); /* Exactly 1 column width (50% - half_gap) */
+  justify-self: center;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
   position: relative;
 }
-.add-user-page .form-group label {
-  font-size: 1.07rem;
-  font-family: 'Quicksand', 'Fira Mono', 'Consolas', monospace;
+
+.form-group label {
+  font-size: 0.85rem;
   font-weight: 600;
-  margin-bottom: 7px;
-  letter-spacing: 0.5px;
-  color: var(--text-label);
-  background: none;
-  border-radius: 5px;
-  padding: 0 2px;
-  transition: color 0.2s;
-}
-.add-user-page .form-group input[type="text"],
-.add-user-page .form-group input[type="password"],
-.add-user-page .form-group input[type="tel"],
-.add-user-page .form-group input[type="email"] {
-  border-radius: 12px;
-  border: 1.5px solid var(--input-border);
-  background: var(--input-bg);
-  color: var(--text-main);
-  font-size: 1.07rem;
-  padding: 13px 15px;
-  margin-bottom: 2px;
-  box-shadow: 0 1px 8px #3b82f60a;
-  transition: border 0.2s, box-shadow 0.2s, background 0.2s;
-  outline: none;
-}
-.add-user-page .form-group input:focus {
-  border: 1.5px solid var(--primary-accent);
-  background: #fff;
-  box-shadow: 0 0 0 5px #60a5fa33;
-  animation: inputFocusPop 0.3s cubic-bezier(.68,-0.55,.27,1.55);
-}
-@keyframes inputFocusPop {
-  0% { transform: scale(1); }
-  60% { transform: scale(1.04); }
-  100% { transform: scale(1); }
-}
-.add-user-page .role-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 22px;
-  margin-top: 10px;
-  justify-content: space-between;
-  width: 100%;
-  padding-bottom: 4px;
-  background: #f5faff;
-  border-radius: 16px;
-  box-shadow: 0 2px 10px #3b82f608;
-}
-.add-user-page .role-options::-webkit-scrollbar,
-.add-user-page .role-options::-webkit-scrollbar-thumb,
-.add-user-page .role-options::-webkit-scrollbar-track {
-  display: none;
-}
-.add-user-page .role-options label {
+  color: #e2e8f0;
+  margin-left: 0.25rem;
   display: flex;
   align-items: center;
-  justify-content: center;
-  min-width: 100px;
-  padding: 10px 20px;
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: var(--primary-accent-dark);
-  background: #e0f2fe;
-  border: 1.5px solid #93c5fd;
-  border-radius: 22px;
-  box-shadow: 0 1px 6px #3b82f610;
-  cursor: pointer;
-  transition: background 0.18s, color 0.18s, border 0.18s, box-shadow 0.18s, transform 0.12s;
-  margin-bottom: 0;
-  margin-top: 0;
-  margin-right: 0;
-  margin-left: 0;
+  gap: 0.5rem;
+}
+
+.label-icon {
+  color: #60a5fa; /* Blue accent for headers */
+  font-size: 1rem;
+}
+
+/* Icon & Input Wrapper */
+.form-group .input-wrapper {
   position: relative;
-  user-select: none;
 }
-.add-user-page .role-options label:hover,
-.add-user-page .role-options label:focus-within {
-  background: #bae6fd;
-  color: var(--primary-accent);
-  border: 1.5px solid var(--primary-accent);
-  box-shadow: 0 2px 12px #3b82f622;
-  transform: translateY(-2px) scale(1.04);
-  z-index: 2;
+
+/* Inputs */
+.form-group input,
+.form-group select {
+  width: 100%;
+  height: var(--input-height);
+  padding: 0.5rem 1rem; /* Standard comfortable padding */
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 23, 42, 0.6);
+  color: #fff !important;
+  font-size: 0.95rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
 }
-.add-user-page .role-options input[type="radio"] {
-  accent-color: var(--primary-accent);
-  margin-right: 8px;
-  transform: scale(1.18);
+
+/* Specific Select Styling */
+.form-group select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 1rem center;
+  background-repeat: no-repeat;
+  background-size: 1.25em;
 }
-.add-user-page .role-options input[type="radio"]:checked + label,
-.add-user-page .role-options label:has(input[type="radio"]:checked) {
-  background: linear-gradient(90deg, #60a5fa 0%, #3b82f6 100%);
-  color: #fff;
-  border: 1.5px solid var(--primary-accent);
-  box-shadow: 0 4px 16px #3b82f622;
-  transform: scale(1.08);
-  z-index: 3;
+
+.form-group select.placeholder-style {
+  color: #94a3b8 !important; /* Lighter color for placeholder */
 }
-.add-user-page .button-group {
-  margin-top: 38px;
+
+/* Dropdown Options */
+.form-group select option {
+  background-color: #1e293b;
+  color: #f8fafc;
+  padding: 12px;
+}
+
+/* Role Selection - Compact */
+.role-group-label-wrapper {
   display: flex;
-  gap: 16px;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+  color: #60a5fa;
 }
-.add-user-page .done-btn, .add-user-page .cancel-btn {
-  border-radius: 18px;
-  font-size: 1.13rem;
-  font-weight: 700;
-  padding: 14px 0;
-  box-shadow: 0 2px 8px #3b82f622;
-  letter-spacing: 1.2px;
-  transition: background 0.2s, color 0.2s, box-shadow 0.2s, transform 0.1s;
-  min-width: 120px;
+
+.role-group-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #cbd5e1;
 }
-.add-user-page .done-btn {
-  background: var(--btn-bg);
-  color: var(--btn-text);
+
+.role-options {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+
+.role-card {
+  position: relative;
+  cursor: pointer;
+  width: 90px;
+}
+
+.role-card input {
+  display: none;
+}
+
+.role-card-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+  height: 70px;
+}
+
+.role-card:hover .role-card-content {
+  border-color: #60a5fa;
+  transform: translateY(-2px);
+}
+
+.role-card input:checked + .role-card-content {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: #60a5fa;
+}
+
+.role-icon {
+  color: #94a3b8;
+  margin-bottom: 0.2rem;
+  font-size: 1.1rem;
+}
+
+.role-card input:checked + .role-card-content .role-icon,
+.role-card input:checked + .role-card-content .role-name {
+  color: #60a5fa;
+}
+
+.role-name {
+  font-size: 0.75rem;
+  color: #cbd5e1;
+}
+
+/* Buttons */
+.button-group {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  grid-column: 1 / -1;
+  justify-content: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 1rem;
+}
+
+.btn {
+  padding: 0.6rem 2rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   border: none;
+  min-width: 120px;
+  justify-content: center;
 }
-.add-user-page .done-btn:hover, .add-user-page .done-btn:focus {
-  background: var(--btn-bg-hover);
-  color: #fff;
-  box-shadow: 0 6px 24px #3b82f644;
-  transform: translateY(-2px) scale(1.04);
+
+.cancel-btn {
+  background: transparent;
+  color: #94a3b8;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
-.add-user-page .cancel-btn {
-  background: var(--btn-cancel-bg);
-  color: var(--btn-cancel-text);
-  border: 2px solid var(--btn-cancel-border);
+
+.cancel-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-color: #ef4444;
 }
-.add-user-page .cancel-btn:hover, .add-user-page .cancel-btn:focus {
-  background: var(--danger);
-  color: #fff;
-  border: 2px solid var(--danger);
-  box-shadow: 0 6px 24px #ef444499;
-  transform: translateY(-2px) scale(1.04);
+
+.done-btn {
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  color: white;
+  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2);
 }
-@media (max-width: 480px) {
-  .add-user-page .add-user-container {
-    max-width: 98%;
-    margin: 18px auto;
-    padding: 18px 6px;
+
+.done-btn:hover {
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .add-user-page {
+    height: auto;
+    overflow-y: auto;
+    padding: 1rem;
   }
-  .add-user-page .form-group {
-    margin-bottom: 12px;
+  .add-user-form-grid {
+    grid-template-columns: 1fr;
   }
-  .add-user-page .form-group label {
-    margin-bottom: 3px;
-    font-size: 0.95rem;
-  }
-  .add-user-page .form-group input[type="text"],
-  .add-user-page .form-group input[type="password"],
-  .add-user-page .form-group input[type="tel"],
-  .add-user-page .form-group input[type="email"] {
-    padding: 8px 8px;
-    font-size: 0.95rem;
-  }
-  .add-user-page .role-options {
-    gap: 10px;
-    border-radius: 12px;
+  .form-group.center-span {
     width: 100%;
-    justify-content: space-between;
-  }
-  .add-user-page .role-options label {
-    min-width: 70px;
-    font-size: 0.95rem;
-    padding: 7px 6px;
-    border-radius: 14px;
-  }
-  .add-user-page .button-group {
-    flex-direction: column;
-    gap: 10px;
-  }
-  .add-user-page .cancel-btn,
-  .add-user-page .done-btn {
-    width: 100%;
-    padding: 10px 0;
-    text-align: center;
   }
 }

@@ -1,90 +1,309 @@
-.sidebar-chro {
+/* SidebarCHRO.css - Modern Executive Theme */
+
+:root {
+  --chro-sidebar-width: 260px;
+  --chro-sidebar-collapsed-width: 80px;
+  --chro-primary: #8b5cf6; /* Violet */
+  --chro-primary-hover: #7c3aed;
+  --chro-bg-dark: #0f172a; /* Slate 900 */
+  --chro-bg-panel: #1e293b; /* Slate 800 */
+  --chro-text-main: #f1f5f9;
+  --chro-text-muted: #94a3b8;
+  --chro-border: rgba(255, 255, 255, 0.1);
+}
+
+/* Sidebar Container */
+.chro-sidebar {
   position: fixed;
-  left: 0;
   top: 0;
-  width: 220px;
+  left: 0;
   height: 100vh;
-  background-color: #2f3542;
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  transition: width 0.3s;
+  background-color: var(--chro-bg-dark);
+  color: var(--chro-text-main);
   z-index: 1000;
-}
-
-.sidebar-chro.closed {
-  width: 64px;
-}
-
-.sidebar-chro-header {
-  padding: 20px;
-  text-align: center;
-  border-bottom: 1px solid rgba(255,255,255,0.2);
-}
-
-.sidebar-chro-username {
-  font-size: 1rem;
-  margin-bottom: 5px;
-}
-
-.sidebar-chro-role {
-  font-size: 0.8rem;
-  color: #a4b0be;
-}
-
-.sidebar-chro-nav {
+  transition: width 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
   display: flex;
   flex-direction: column;
-  padding: 10px 0;
-  flex: 1;
 }
 
-.sidebar-chro-button {
-  background: none;
-  border: none;
-  color: #fff;
-  text-align: left;
-  padding: 12px 20px;
-  cursor: pointer;
-  font-size: 0.95rem;
+.chro-sidebar.open {
+  width: var(--chro-sidebar-width);
+}
+
+.chro-sidebar.closed {
+  width: var(--chro-sidebar-collapsed-width);
+}
+
+.chro-sidebar-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-x: hidden;
+}
+
+/* Toggle Button */
+.chro-toggle-btn {
+  position: absolute;
+  top: 20px;
+  right: -15px;
+  width: 30px;
+  height: 30px;
+  background: var(--chro-primary);
+  border: 2px solid var(--chro-bg-dark);
+  border-radius: 50%;
+  color: white;
   display: flex;
   align-items: center;
-  gap: 10px;
-  transition: background 0.2s;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1001;
+  transition: all 0.2s;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
-.sidebar-chro-button:hover {
-  background-color: #57606f;
+.chro-toggle-btn:hover {
+  transform: scale(1.1);
+  background: var(--chro-primary-hover);
 }
 
-.sidebar-chro-button.logout {
-  margin-top: auto;
-  background-color: #ff4757;
+/* Logo Section */
+.chro-logo-section {
+  height: 80px;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 16px;
+  white-space: nowrap;
 }
 
-.sidebar-chro-button.logout:hover {
-  background-color: #ff6b81;
+.chro-sidebar.closed .chro-logo-section {
+  padding: 0;
+  justify-content: center;
 }
 
-.sidebar-chro-spacer {
+.chro-logo-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, var(--chro-primary), #6366f1);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+  min-width: 40px;
+}
+
+.chro-logo-text h2 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  background: linear-gradient(to right, #fff, #cbd5e1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.chro-logo-text span {
+  font-size: 0.75rem;
+  color: var(--chro-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.chro-divider {
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--chro-border),
+    transparent
+  );
+  margin: 0 20px;
+}
+
+/* Navigation */
+.chro-nav-menu {
   flex: 1;
+  padding: 20px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.sidebar-chro-toggle-btn {
-  position: fixed;
-  top: 18px;
-  left: 220px;
+.chro-nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 12px;
+  color: var(--chro-text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.chro-sidebar.closed .chro-nav-item {
+  justify-content: center;
+  padding: 14px 0;
+}
+
+.chro-nav-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+.chro-nav-item.active {
+  background: rgba(139, 92, 246, 0.15);
+  color: var(--chro-primary);
+  font-weight: 600;
+}
+
+.chro-nav-icon {
+  font-size: 1.2rem;
+  min-width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chro-sidebar.open .chro-nav-label {
+  margin-left: 14px;
+}
+
+.chro-active-indicator {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 20px;
+  background: var(--chro-primary);
+  border-radius: 4px 0 0 4px;
+}
+
+/* User Profile Footer */
+.chro-sidebar-footer {
+  padding: 20px;
+  border-top: 1px solid var(--chro-border);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chro-user-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+
+.chro-sidebar.closed .chro-user-profile {
+  justify-content: center;
+  background: transparent;
+  padding: 0;
+  margin-bottom: 10px;
+}
+
+.chro-avatar {
   width: 36px;
   height: 36px;
-  background-color: #4f8cff;
-  color: #fff;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  z-index: 1100;
-  transition: left 0.3s;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f43f5e, #be123c);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: white;
+  font-size: 1rem;
 }
 
-.sidebar-chro.closed + .sidebar-chro-toggle-btn {
-  left: 64px;
+.chro-user-info {
+  overflow: hidden;
+}
+
+.chro-user-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.chro-user-role {
+  font-size: 0.75rem;
+  color: var(--chro-text-muted);
+}
+
+.chro-logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 600;
+}
+
+.chro-sidebar.closed .chro-logout-btn {
+  padding: 12px 0;
+}
+.chro-sidebar.closed .chro-logout-btn span {
+  display: none;
+}
+
+.chro-logout-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  color: #fff;
+}
+
+/* Mobile Overlay */
+.chro-sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.chro-sidebar-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .chro-sidebar {
+    transform: translateX(-100%);
+  }
+  .chro-sidebar.open {
+    transform: translateX(0);
+    width: var(--chro-sidebar-width);
+  }
+  .chro-sidebar.closed {
+    transform: translateX(-100%);
+  }
+
+  .chro-toggle-btn {
+    /* Hide floating toggle on mobile, rely on header or overlay to close */
+    display: none;
+  }
 }

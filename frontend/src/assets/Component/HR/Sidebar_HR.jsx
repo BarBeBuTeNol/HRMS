@@ -1,71 +1,171 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  FaHome,
+  FaUserPlus,
+  FaUsers,
+  FaCalendarAlt,
+  FaClipboardList,
+  FaExchangeAlt,
+  FaBell,
+  FaBullhorn,
+  FaSignOutAlt,
+  FaChevronLeft,
+  FaChevronRight,
+  FaUserCircle,
+} from "react-icons/fa";
 import "./Sidebar_HR.css";
 
 const Sidebar_HR = () => {
   const [open, setOpen] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // ดึงข้อมูล currentUser จาก localStorage
   const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
   const displayUsername = currentUser.username || "Guest";
   const displayRole = currentUser.role || "HR";
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("username");
+    localStorage.clear();
     navigate("/login");
   };
 
-  // ปุ่ม toggle สำหรับขยาย/ย่อ
-  const ToggleButton = (
-    <button
-      className="sidebar-hr-toggle-btn"
-      onClick={() => setOpen((prev) => !prev)}
-      aria-label={open ? "ย่อ Sidebar" : "ขยาย Sidebar"}
-      style={{ position: "absolute", top: 18, right: open ? -18 : -18, zIndex: 1100, background: "#4f8cff", color: "#fff", border: "none", borderRadius: "50%", width: 36, height: 36, boxShadow: "0 2px 8px #23272f33", cursor: "pointer", transition: "right 0.3s" }}
-    >
-      {open ? "←" : "→"}
-    </button>
-  );
+  const isActive = (path) => location.pathname === path;
+
+  const menuItems = [
+    {
+      title: "HR Management",
+      width: "100%",
+      items: [
+        { path: "/hr/dashboard", icon: <FaHome />, label: "Dashboard" },
+        { path: "/hr/add-user", icon: <FaUserPlus />, label: "Create User" },
+
+        { path: "/hr/show-emp", icon: <FaUsers />, label: "Show Employees" },
+      ],
+    },
+    {
+      title: "Leave & Shifts",
+      items: [
+        {
+          path: "/hr/leave-info",
+          icon: <FaCalendarAlt />,
+          label: "Leave Requests",
+        },
+        {
+          path: "/hr/show-leave",
+          icon: <FaClipboardList />,
+          label: "Show Leave",
+        },
+        {
+          path: "/hr/show-static-switch",
+          icon: <FaExchangeAlt />,
+          label: "Static / Switch Job",
+        },
+      ],
+    },
+    {
+      title: "Communication",
+      items: [
+        {
+          path: "/hr/send-notification",
+          icon: <FaBell />,
+          label: "Notification",
+        },
+        {
+          path: "/hr/announcements",
+          icon: <FaBullhorn />,
+          label: "Announcements",
+        },
+      ],
+    },
+  ];
 
   return (
-    <div className={`sidebar-hr-fixed${open ? " open" : " closed"}`} style={{ position: "relative" }}>
-      {open ? (
-        <>
-          {ToggleButton}
-          <div className="sidebar-hr">
-            <div className="sidebar-hr-username" title={displayUsername}>
-              👤 {displayUsername}
-              <div className="sidebar-hr-role">{displayRole}</div>
-            </div>
-            <button className="sidebar-hr-btn" onClick={() => navigate("/hr/dashboard")}>Home</button>
-<button className="sidebar-hr-btn" onClick={() => navigate("/hr/add-user")}>Create User</button>
-<button className="sidebar-hr-btn" onClick={() => navigate("/hr/add-emp-personal")}>Create Employee</button>
-<button className="sidebar-hr-btn" onClick={() => navigate("/hr/show-emp")}>Show Employees</button>
-<button className="sidebar-hr-btn" onClick={() => navigate("/hr/leave-info")}>Leave</button>
-<button className="sidebar-hr-btn" onClick={() => navigate("/hr/show-leave")}>Show Leave </button>
-<button className="sidebar-hr-btn" onClick={() => navigate("/hr/show-static-switch")}>Show Static And Switch Job</button>
-<button className="sidebar-hr-btn" onClick={() => navigate("/hr/send-notification")}>Notification</button>
-<button className="sidebar-hr-btn" onClick={() => navigate("/hr/announcements")}>Announcements</button>
+    <motion.div
+      animate={{ width: open ? "260px" : "80px" }}
+      transition={{ duration: 0.5, type: "spring", damping: 12 }}
+      className="sidebar-hr-container"
+    >
+      <div className="sidebar-header">
+        <AnimatePresence>
+          {open && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="user-info"
+            >
+              <FaUserCircle className="user-avatar" />
+              <div className="user-text">
+                <h3 className="user-name">{displayUsername}</h3>
+                <span className="user-role">{displayRole}</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-            <div className="sidebar-hr-spacer" />
-            <button className="sidebar-hr-btn logout" onClick={handleLogout}>Logout</button>
+        <button className="toggle-btn" onClick={() => setOpen(!open)}>
+          {open ? <FaChevronLeft /> : <FaChevronRight />}
+        </button>
+      </div>
+
+      <div className="sidebar-menu">
+        {menuItems.map((group, index) => (
+          <div key={index} className="menu-group">
+            {open && <h4 className="group-title">{group.title}</h4>}
+            {group.items.map((item) => (
+              <div
+                key={item.path}
+                className={`menu-item ${isActive(item.path) ? "active" : ""}`}
+                onClick={() => navigate(item.path)}
+                title={!open ? item.label : ""}
+              >
+                <span className="menu-icon">{item.icon}</span>
+                <AnimatePresence>
+                  {open && (
+                    <motion.span
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      className="menu-label"
+                    >
+                      {item.label}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+                {isActive(item.path) && (
+                  <motion.div
+                    layoutId="active-pill"
+                    className="active-indicator"
+                  />
+                )}
+              </div>
+            ))}
           </div>
-        </>
-      ) : (
-        <div
-          className="sidebar-hr sidebar-hr-collapsed sidebar-hr-collapsed-clickable"
-          style={{ cursor: "pointer", width: "64px", minWidth: "64px", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}
-          onClick={() => setOpen(true)}
-          title="ขยาย Sidebar"
-        >
-          <div className="sidebar-hr-username" style={{ fontSize: "2rem", margin: 0, padding: 0 }}>
-            →
-          </div>
+        ))}
+      </div>
+
+      <div className="sidebar-footer">
+        <div className="menu-item logout" onClick={handleLogout} title="Logout">
+          <span className="menu-icon">
+            <FaSignOutAlt />
+          </span>
+          <AnimatePresence>
+            {open && (
+              <motion.span
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="menu-label"
+              >
+                Logout
+              </motion.span>
+            )}
+          </AnimatePresence>
         </div>
-      )}
-    </div>
+      </div>
+    </motion.div>
   );
 };
 

@@ -1,53 +1,43 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import Sidebar_HR from "../../../Component/HR/Sidebar_HR.jsx";
+import { useNavigate, useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
+import {
+  FaUser,
+  FaBriefcase,
+  FaMoneyBillWave,
+  FaCalendarAlt,
+  FaCheckCircle,
+  FaIdBadge,
+  FaFileAlt,
+} from "react-icons/fa";
+import HRLayout from "../../../Component/HR/HRLayout";
+import PopupNotification from "../../../Component/popup_notifications/PopupNotification";
+import EditEmpNav from "../../../Component/HR/EditEmpNav";
 import "./Add_emp_info.css";
 
 const AddEmpInfo = () => {
   const navigate = useNavigate();
-  const [personalId, setPersonalId] = useState("");
+  const location = useLocation();
+  const { empPersonal, userId, isEditMode } = location.state || {};
+
+  const [showIds, setShowIds] = useState({
+    userId: userId || "",
+    empCode: empPersonal?.empId || "",
+  });
+
   const [imageUrl, setImageUrl] = useState("");
-  const [isSaved, setIsSaved] = useState(false);
+  const [departmentId, setDepartmentId] = useState(null);
 
-  useEffect(() => {
-    // Get emp_personal_list for personalId and imageUrl
-    const empPersonalList = JSON.parse(localStorage.getItem("emp_personal_list") || "[]");
-    if (empPersonalList.length > 0) {
-      const last = empPersonalList[empPersonalList.length - 1];
-      setPersonalId(last.personalId || "");
-      setImageUrl(last.imageUrl || "");
-    }
-
-    // Generate new Employee ID
-    const empInfoList = JSON.parse(localStorage.getItem("emp_info_list") || "[]");
-    let nextEmpId = "001";
-    if (empInfoList.length > 0) {
-      // Find max empId (as number)
-      const maxId = empInfoList.reduce((max, emp) => {
-        const idNum = parseInt(emp.empId, 10);
-        return !isNaN(idNum) && idNum > max ? idNum : max;
-      }, 0);
-      nextEmpId = String(maxId + 1).padStart(3, "0");
-    }
-
-    // Set today's date for startDate
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-    const todayStr = `${yyyy}-${mm}-${dd}`;
-
-    setForm((prev) => ({
-      ...prev,
-      empId: nextEmpId,
-      startDate: todayStr,
-    }));
-    setSalaryDisplay("");
-  }, []);
+  // Popup State
+  const [popup, setPopup] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info",
+  });
 
   const [form, setForm] = useState({
     empId: "",
-    department: "",
     status: "",
     startTime: "",
     endTime: "",
@@ -55,191 +45,517 @@ const AddEmpInfo = () => {
     startDate: "",
     salary: "",
     benefit: "",
-    performanceReview: null,
-    trainingInfo: null,
+    performanceReview: "",
+    trainingInfo: "",
   });
-  // For displaying salary with commas
+
   const [salaryDisplay, setSalaryDisplay] = useState("");
 
+  // Track original form data for dirty checking
+  const [originalForm, setOriginalForm] = useState(null);
+
+  useEffect(() => {
+    // If we have passed-in personal info, use it for image/codes
+    if (empPersonal?.imageUrl) {
+      setImageUrl(empPersonal.imageUrl);
+    }
+
+    // Default start date
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const dd = String(today.getDate()).padStart(2, "0");
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+
+    setForm((prev) => ({
+      ...prev,
+      startDate: todayStr,
+    }));
+
+    // Fetch user details to pre-fill if in edit mode (or just continuing flow with existing data)
+    const fetchFullDetails = async () => {
+      if (!userId) return;
+      try {
+        const res = await fetch(`/api/users/${userId}`);
+        if (res.ok) {
+          const data = await res.json();
+
+          // Set Department ID and IDs
+          if (data.department_id) setDepartmentId(data.department_id);
+          // Ensure we set showIds from fetched data if navigating directly
+          setShowIds((prev) => ({
+            ...prev,
+            userId: userId,
+            empCode: data.emp_code || prev.empCode,
+          }));
+
+          if (data.image_url) setImageUrl(data.image_url);
+
+          // Pre-fill form - Keys MUST match useState order for JSON.stringify comparison
+          const loadedForm = {
+            empId: data.emp_code ? String(data.emp_code) : "",
+            status: data.employment_status
+              ? String(data.employment_status)
+              : "",
+            startTime: data.work_start_time ? String(data.work_start_time) : "",
+            endTime: data.work_end_time ? String(data.work_end_time) : "",
+            jobPosition: data.job_position ? String(data.job_position) : "",
+            startDate: data.hire_date
+              ? new Date(data.hire_date).toISOString().split("T")[0]
+              : todayStr,
+            salary: data.salary ? String(data.salary) : "",
+            benefit: data.benefits ? String(data.benefits) : "",
+            performanceReview: data.performance_review
+              ? String(data.performance_review)
+              : "",
+            trainingInfo: data.training_info ? String(data.training_info) : "",
+          };
+
+          if (data.emp_code || isEditMode) {
+            setForm((prev) => ({
+              ...prev,
+              ...loadedForm, // Merge all loaded fields
+            }));
+
+            if (data.salary) {
+              const formatted = String(data.salary).replace(
+                /\B(?=(\d{3})+(?!\d))/g,
+                ","
+              );
+              setSalaryDisplay(formatted);
+            }
+
+            // Set original form for dirty checking
+            setOriginalForm(JSON.stringify(loadedForm));
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch user details", err);
+      }
+    };
+
+    if (userId) {
+      fetchFullDetails();
+    }
+  }, [userId, isEditMode]); // Clean dependencies
+
   const handleChange = (e) => {
-    const { name, value, type, files } = e.target;
+    const { name, value } = e.target;
     if (name === "salary") {
-      // Remove all non-digit characters
       const raw = value.replace(/[^\d]/g, "");
-      // Format with commas
       const formatted = raw.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
       setSalaryDisplay(formatted);
-      setForm((prev) => ({
-        ...prev,
-        salary: raw,
-      }));
+      setForm((prev) => ({ ...prev, salary: raw }));
       return;
     }
-    if (type === "file") {
-      setForm((prev) => ({
-        ...prev,
-        [name]: files[0],
-      }));
-    } else {
-      setForm((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleBack = () => {
-    navigate("/add-emp-personal");
+    // In edit mode, back returns to Show_emp. In add mode, back goes to step 1.
+    if (isEditMode) {
+      navigate("/hr/show-emp");
+    } else {
+      navigate("/hr/add-emp-personal", {
+        state: { userId: userId, ...empPersonal },
+      });
+    }
   };
 
-  const handleSave = (e) => {
+  const isFormFilled =
+    form.jobPosition &&
+    form.status &&
+    form.startDate &&
+    form.startTime &&
+    form.endTime &&
+    form.salary;
+
+  // Dirty check
+  const isDirty = (() => {
+    if (!originalForm) return false;
+    return JSON.stringify(form) !== originalForm;
+  })();
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const empInfoList = JSON.parse(localStorage.getItem("emp_info_list") || "[]");
-    const newEmpInfo = {
-      ...form,
-      personalId,
-      imageUrl,
-    };
-    empInfoList.push(newEmpInfo);
-    localStorage.setItem("emp_info_list", JSON.stringify(empInfoList));
-    setIsSaved(true);
-    alert("ข้อมูลพนักงานถูกบันทึกเรียบร้อยแล้ว");
-  };
+    if (!isFormFilled) {
+      setPopup({
+        isOpen: true,
+        title: "Incomplete Form",
+        message: "Please fill in all required fields.",
+        type: "warning",
+      });
+      return;
+    }
 
-  const handleDone = (e) => {
-    e.preventDefault();
-    // ส่งข้อมูลไปหน้า Add_emp_education
-    navigate("/add_emp_education", {
-      state: {
-        empId: form.empId,
-        personalId: personalId,
-        empImage: imageUrl,
-      },
-    });
-  };
-  
-  const isFormFilled = Object.entries(form)
-    .filter(([key]) => key !== "performanceReview" && key !== "trainingInfo")
-    .every(([_, value]) => value && value !== "");
+    if (!departmentId) {
+      setPopup({
+        isOpen: true,
+        title: "Missing Department",
+        message:
+          "Could not retrieve department from user account. Please try again.",
+        type: "error",
+      });
+      return;
+    }
 
-  useEffect(() => {
-    if (isFormFilled && personalId) {
-      const empInfoList = JSON.parse(localStorage.getItem("emp_info_list") || "[]");
-      const exists = empInfoList.some(emp => emp.empId === form.empId);
-      if (!exists) {
+    try {
+      const payload = {
+        userId: userId,
+        empCode: showIds.empCode,
+        departmentId: departmentId,
+        jobPosition: form.jobPosition,
+        employmentStatus: form.status,
+        workStartTime: form.startTime,
+        workEndTime: form.endTime,
+        hireDate: form.startDate,
+        salary: form.salary,
+        benefits: form.benefit,
+        performanceReview: form.performanceReview,
+        trainingInfo: form.trainingInfo,
+      };
+
+      const res = await fetch("/api/employee-data/job", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        // Update dirty check baseline
+        setOriginalForm(JSON.stringify(form));
+
+        const empInfoList = JSON.parse(
+          localStorage.getItem("emp_info_list") || "[]"
+        );
         const newEmpInfo = {
           ...form,
-          personalId,
+          personalId: showIds.empCode,
           imageUrl,
+          userId,
+          departmentId,
         };
         empInfoList.push(newEmpInfo);
         localStorage.setItem("emp_info_list", JSON.stringify(empInfoList));
+
+        if (isEditMode) {
+          setPopup({
+            isOpen: true,
+            title: "Success",
+            message: "Job information saved successfully!",
+            type: "success",
+          });
+          // Stay on page
+        } else {
+          setPopup({
+            isOpen: true,
+            title: "Success",
+            message:
+              "Job information saved successfully! Proceeding to Education Information...",
+            type: "success",
+          });
+
+          setTimeout(() => {
+            navigate("/hr/add-emp-education", {
+              state: {
+                empId: showIds.empCode,
+                personalId: showIds.empCode, // Maintain consistency
+                empImage: imageUrl,
+                userId: userId,
+              },
+            });
+          }, 1500);
+        }
+      } else {
+        const err = await res.json();
+        setPopup({
+          isOpen: true,
+          title: "Error",
+          message: "Error: " + err.message,
+          type: "error",
+        });
       }
+    } catch (error) {
+      console.error("Error saving job info:", error);
+      setPopup({
+        isOpen: true,
+        title: "Network Error",
+        message: "Failed to connect to server.",
+        type: "error",
+      });
     }
-  }, [isFormFilled, form, personalId, imageUrl]);
+  };
+
+  const containerVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6, staggerChildren: 0.1 },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, x: -10 },
+    visible: { opacity: 1, x: 0 },
+  };
 
   return (
-    <div className="add-emp-info-layout">
-      <Sidebar_HR />
-      <div className="add-emp-info-content">
-        <div className="add-emp-info-page">
-          <div className="add-emp-info-main">
-            <div className="add-emp-info-form-container">
-              <form className="add-emp-info-form" onSubmit={isSaved ? handleDone : handleSave}>
-                <h2>Employee Information</h2>
-                <div className="form-group">
-                  <label>Employee ID</label>
-                  <input type="text" name="empId" value={form.empId} onChange={handleChange} required readOnly />
+    <HRLayout>
+      <PopupNotification
+        isOpen={popup.isOpen}
+        onClose={() => setPopup({ ...popup, isOpen: false })}
+        title={popup.title}
+        message={popup.message}
+        type={popup.type}
+      />
+      <div className="add-emp-info-page">
+        {isEditMode ? (
+          <EditEmpNav userId={userId} activeTab="job" />
+        ) : (
+          <motion.div
+            className="info-header"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <h2 className="add-emp-info-title">Job Information</h2>
+            <span className="step-indicator">
+              Step 2 of 3: Employment Details
+            </span>
+          </motion.div>
+        )}
+
+        <motion.div
+          className="add-emp-info-content"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          <motion.div className="info-image-card" variants={itemVariants}>
+            <div className="info-image-wrapper">
+              {imageUrl ? (
+                <img src={imageUrl} alt="Employee" className="info-emp-image" />
+              ) : (
+                <div className="info-image-placeholder">
+                  <FaUser />
                 </div>
-                <div className="form-group">
-                  <label>Personal ID</label>
-                  <input type="text" name="personalId" value={personalId} readOnly />
-                </div>
-                <div className="form-group">
-                  <label>Department</label>
-                  <input type="text" name="department" value={form.department} onChange={handleChange} required />
-                </div>
-                <div className="form-group">
-                  <label>Status</label>
-                  <select name="status" value={form.status} onChange={handleChange} required>
-                    <option value="">-- เลือกสถานะ --</option>
-                    <option value="ฝึกงาน">ฝึกงาน</option>
-                    <option value="พนักงาน">พนักงาน</option>
-                    <option value="part-time">part-time</option>
-                  </select>
-                </div>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Start Time</label>
-                    <input type="time" name="startTime" value={form.startTime} onChange={handleChange} required />
-                  </div>
-                  <div className="form-group">
-                    <label>End Time</label>
-                    <input type="time" name="endTime" value={form.endTime} onChange={handleChange} required />
-                  </div>
-                </div>
-                <div className="form-group">
-                  <label>Job Position</label>
-                  <input type="text" name="jobPosition" value={form.jobPosition} onChange={handleChange} required />
-                </div>
-                <div className="form-group">
-                  <label>Start Date</label>
-                  <input type="date" name="startDate" value={form.startDate} onChange={handleChange} required />
-                </div>
-                <div className="form-group">
-                  <label>Salary (Bath)</label>
-                  <input
-                    type="text"
-                    name="salary"
-                    value={salaryDisplay}
-                    onChange={handleChange}
-                    required
-                    min="0"
-                    inputMode="numeric"
-                    pattern="[0-9,]*"
-                    placeholder="0"
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Benefit</label>
-                  <input type="text" name="benefit" value={form.benefit} onChange={handleChange} />
-                </div>
-                <div className="form-group">
-                  <label>Performance Review (อัปโหลดไฟล์)</label>
-                  <input type="file" name="performanceReview" accept=".pdf,.doc,.docx,.jpg,.png" onChange={handleChange} />
-                </div>
-                <div className="form-group">
-                  <label>Training Information (อัปโหลดไฟล์)</label>
-                  <input type="file" name="trainingInfo" accept=".pdf,.doc,.docx,.jpg,.png" onChange={handleChange} />
-                </div>
-                <div className="button-row">
-                  <button type="button" className="back-btn" onClick={handleBack}>
-                    Back
-                  </button>
-                  <button type="submit" className="submit-btn">
-                    {isSaved ? "Done" : "Save"}
-                  </button>
-                </div>
-              </form>
+              )}
             </div>
-            <div className="emp-image-section">
-              <div className="emp-image-preview-container">
-                <div className="image-label">Image Employee</div>
-                {imageUrl ? (
-                  <img
-                    src={imageUrl}
-                    alt="Employee"
-                    className="emp-image-preview"
-                  />
-                ) : (
-                  <div className="emp-image-preview no-image">ไม่มีรูปภาพ</div>
-                )}
+
+            <div className="emp-id-badges">
+              <div className="id-badge">
+                <label>User ID</label>
+                <span>{showIds.userId}</span>
+              </div>
+              <div className="id-badge">
+                <label>Employee Code</label>
+                <span>{showIds.empCode}</span>
               </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
+
+          <motion.div className="info-form-card" variants={itemVariants}>
+            <form onSubmit={handleSubmit}>
+              {/* Section 1: Role & Status */}
+              <div className="form-section">
+                <div className="section-title">
+                  <FaBriefcase className="section-icon" />
+                  <span>Role & Status</span>
+                </div>
+                <div className="form-fields-grid">
+                  <div className="form-group span-1">
+                    <label>Job Position</label>
+                    <div className="input-group">
+                      <FaBriefcase className="input-icon" />
+                      <input
+                        type="text"
+                        name="jobPosition"
+                        value={form.jobPosition}
+                        onChange={handleChange}
+                        required
+                        placeholder="e.g. Software Engineer"
+                      />
+                    </div>
+                  </div>
+                  <div className="form-group span-1">
+                    <label>Employment Status</label>
+                    <div className="input-group">
+                      <FaIdBadge className="input-icon" />
+                      <select
+                        name="status"
+                        value={form.status}
+                        onChange={handleChange}
+                        required
+                      >
+                        <option value="">-- Select Status --</option>
+                        <option value="Full-time">Full-time</option>
+                        <option value="Part-time">Part-time</option>
+                        <option value="Contract">Contract</option>
+                        <option value="Intern">Intern</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 2: Compensation & Schedule */}
+              <div className="form-section">
+                <div className="section-title">
+                  <FaMoneyBillWave className="section-icon" />
+                  <span>Compensation & Schedule</span>
+                </div>
+                <div className="form-fields-grid">
+                  <div className="form-group span-1">
+                    <label>Start Date</label>
+                    <div className="input-group">
+                      <FaCalendarAlt className="input-icon" />
+                      <input
+                        type="date"
+                        name="startDate"
+                        value={form.startDate}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="form-group span-1">
+                    <label>Working Hours</label>
+                    <div
+                      className="input-group"
+                      style={{ display: "flex", gap: "0.5rem" }}
+                    >
+                      <input
+                        type="time"
+                        name="startTime"
+                        value={form.startTime}
+                        onChange={handleChange}
+                        required
+                        style={{ paddingLeft: "1rem" }}
+                      />
+                      <span style={{ alignSelf: "center", color: "#94a3b8" }}>
+                        -
+                      </span>
+                      <input
+                        type="time"
+                        name="endTime"
+                        value={form.endTime}
+                        onChange={handleChange}
+                        required
+                        style={{ paddingLeft: "1rem" }}
+                      />
+                    </div>
+                  </div>
+                  <div className="form-group span-1">
+                    <label>Salary (THB)</label>
+                    <div className="input-group">
+                      <FaMoneyBillWave className="input-icon" />
+                      <input
+                        type="text"
+                        name="salary"
+                        value={salaryDisplay}
+                        onChange={handleChange}
+                        required
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </div>
+                  <div className="form-group span-1">
+                    <label>Benefits</label>
+                    <div className="input-group">
+                      <textarea
+                        name="benefit"
+                        value={form.benefit}
+                        onChange={handleChange}
+                        placeholder="e.g. Health Insurance"
+                        rows="1"
+                        className="form-textarea no-scroll"
+                        style={{ paddingTop: "0.8rem" }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 3: Additional Info */}
+              <div className="form-section">
+                <div className="section-title">
+                  <FaFileAlt className="section-icon" />
+                  <span>Additional Details</span>
+                </div>
+                <div className="form-fields-grid">
+                  <div className="form-group span-1">
+                    <label>Performance Review</label>
+                    <div className="input-group">
+                      <textarea
+                        name="performanceReview"
+                        value={form.performanceReview}
+                        onChange={handleChange}
+                        placeholder="Initial notes..."
+                        rows="3"
+                        className="form-textarea"
+                        style={{ paddingLeft: "1rem" }}
+                      />
+                    </div>
+                  </div>
+                  <div className="form-group span-1">
+                    <label>Training Info</label>
+                    <div className="input-group">
+                      <textarea
+                        name="trainingInfo"
+                        value={form.trainingInfo}
+                        onChange={handleChange}
+                        placeholder="Required training..."
+                        rows="3"
+                        className="form-textarea"
+                        style={{ paddingLeft: "1rem" }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                className="form-actions"
+                style={{
+                  display: "flex",
+                  gap: "1rem",
+                  justifyContent: "center", // Centered
+                }}
+              >
+                <button
+                  type="button"
+                  className="btn-back"
+                  onClick={handleBack}
+                  style={{ width: "300px" }} // Expanded width
+                >
+                  Back
+                </button>
+                <button
+                  type="submit"
+                  className="btn-save"
+                  disabled={isEditMode ? !isDirty : !isFormFilled}
+                  style={{
+                    width: isEditMode ? "300px" : "100%", // Expanded width
+                    flex: isEditMode ? "none" : 1,
+                    opacity:
+                      (isEditMode && !isDirty) || (!isEditMode && !isFormFilled)
+                        ? 0.5
+                        : 1,
+                    cursor:
+                      (isEditMode && !isDirty) || (!isEditMode && !isFormFilled)
+                        ? "not-allowed"
+                        : "pointer",
+                  }}
+                >
+                  {isEditMode ? "Save Changes" : "Proceed to Step 3"}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </motion.div>
       </div>
-    </div>
+    </HRLayout>
   );
 };
 

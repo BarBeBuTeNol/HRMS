@@ -12,6 +12,10 @@ import employeeRoutes from "./routes/employeeRoutes";
 import workScheduleRoutes from "./routes/workScheduleRoutes";
 import taskAssignmentRoutes from "./routes/taskAssignmentRoutes";
 import shiftAssignmentRoutes from "./routes/shiftAssignmentRoutes";
+import roleRoutes from "./routes/roleRoutes";
+import departmentRoutes from "./routes/departmentRoutes";
+import employeeDataRoutes from "./routes/employeeDataRoutes";
+import prefixRoutes from "./routes/prefixRoutes";
 console.log("DEBUG shiftAssignmentRoutes >>>", shiftAssignmentRoutes);
 
 dotenv.config();
@@ -19,7 +23,12 @@ dotenv.config();
 const app = express();
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:3000"],
+    origin: [
+      "http://localhost:5173", 
+      "http://localhost:3000",
+      "http://127.0.0.1:5173",
+      "http://127.0.0.1:3000"
+    ],
     credentials: true,
   })
 );
@@ -39,6 +48,17 @@ app.use("/api/employees", employeeRoutes); // ✅ สำหรับดึงพ
 app.use("/api/work-schedules", workScheduleRoutes); // ✅ สำหรับจัดการตารางเวร
 app.use("/api", taskAssignmentRoutes); // ✅ สำหรับจัดการมอบหมายงาน
 app.use("/api", shiftAssignmentRoutes);
+app.use("/api/roles", roleRoutes);
+app.use("/api/departments", departmentRoutes);
+app.use("/api/employee-data", employeeDataRoutes);
+app.use("/api/prefixes", prefixRoutes);
+
+// ✅ Reports Routes
+import swapReportRoutes from "./routes/swapReportRoutes";
+app.use("/api/reports", swapReportRoutes);
+
+import announcementRoutes from "./routes/announcementRoutes";
+app.use("/api/announcements", announcementRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () =>

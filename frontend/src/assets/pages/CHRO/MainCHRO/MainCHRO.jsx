@@ -1,12 +1,32 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import SidebarCHRO from '../../../Component/CHRO/SidebarCHRO';
-import './MainCHRO.css';
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import SidebarCHRO from "../../../Component/CHRO/SidebarCHRO";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  FaUsers,
+  FaUserTie,
+  FaBuilding,
+  FaChartLine,
+  FaSearch,
+  FaFilter,
+  FaSortAmountDown,
+  FaThLarge,
+  FaList,
+  FaFileCsv,
+  FaTimes,
+  FaTrashAlt,
+  FaEye,
+  FaStar,
+  FaBriefcase,
+  FaBirthdayCake,
+  FaVenusMars,
+} from "react-icons/fa";
+import "./MainCHRO.css";
 
 const MainCHRO = () => {
   const navigate = useNavigate();
 
-  /** ---------- State หลัก (เฉพาะหน้านี้) ---------- */
+  // --- State ---
   const [currentUser, setCurrentUser] = useState({});
   const [employees, setEmployees] = useState([]);
   const [departments, setDepartments] = useState([]);
@@ -17,623 +37,755 @@ const MainCHRO = () => {
     turnoverRate: 0,
     avgSalary: 0,
     genderDistribution: { male: 0, female: 0, other: 0 },
-    ageDistribution: { '18-25': 0, '26-35': 0, '36-45': 0, '46-55': 0, '55+': 0 },
-    departmentStats: []
+    ageDistribution: {
+      "18-25": 0,
+      "26-35": 0,
+      "36-45": 0,
+      "46-55": 0,
+      "55+": 0,
+    },
+    departmentStats: [],
   });
   const [recentActivities, setRecentActivities] = useState([]);
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState("dashboard"); // dashboard | employees | departments | analytics
 
-  /** ---------- ค้นหา / กรอง / จัดเรียง / แบ่งหน้า (เฉพาะหน้านี้) ---------- */
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterDepartment, setFilterDepartment] = useState('all');
-  const [chroViewMode, setChroViewMode] = useState('grid'); // 'grid' | 'list'
-  const [chroSortKey, setChroSortKey] = useState('name');   // 'name' | 'empId' | 'role' | 'department'
-  const [chroSortDir, setChroSortDir] = useState('asc');    // 'asc' | 'desc'
-  const [chroPage, setChroPage] = useState(1);
-  const [chroPageSize, setChroPageSize] = useState(12);
+  // --- Filter/Sort State ---
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterDepartment, setFilterDepartment] = useState("all");
+  const [viewMode, setViewMode] = useState("grid"); // grid | list
+  const [sortKey, setSortKey] = useState("name");
+  const [sortDir, setSortDir] = useState("asc");
 
-  /** ---------- โมดัล ---------- */
-  const [showEmployeeModal, setShowEmployeeModal] = useState(false);
+  // --- Modal State ---
   const [selectedEmployee, setSelectedEmployee] = useState(null);
-
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState(null);
-  const [deletePassword, setDeletePassword] = useState('');
-  const [deleteError, setDeleteError] = useState('');
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteError, setDeleteError] = useState("");
 
-  /** ---------- Load ข้อมูล (ยึดตามหน้าเดิม) ---------- */
+  // --- Sidebar State ---
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  // --- Effects ---
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const handleResize = () => {
+      if (window.innerWidth < 1024) setIsSidebarOpen(false);
+      else setIsSidebarOpen(true);
+    };
+    window.addEventListener("resize", handleResize);
+    handleResize();
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
     setCurrentUser(user);
 
-    const storedEmployees = JSON.parse(localStorage.getItem('employees') || '[]');
-    setEmployees(storedEmployees);
+    const storedEmployees = JSON.parse(
+      localStorage.getItem("employees") || "[]"
+    );
 
+    // Fallback if no employees in LS
+    let empData = storedEmployees;
     if (storedEmployees.length === 0) {
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-      const employeeUsers = users.filter(u => u.role === 'Employee' || u.role === 'Manager');
-      setEmployees(employeeUsers);
+      const users = JSON.parse(localStorage.getItem("users") || "[]");
+      empData = users.filter(
+        (u) => u.role === "Employee" || u.role === "Manager"
+      );
     }
+    setEmployees(empData);
 
+    // Mock Departments
     const mockDepartments = [
-      { id: 1, name: 'Human Resources', count: 12, budget: 850000 },
-      { id: 2, name: 'Engineering', count: 45, budget: 3200000 },
-      { id: 3, name: 'Marketing', count: 18, budget: 1200000 },
-      { id: 4, name: 'Sales', count: 25, budget: 1800000 },
-      { id: 5, name: 'Finance', count: 15, budget: 950000 },
-      { id: 6, name: 'Operations', count: 30, budget: 2100000 }
+      { id: 1, name: "Human Resources", count: 12, budget: 850000, score: 92 },
+      { id: 2, name: "Engineering", count: 45, budget: 3200000, score: 88 },
+      { id: 3, name: "Marketing", count: 18, budget: 1200000, score: 95 },
+      { id: 4, name: "Sales", count: 25, budget: 1800000, score: 85 },
+      { id: 5, name: "Finance", count: 15, budget: 950000, score: 90 },
+      { id: 6, name: "Operations", count: 30, budget: 2100000, score: 82 },
     ];
     setDepartments(mockDepartments);
 
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const employeeUsers = users.filter(u => u.role === 'Employee' || u.role === 'Manager');
-    generateAnalytics(storedEmployees.length > 0 ? storedEmployees : employeeUsers, mockDepartments);
-
+    generateAnalytics(empData, mockDepartments);
     generateRecentActivities();
   }, []);
 
-  /** ---------- Analytics & Activities (คงแนวเดิม) ---------- */
   const generateAnalytics = (empData, deptData) => {
     const total = empData.length;
-    const active = Math.floor(total * 0.95);
-    const turnover = 2.3;
-    const avgSalary = 65000;
+    const active = Math.floor(total * 0.95); // Mock active calculation
 
+    // Advanced Mock Stats
     const genderDist = {
-      male: Math.floor(total * 0.52),
-      female: Math.floor(total * 0.45),
-      other: total - Math.floor(total * 0.52) - Math.floor(total * 0.45)
-    };
-
-    const ageDist = {
-      '18-25': Math.floor(total * 0.15),
-      '26-35': Math.floor(total * 0.35),
-      '36-45': Math.floor(total * 0.30),
-      '46-55': Math.floor(total * 0.15),
-      '55+': Math.floor(total * 0.05)
+      male: Math.floor(total * 0.55),
+      female: Math.floor(total * 0.4),
+      other: total - Math.floor(total * 0.55) - Math.floor(total * 0.4),
     };
 
     setAnalytics({
       totalEmployees: total,
       activeEmployees: active,
       departments: deptData.length,
-      turnoverRate: turnover,
-      avgSalary,
+      turnoverRate: 2.3, // Mock KPI
+      avgSalary: 65000,
       genderDistribution: genderDist,
-      ageDistribution: ageDist,
-      departmentStats: deptData
+      departmentStats: deptData,
+      ageDistribution: {
+        "18-25": 12,
+        "26-35": 38,
+        "36-45": 25,
+        "46-55": 15,
+        "55+": 10,
+      }, // Mock
     });
   };
 
   const generateRecentActivities = () => {
-    const activities = [
-      { id: 1, type: 'hire', message: 'New employee John Smith hired in Engineering', time: '2 hours ago', icon: '👤' },
-      { id: 2, type: 'promotion', message: 'Sarah Johnson promoted to Senior Manager', time: '1 day ago', icon: '📈' },
-      { id: 3, type: 'training', message: 'Leadership training completed for 15 managers', time: '2 days ago', icon: '🎓' },
-      { id: 4, type: 'review', message: 'Annual performance reviews completed', time: '3 days ago', icon: '📋' },
-      { id: 5, type: 'policy', message: 'Updated remote work policy implemented', time: '1 week ago', icon: '📄' }
-    ];
-    setRecentActivities(activities);
+    setRecentActivities([
+      {
+        id: 1,
+        message: "Strategic Hiring Plan Approved",
+        time: "2 hours ago",
+        type: "strategy",
+      },
+      {
+        id: 2,
+        message: "Quarterly Review Completed",
+        time: "5 hours ago",
+        type: "review",
+      },
+      {
+        id: 3,
+        message: "New Benefits Package Live",
+        time: "1 day ago",
+        type: "benefit",
+      },
+      {
+        id: 4,
+        message: "Engineering Head Onboarded",
+        time: "2 days ago",
+        type: "hiring",
+      },
+    ]);
   };
 
-  /** ---------- Filter / Sort / Pagination ---------- */
+  // --- Filtering & Sorting ---
   const filteredEmployees = useMemo(() => {
-    const t = searchTerm.trim().toLowerCase();
-    return employees.filter(emp => {
-      const matchesSearch =
-        emp.firstName?.toLowerCase().includes(t) ||
-        emp.lastName?.toLowerCase().includes(t) ||
-        emp.empId?.toLowerCase().includes(t);
-
-      const matchesDept = filterDepartment === 'all' || emp.department === filterDepartment;
-      return matchesSearch && matchesDept;
+    return employees.filter((emp) => {
+      const matchSearch =
+        (emp.firstName?.toLowerCase() || "").includes(
+          searchTerm.toLowerCase()
+        ) ||
+        (emp.lastName?.toLowerCase() || "").includes(
+          searchTerm.toLowerCase()
+        ) ||
+        (emp.empId || "").includes(searchTerm);
+      const matchDept =
+        filterDepartment === "all" || emp.department === filterDepartment;
+      return matchSearch && matchDept;
     });
   }, [employees, searchTerm, filterDepartment]);
 
   const sortedEmployees = useMemo(() => {
-    const clone = [...filteredEmployees];
-    const getKey = (e) => {
-      if (chroSortKey === 'name') return `${e.firstName || ''} ${e.lastName || ''}`.trim().toLowerCase();
-      if (chroSortKey === 'empId') return (e.empId || '').toString().toLowerCase();
-      if (chroSortKey === 'role') return (e.role || '').toLowerCase();
-      if (chroSortKey === 'department') return (e.department || '').toLowerCase();
-      return '';
-    };
-    clone.sort((a, b) => {
-      const A = getKey(a), B = getKey(b);
-      if (A < B) return chroSortDir === 'asc' ? -1 : 1;
-      if (A > B) return chroSortDir === 'asc' ? 1 : -1;
+    return [...filteredEmployees].sort((a, b) => {
+      let valA = "",
+        valB = "";
+      if (sortKey === "name") {
+        valA = a.firstName;
+        valB = b.firstName;
+      } else if (sortKey === "dept") {
+        valA = a.department;
+        valB = b.department;
+      } else if (sortKey === "role") {
+        valA = a.role;
+        valB = b.role;
+      }
+
+      if (valA < valB) return sortDir === "asc" ? -1 : 1;
+      if (valA > valB) return sortDir === "asc" ? 1 : -1;
       return 0;
     });
-    return clone;
-  }, [filteredEmployees, chroSortKey, chroSortDir]);
+  }, [filteredEmployees, sortKey, sortDir]);
 
-  const totalPages = Math.max(1, Math.ceil(sortedEmployees.length / chroPageSize));
+  // --- Actions ---
+  const handleEmployeeClick = (emp) => setSelectedEmployee(emp);
 
-  useEffect(() => {
-    // รีเซ็ตหน้า เมื่อผลลัพธ์เปลี่ยน
-    setChroPage(1);
-  }, [searchTerm, filterDepartment, chroSortKey, chroSortDir, chroPageSize]);
-
-  const pagedEmployees = useMemo(() => {
-    const start = (chroPage - 1) * chroPageSize;
-    return sortedEmployees.slice(start, start + chroPageSize);
-  }, [sortedEmployees, chroPage, chroPageSize]);
-
-  /** ---------- Actions ---------- */
-  const handleEmployeeSelect = (employee) => {
-    setSelectedEmployee(employee);
-    setShowEmployeeModal(true);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('currentUser');
-    navigate('/login');
-  };
-
-  const handleDeleteEmployee = (employee) => {
-    setEmployeeToDelete(employee);
+  const initiateDelete = (emp) => {
+    setEmployeeToDelete(emp);
     setShowDeleteModal(true);
-    setDeletePassword('');
-    setDeleteError('');
+    setDeletePassword("");
+    setDeleteError("");
   };
 
-  const confirmDeleteEmployee = () => {
-    if (deletePassword === '0123') {
-      const updated = employees.filter(emp => emp.username !== employeeToDelete.username);
+  const confirmDelete = () => {
+    if (deletePassword === "0123") {
+      // Mock password check
+      const updated = employees.filter(
+        (e) =>
+          e.id !== employeeToDelete.id &&
+          e.username !== employeeToDelete.username
+      );
       setEmployees(updated);
-      localStorage.setItem('employees', JSON.stringify(updated));
+      localStorage.setItem("employees", JSON.stringify(updated));
 
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-      const updatedUsers = users.filter(u => u.username !== employeeToDelete.username);
-      localStorage.setItem('users', JSON.stringify(updatedUsers));
-
-      generateAnalytics(updated, departments);
+      // Also update Users list
+      const users = JSON.parse(localStorage.getItem("users") || "[]");
+      const updatedUsers = users.filter(
+        (u) => u.username !== employeeToDelete.username
+      );
+      localStorage.setItem("users", JSON.stringify(updatedUsers));
 
       setShowDeleteModal(false);
-      setShowEmployeeModal(false);
-      setEmployeeToDelete(null);
-      setDeletePassword('');
-      setDeleteError('');
-      alert(`พนักงาน ${employeeToDelete.firstName} ${employeeToDelete.lastName} ถูกลบออกเรียบร้อยแล้ว`);
+      setSelectedEmployee(null);
+      alert("Employee profile terminated.");
+      generateAnalytics(updated, departments);
     } else {
-      setDeleteError('รหัสผ่านไม่ถูกต้อง กรุณาใส่รหัสผ่าน CHRO/HR ที่ถูกต้อง');
+      setDeleteError("Invalid Executive Authorization Code");
     }
   };
 
-  const cancelDelete = () => {
-    setShowDeleteModal(false);
-    setEmployeeToDelete(null);
-    setDeletePassword('');
-    setDeleteError('');
+  // --- Render Helpers ---
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good Morning";
+    if (hour < 18) return "Good Afternoon";
+    return "Good Evening";
   };
 
-  const exportCurrentViewCSV = () => {
-    const rows = [
-      ['EmpID', 'First Name', 'Last Name', 'Role', 'Department', 'Email', 'Telephone'],
-      ...sortedEmployees.map(e => [
-        e.empId || '',
-        e.firstName || '',
-        e.lastName || '',
-        e.role || '',
-        e.department || '',
-        e.email || '',
-        e.telephone || ''
-      ])
-    ];
-    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'employees.csv';
-    document.body.appendChild(a); a.click(); a.remove();
-    URL.revokeObjectURL(url);
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 },
+    },
   };
 
-  /** ---------- Helpers ---------- */
-  const genderPct = (x) => analytics.totalEmployees ? Math.round((x / analytics.totalEmployees) * 100) : 0;
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 },
+  };
 
   return (
     <div className="main-chro-container">
-      {/* Sidebar */}
-      <SidebarCHRO />
+      <SidebarCHRO isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
-      {/* Header */}
-      <header className="chro-header" role="banner">
-        <div className="header-content">
-          <div className="header-left">
-            <h1 className="chro-title">CHRO Dashboard</h1>
-            <p className="chro-subtitle">Human Resources Management</p>
-          </div>
-          <div className="header-right">
-            <div className="user-info">
-              <span className="user-name">{currentUser.firstName} {currentUser.lastName}</span>
-              <span className="user-role">{currentUser.role}</span>
+      <div
+        className={`chro-dashboard-container ${
+          !isSidebarOpen ? "expanded-view" : ""
+        }`}
+      >
+        <div className="chro-content-wrapper">
+          {/* Header */}
+          <header className="chro-header-section">
+            <div className="chro-welcome-text">
+              <motion.h1
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                {getGreeting()}, {currentUser.firstName || "Executive"}
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                Here is your daily workforce intelligence report.
+              </motion.p>
             </div>
-            <button className="logout-btn" onClick={handleLogout}><span>🚪</span> Logout</button>
-          </div>
-        </div>
-      </header>
-
-      {/* Tabs */}
-      <nav className="chro-nav" aria-label="Primary">
-        <button className={`nav-tab ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>
-          <span className="nav-icon">📊</span> Dashboard
-        </button>
-        <button className={`nav-tab ${activeTab === 'employees' ? 'active' : ''}`} onClick={() => setActiveTab('employees')}>
-          <span className="nav-icon">👥</span> Employees
-        </button>
-        <button className={`nav-tab ${activeTab === 'departments' ? 'active' : ''}`} onClick={() => setActiveTab('departments')}>
-          <span className="nav-icon">🏢</span> Departments
-        </button>
-        <button className={`nav-tab ${activeTab === 'analytics' ? 'active' : ''}`} onClick={() => setActiveTab('analytics')}>
-          <span className="nav-icon">📈</span> Analytics
-        </button>
-      </nav>
-
-      {/* Main */}
-      <main className="chro-main">
-        {/* DASHBOARD */}
-        {activeTab === 'dashboard' && (
-          <div className="dashboard-content">
-            <section className="metrics-grid" aria-label="KPI">
-              <div className="metric-card">
-                <div className="metric-icon">👥</div>
-                <div className="metric-content">
-                  <h3>{analytics.totalEmployees}</h3>
-                  <p>พนักงานทั้งหมด</p>
-                </div>
-              </div>
-              <div className="metric-card">
-                <div className="metric-icon">✅</div>
-                <div className="metric-content">
-                  <h3>{analytics.activeEmployees}</h3>
-                  <p>พนักงานที่ทำงานอยู่</p>
-                </div>
-              </div>
-              <div className="metric-card">
-                <div className="metric-icon">🏢</div>
-                <div className="metric-content">
-                  <h3>{analytics.departments}</h3>
-                  <p>แผนก</p>
-                </div>
-              </div>
-              <div className="metric-card">
-                <div className="metric-icon">📊</div>
-                <div className="metric-content">
-                  <h3>{analytics.turnoverRate}%</h3>
-                  <p>อัตราการลาออก</p>
-                </div>
-              </div>
-            </section>
-
-            <section className="charts-section">
-              <div className="chart-container">
-                <h3>การกระจายตามเพศ</h3>
-                <div className="gender-chart">
-                  <div className="gender-bar">
-                    <div className="gender-label">Male</div>
-                    <div className="gender-progress">
-                      <div className="gender-fill male" style={{ '--w': `${genderPct(analytics.genderDistribution.male)}%` }} />
-                    </div>
-                    <div className="gender-percentage">{analytics.genderDistribution.male}</div>
-                  </div>
-                  <div className="gender-bar">
-                    <div className="gender-label">Female</div>
-                    <div className="gender-progress">
-                      <div className="gender-fill female" style={{ '--w': `${genderPct(analytics.genderDistribution.female)}%` }} />
-                    </div>
-                    <div className="gender-percentage">{analytics.genderDistribution.female}</div>
-                  </div>
-                  <div className="gender-bar">
-                    <div className="gender-label">Other</div>
-                    <div className="gender-progress">
-                      <div className="gender-fill other" style={{ '--w': `${genderPct(analytics.genderDistribution.other)}%` }} />
-                    </div>
-                    <div className="gender-percentage">{analytics.genderDistribution.other}</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="chart-container">
-                <h3>การกระจายตามอายุ</h3>
-                <div className="age-chart">
-                  {Object.entries(analytics.ageDistribution).map(([range, count]) => {
-                    const pct = analytics.totalEmployees ? Math.round((count / analytics.totalEmployees) * 100) : 0;
-                    return (
-                      <div key={range} className="age-bar">
-                        <div className="age-label">{range}</div>
-                        <div className="age-progress">
-                          <div className="age-fill" style={{ '--w': `${pct}%` }} />
-                        </div>
-                        <div className="age-count">{count}</div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </section>
-
-            <section className="activities-section">
-              <h3>กิจกรรมล่าสุด</h3>
-              <div className="activities-list">
-                {recentActivities.map(a => (
-                  <div key={a.id} className="activity-item">
-                    <div className="activity-icon">{a.icon}</div>
-                    <div className="activity-content">
-                      <p className="activity-message">{a.message}</p>
-                      <span className="activity-time">{a.time}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </div>
-        )}
-
-        {/* EMPLOYEES */}
-        {activeTab === 'employees' && (
-          <section className="employees-content">
-            <div className="employees-header">
-              <h2>การจัดการพนักงาน</h2>
-              <div className="employees-toolbar">
-                <input
-                  type="text"
-                  className="search-input"
-                  placeholder="🔍 ค้นหาพนักงาน..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <select
-                  className="filter-select"
-                  value={filterDepartment}
-                  onChange={(e) => setFilterDepartment(e.target.value)}
-                >
-                  <option value="all">ทุกแผนก</option>
-                  {departments.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
-                </select>
-
-                <select
-                  className="sort-select"
-                  value={chroSortKey}
-                  onChange={(e) => setChroSortKey(e.target.value)}
-                >
-                  <option value="name">เรียงตามชื่อ</option>
-                  <option value="empId">เรียงตามรหัส</option>
-                  <option value="role">เรียงตามตำแหน่ง</option>
-                  <option value="department">เรียงตามแผนก</option>
-                </select>
-
-                <button
-                  className="sort-dir-btn"
-                  aria-label="toggle sort direction"
-                  onClick={() => setChroSortDir(d => d === 'asc' ? 'desc' : 'asc')}
-                >
-                  {chroSortDir === 'asc' ? '⬆️ ASC' : '⬇️ DESC'}
-                </button>
-
-                <div className="view-toggle" role="group" aria-label="view mode">
-                  <button
-                    className={`view-btn ${chroViewMode === 'grid' ? 'active' : ''}`}
-                    onClick={() => setChroViewMode('grid')}
-                    title="Grid view"
-                  >🗃️ Grid</button>
-                  <button
-                    className={`view-btn ${chroViewMode === 'list' ? 'active' : ''}`}
-                    onClick={() => setChroViewMode('list')}
-                    title="List view"
-                  >📋 List</button>
-                </div>
-
-                <select
-                  className="page-size"
-                  value={chroPageSize}
-                  onChange={(e) => setChroPageSize(Number(e.target.value))}
-                >
-                  {[6, 12, 24, 48].map(n => <option key={n} value={n}>{n}/หน้า</option>)}
-                </select>
-
-                <button className="export-btn" onClick={exportCurrentViewCSV}>⬇️ Export CSV</button>
-              </div>
-            </div>
-
-            {/* Grid Mode */}
-            {chroViewMode === 'grid' && (
-              <div className="employees-grid">
-                {pagedEmployees.map(employee => (
-                  <div key={employee.username || `${employee.firstName}-${employee.lastName}`} className="employee-card" onClick={() => handleEmployeeSelect(employee)}>
-                    <div className="employee-avatar">{employee.firstName?.[0]}{employee.lastName?.[0]}</div>
-                    <div className="employee-details">
-                      <h4>{employee.firstName} {employee.lastName}</h4>
-                      <p className="employee-id">ID: {employee.empId || 'N/A'}</p>
-                      <p className="employee-role">{employee.role}</p>
-                      <p className="employee-dept">{employee.department || 'General'}</p>
-                    </div>
-                    <div className="employee-status">
-                      <span className="status-badge active">Active</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* List Mode */}
-            {chroViewMode === 'list' && (
-              <div className="employees-table-wrap">
-                <table className="employees-table">
-                  <thead>
-                    <tr>
-                      <th>EmpID</th>
-                      <th>ชื่อ-นามสกุล</th>
-                      <th>ตำแหน่ง</th>
-                      <th>แผนก</th>
-                      <th>อีเมล</th>
-                      <th>เบอร์โทร</th>
-                      <th>สถานะ</th>
-                      <th>จัดการ</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pagedEmployees.map(emp => (
-                      <tr key={emp.username || `${emp.firstName}-${emp.lastName}`}>
-                        <td>{emp.empId || '—'}</td>
-                        <td className="emp-name" onClick={() => handleEmployeeSelect(emp)}>
-                          <span className="mini-avatar">{emp.firstName?.[0]}{emp.lastName?.[0]}</span>
-                          {emp.firstName} {emp.lastName}
-                        </td>
-                        <td>{emp.role}</td>
-                        <td>{emp.department || 'General'}</td>
-                        <td>{emp.email || '—'}</td>
-                        <td>{emp.telephone || '—'}</td>
-                        <td><span className="status-badge active">Active</span></td>
-                        <td className="row-actions">
-                          <button className="row-btn view" onClick={() => handleEmployeeSelect(emp)}>ดู</button>
-                          <button className="row-btn danger" onClick={() => handleDeleteEmployee(emp)}>ลบ</button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            {/* Pagination */}
-            <div className="pagination">
-              <button disabled={chroPage === 1} onClick={() => setChroPage(1)}>« First</button>
-              <button disabled={chroPage === 1} onClick={() => setChroPage(p => Math.max(1, p - 1))}>‹ Prev</button>
-              <span className="page-info">หน้า {chroPage} / {totalPages}</span>
-              <button disabled={chroPage === totalPages} onClick={() => setChroPage(p => Math.min(totalPages, p + 1))}>Next ›</button>
-              <button disabled={chroPage === totalPages} onClick={() => setChroPage(totalPages)}>Last »</button>
-            </div>
-          </section>
-        )}
-
-        {/* DEPARTMENTS */}
-        {activeTab === 'departments' && (
-          <section className="departments-content">
-            <h2>ภาพรวมแผนก</h2>
-            <div className="departments-grid">
-              {departments.map(dept => {
-                const score = Math.floor(Math.random() * 30) + 70;
-                return (
-                  <div key={dept.id} className="department-card">
-                    <div className="department-header">
-                      <h3>{dept.name}</h3>
-                      <div className="performance-score">{score}%</div>
-                    </div>
-                    <div className="department-stats">
-                      <div className="stat-item"><span className="stat-label">Employees</span><span className="stat-value">{dept.count}</span></div>
-                      <div className="stat-item"><span className="stat-label">Budget</span><span className="stat-value">${(dept.budget/1000).toFixed(0)}K</span></div>
-                      <div className="stat-item"><span className="stat-label">Avg Salary</span><span className="stat-value">${(dept.budget/dept.count).toFixed(0)}</span></div>
-                    </div>
-                    <div className="department-progress">
-                      <div className="progress-bar"><div className="progress-fill" style={{ '--w': `${score}%` }} /></div>
-                    </div>
-                  </div>
-                );
+            <div className="chro-date-badge">
+              📅{" "}
+              {new Date().toLocaleDateString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
               })}
             </div>
-          </section>
-        )}
+          </header>
 
-        {/* ANALYTICS */}
-        {activeTab === 'analytics' && (
-          <section className="analytics-content">
-            <h2>การวิเคราะห์ทรัพยากรบุคคล</h2>
-            <div className="analytics-grid">
-              <div className="analytics-card">
-                <h3>Salary Analysis</h3>
-                <div className="salary-stats">
-                  <div className="salary-item"><span>Average Salary</span><strong>${analytics.avgSalary.toLocaleString()}</strong></div>
-                  <div className="salary-item"><span>Median Salary</span><strong>${(analytics.avgSalary * 0.9).toLocaleString()}</strong></div>
-                  <div className="salary-item"><span>Salary Range</span><strong>$45K - $120K</strong></div>
+          {/* Metrics Cards */}
+          <motion.section
+            className="chro-metrics-grid"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            {[
+              {
+                label: "Total Workforce",
+                value: analytics.totalEmployees,
+                icon: <FaUsers />,
+                delay: 0,
+              },
+              {
+                label: "Active Personnel",
+                value: analytics.activeEmployees,
+                icon: <FaUserTie />,
+                delay: 0.1,
+              },
+              {
+                label: "Departments",
+                value: analytics.departments,
+                icon: <FaBuilding />,
+                delay: 0.2,
+              },
+              {
+                label: "Turnover Rate",
+                value: `${analytics.turnoverRate}%`,
+                icon: <FaChartLine />,
+                delay: 0.3,
+              },
+            ].map((metric, idx) => (
+              <motion.div
+                key={idx}
+                className="chro-metric-card"
+                variants={itemVariants}
+                whileHover={{ y: -5, transition: { duration: 0.2 } }}
+              >
+                <div className="chro-metric-icon-wrapper">{metric.icon}</div>
+                <div className="chro-metric-info">
+                  <div className="chro-metric-value">{metric.value}</div>
+                  <div className="chro-metric-label">{metric.label}</div>
                 </div>
+              </motion.div>
+            ))}
+          </motion.section>
+
+          {/* Navigation Tabs */}
+          <nav className="chro-tabs-nav">
+            <button
+              className={`chro-tab-btn ${
+                activeTab === "dashboard" ? "active" : ""
+              }`}
+              onClick={() => setActiveTab("dashboard")}
+            >
+              <FaChartLine /> Executive Dashboard
+            </button>
+            <button
+              className={`chro-tab-btn ${
+                activeTab === "employees" ? "active" : ""
+              }`}
+              onClick={() => setActiveTab("employees")}
+            >
+              <FaUsers /> Workforce Management
+            </button>
+            <button
+              className={`chro-tab-btn ${
+                activeTab === "departments" ? "active" : ""
+              }`}
+              onClick={() => setActiveTab("departments")}
+            >
+              <FaBuilding /> Department Performance
+            </button>
+          </nav>
+
+          {/* --- Content Area --- */}
+          <main className="chro-content-area">
+            <AnimatePresence mode="wait">
+              {/* Dashboard View */}
+              {activeTab === "dashboard" && (
+                <motion.div
+                  key="dashboard"
+                  className="chro-grid-layout"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <motion.div
+                    className="chro-panel glass"
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.1 }}
+                  >
+                    <div className="chro-panel-header">
+                      <h3>
+                        <FaVenusMars /> Demographics Overview
+                      </h3>
+                    </div>
+                    <div className="chro-chart-wrapper">
+                      <div className="chro-bar-group">
+                        <div className="chro-bar-header">
+                          <span>Male</span>
+                          <span>{analytics.genderDistribution.male}</span>
+                        </div>
+                        <div className="chro-bar-track">
+                          <motion.div
+                            className="chro-bar-fill"
+                            initial={{ width: 0 }}
+                            animate={{ width: "55%" }}
+                            transition={{ duration: 1, delay: 0.5 }}
+                          ></motion.div>
+                        </div>
+                      </div>
+                      <div className="chro-bar-group">
+                        <div className="chro-bar-header">
+                          <span>Female</span>
+                          <span>{analytics.genderDistribution.female}</span>
+                        </div>
+                        <div className="chro-bar-track">
+                          <motion.div
+                            className="chro-bar-fill"
+                            style={{ background: "#f43f5e" }}
+                            initial={{ width: 0 }}
+                            animate={{ width: "40%" }}
+                            transition={{ duration: 1, delay: 0.6 }}
+                          ></motion.div>
+                        </div>
+                      </div>
+                      <div className="chro-bar-group">
+                        <div className="chro-bar-header">
+                          <span>Avg Salary</span>
+                          <span>${analytics.avgSalary.toLocaleString()}</span>
+                        </div>
+                        <div className="chro-bar-track">
+                          <motion.div
+                            className="chro-bar-fill"
+                            style={{ background: "#10b981" }}
+                            initial={{ width: 0 }}
+                            animate={{ width: "75%" }}
+                            transition={{ duration: 1, delay: 0.7 }}
+                          ></motion.div>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    className="chro-panel"
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    <div className="chro-panel-header">
+                      <h3>
+                        <FaList /> Recent Activities
+                      </h3>
+                    </div>
+                    <div className="chro-feed-list">
+                      {recentActivities.map((act) => (
+                        <div key={act.id} className="chro-feed-item">
+                          <div className="chro-feed-icon">
+                            <FaBriefcase />
+                          </div>
+                          <div className="chro-feed-content">
+                            <p>{act.message}</p>
+                            <span className="chro-feed-time">{act.time}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                </motion.div>
+              )}
+
+              {/* Employees View */}
+              {activeTab === "employees" && (
+                <motion.div
+                  key="employees"
+                  className="chro-panel glass"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="chro-controls-toolbar">
+                    <div className="chro-search-box">
+                      <FaSearch className="chro-search-icon" />
+                      <input
+                        type="text"
+                        placeholder="Search personnel..."
+                        className="chro-search-input"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
+                    </div>
+                    <select
+                      className="chro-select"
+                      value={filterDepartment}
+                      onChange={(e) => setFilterDepartment(e.target.value)}
+                    >
+                      <option value="all">All Departments</option>
+                      {departments.map((d) => (
+                        <option key={d.id} value={d.name}>
+                          {d.name}
+                        </option>
+                      ))}
+                    </select>
+
+                    <div className="chro-divider-v" />
+
+                    <button
+                      className="chro-btn-secondary"
+                      onClick={() =>
+                        setViewMode(viewMode === "grid" ? "list" : "grid")
+                      }
+                    >
+                      {viewMode === "grid" ? <FaList /> : <FaThLarge />}
+                    </button>
+                    <button
+                      className="chro-btn-secondary"
+                      onClick={() =>
+                        setSortDir(sortDir === "asc" ? "desc" : "asc")
+                      }
+                    >
+                      <FaSortAmountDown
+                        style={{
+                          transform:
+                            sortDir === "desc" ? "rotate(180deg)" : "none",
+                        }}
+                      />
+                    </button>
+                  </div>
+
+                  {viewMode === "grid" ? (
+                    <motion.div
+                      className="chro-emp-grid"
+                      variants={containerVariants}
+                      initial="hidden"
+                      animate="visible"
+                    >
+                      {sortedEmployees.map((emp) => (
+                        <motion.div
+                          key={emp.id}
+                          className="chro-emp-card active-status"
+                          onClick={() => handleEmployeeClick(emp)}
+                          variants={itemVariants}
+                          whileHover={{ y: -5, transition: { duration: 0.2 } }}
+                        >
+                          <div className="chro-avatar-large">
+                            {emp.firstName?.[0]}
+                          </div>
+                          <h4 className="chro-emp-name">
+                            {emp.firstName} {emp.lastName}
+                          </h4>
+                          <span className="chro-emp-role">{emp.role}</span>
+                          <span className="chro-emp-dept">
+                            {emp.department || "No Dept"}
+                          </span>
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                  ) : (
+                    <div className="chro-table-container">
+                      <table className="chro-table">
+                        <thead>
+                          <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Department</th>
+                            <th>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {sortedEmployees.map((emp) => (
+                            <tr key={emp.id}>
+                              <td>{emp.empId || "N/A"}</td>
+                              <td className="emp-name">
+                                <span className="mini-avatar">
+                                  {emp.firstName?.[0]}
+                                </span>
+                                {emp.firstName} {emp.lastName}
+                              </td>
+                              <td>{emp.role}</td>
+                              <td>{emp.department || "General"}</td>
+                              <td className="chro-row-actions">
+                                <button
+                                  className="chro-btn-view"
+                                  onClick={() => handleEmployeeClick(emp)}
+                                >
+                                  View
+                                </button>
+                                <button
+                                  className="chro-btn-delete"
+                                  onClick={() => initiateDelete(emp)}
+                                >
+                                  <FaTrashAlt />
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+
+              {/* Departments View */}
+              {activeTab === "departments" && (
+                <motion.div
+                  key="departments"
+                  className="chro-dept-grid"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {departments.map((dept) => (
+                    <motion.div
+                      key={dept.id}
+                      className="chro-dept-card"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.3 }}
+                      whileHover={{ y: -5 }}
+                    >
+                      <div className="chro-dept-header">
+                        <h3>{dept.name}</h3>
+                        <div
+                          className="chro-dept-score"
+                          style={{
+                            color: dept.score > 90 ? "#10b981" : "#f59e0b",
+                          }}
+                        >
+                          {dept.score}
+                        </div>
+                      </div>
+                      <div className="chro-dept-stats">
+                        <div className="dept-stat-box">
+                          <span className="dept-stat-val">{dept.count}</span>
+                          <span className="dept-stat-lbl">Staff</span>
+                        </div>
+                        <div className="dept-stat-box">
+                          <span className="dept-stat-val">
+                            ${(dept.budget / 1000).toFixed(0)}k
+                          </span>
+                          <span className="dept-stat-lbl">Budget</span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </main>
+        </div>
+      </div>
+
+      {/* --- Modals --- */}
+      {/* Employee Details Modal */}
+      <div
+        className={`chro-modal-overlay ${selectedEmployee ? "open" : ""}`}
+        onClick={() => setSelectedEmployee(null)}
+      >
+        {selectedEmployee && (
+          <div
+            className="chro-modal-content"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="chro-modal-header">
+              <h3>{selectedEmployee.firstName}'s Profile</h3>
+              <button
+                className="chro-modal-close"
+                onClick={() => setSelectedEmployee(null)}
+              >
+                <FaTimes />
+              </button>
+            </div>
+            <div className="chro-modal-body">
+              <div className="chro-info-row">
+                <span>Employee ID</span>
+                <span>{selectedEmployee.empId}</span>
               </div>
-              <div className="analytics-card">
-                <h3>Employee Retention</h3>
-                <div className="retention-stats">
-                  <div className="retention-item"><span>Turnover Rate</span><strong>{analytics.turnoverRate}%</strong></div>
-                  <div className="retention-item"><span>Avg Tenure</span><strong>4.2 years</strong></div>
-                  <div className="retention-item"><span>Retention Rate</span><strong>97.7%</strong></div>
-                </div>
+              <div className="chro-info-row">
+                <span>Details</span>
+                <span>{selectedEmployee.email}</span>
               </div>
-              <div className="analytics-card">
-                <h3>Recruitment Metrics</h3>
-                <div className="recruitment-stats">
-                  <div className="recruitment-item"><span>Time to Hire</span><strong>23 days</strong></div>
-                  <div className="recruitment-item"><span>Cost per Hire</span><strong>$4,200</strong></div>
-                  <div className="recruitment-item"><span>Offer Acceptance</span><strong>87%</strong></div>
-                </div>
+              <div className="chro-info-row">
+                <span>Position</span>
+                <span>{selectedEmployee.role}</span>
+              </div>
+              <div className="chro-info-row">
+                <span>Department</span>
+                <span>{selectedEmployee.department}</span>
+              </div>
+              <div className="chro-info-row">
+                <span>Phone</span>
+                <span>{selectedEmployee.telephone}</span>
               </div>
             </div>
-          </section>
-        )}
-      </main>
-
-      {/* Employee Modal */}
-      {showEmployeeModal && selectedEmployee && (
-        <div className="modal-overlay" onClick={() => setShowEmployeeModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>รายละเอียดพนักงาน</h3>
-              <button className="modal-close" onClick={() => setShowEmployeeModal(false)}>×</button>
-            </div>
-            <div className="modal-body">
-              <div className="employee-modal-info">
-                <div className="info-row"><span className="info-label">ชื่อ:</span><span className="info-value">{selectedEmployee.firstName} {selectedEmployee.lastName}</span></div>
-                <div className="info-row"><span className="info-label">รหัสพนักงาน:</span><span className="info-value">{selectedEmployee.empId || 'ไม่มีข้อมูล'}</span></div>
-                <div className="info-row"><span className="info-label">ตำแหน่ง:</span><span className="info-value">{selectedEmployee.role}</span></div>
-                <div className="info-row"><span className="info-label">แผนก:</span><span className="info-value">{selectedEmployee.department || 'ทั่วไป'}</span></div>
-                <div className="info-row"><span className="info-label">อีเมล:</span><span className="info-value">{selectedEmployee.email || 'ไม่มีข้อมูล'}</span></div>
-                <div className="info-row"><span className="info-label">เบอร์โทร:</span><span className="info-value">{selectedEmployee.telephone || 'ไม่มีข้อมูล'}</span></div>
-              </div>
-              <div className="modal-actions">
-                <button className="delete-employee-btn" onClick={() => handleDeleteEmployee(selectedEmployee)}>🗑️ ลบพนักงาน</button>
-              </div>
+            <div className="chro-modal-actions">
+              <button
+                className="chro-btn-danger"
+                onClick={() => initiateDelete(selectedEmployee)}
+              >
+                Terminate Profile
+              </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* Delete Confirm Modal */}
-      {showDeleteModal && employeeToDelete && (
-        <div className="modal-overlay" onClick={cancelDelete}>
-          <div className="modal-content delete-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>⚠️ ลบพนักงาน</h3>
-              <button className="modal-close" onClick={cancelDelete}>×</button>
+      {/* Delete Confirmation Modal */}
+      <div
+        className={`chro-modal-overlay ${showDeleteModal ? "open" : ""}`}
+        onClick={() => setShowDeleteModal(false)}
+      >
+        {showDeleteModal && (
+          <div
+            className="chro-modal-content delete-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              className="chro-modal-header"
+              style={{
+                background: "linear-gradient(135deg, #dc2626, #991b1b)",
+              }}
+            >
+              <h3>
+                <FaTrashAlt /> Confirm Termination
+              </h3>
             </div>
-            <div className="modal-body">
-              <div className="delete-warning">
-                <p>คุณแน่ใจหรือไม่ที่จะลบพนักงานคนนี้?</p>
-                <div className="employee-to-delete">
-                  <strong>{employeeToDelete.firstName} {employeeToDelete.lastName}</strong>
-                  <span>รหัส: {employeeToDelete.empId || 'ไม่มีข้อมูล'}</span>
-                  <span>ตำแหน่ง: {employeeToDelete.role}</span>
-                </div>
-                <p className="warning-text">การดำเนินการนี้ไม่สามารถยกเลิกได้!</p>
-              </div>
-              <div className="password-confirmation">
-                <label htmlFor="deletePassword">ใส่รหัสผ่าน CHRO/HR เพื่อยืนยัน:</label>
-                <input
-                  id="deletePassword"
-                  type="password"
-                  className="password-input"
-                  value={deletePassword}
-                  onChange={(e) => setDeletePassword(e.target.value)}
-                  placeholder="ใส่รหัสผ่าน (0123)"
-                />
-                {deleteError && <p className="error-message">{deleteError}</p>}
-              </div>
-              <div className="delete-actions">
-                <button className="cancel-btn" onClick={cancelDelete}>❌ ยกเลิก</button>
-                <button className="confirm-delete-btn" onClick={confirmDeleteEmployee}>🗑️ ลบพนักงาน</button>
-              </div>
+            <div className="chro-modal-body">
+              <p
+                style={{
+                  textAlign: "center",
+                  marginBottom: "20px",
+                  color: "#cbd5e1",
+                }}
+              >
+                Are you authorized to remove{" "}
+                <strong>
+                  {employeeToDelete?.firstName} {employeeToDelete?.lastName}
+                </strong>
+                ?
+              </p>
+              <input
+                type="password"
+                className="chro-search-input"
+                placeholder="Enter Auth Code (0123)"
+                value={deletePassword}
+                onChange={(e) => setDeletePassword(e.target.value)}
+                style={{ textAlign: "center", letterSpacing: "4px" }}
+              />
+              {deleteError && (
+                <p
+                  className="error-message"
+                  style={{ textAlign: "center", marginTop: "10px" }}
+                >
+                  {deleteError}
+                </p>
+              )}
+            </div>
+            <div className="chro-modal-actions">
+              <button
+                className="cancel-btn"
+                onClick={() => setShowDeleteModal(false)}
+              >
+                Cancel
+              </button>
+              <button className="confirm-delete-btn" onClick={confirmDelete}>
+                Confirm
+              </button>
             </div>
           </div>
-        </div>
-      )}
-
+        )}
+      </div>
     </div>
   );
 };
