@@ -1,18 +1,14 @@
-import db from "../config/db.js";
+import { Request, Response } from 'express';
+import workScheduleRepository from "../repository/workScheduleRepository";
 
-export const bulkUpsertSchedules = async (req, res) => {
+export const bulkUpsertSchedules = async (req: Request, res: Response) => {
   const schedules = req.body;
   try {
-    for (const item of schedules) {
-      const { user_id, date, shift, department_id } = item;
-
-      // ✅ ใช้ REPLACE INTO เพื่อเพิ่มหรืออัปเดต
-      await db.query(
-        `REPLACE INTO work_schedules (user_id, date, shift, department_id)
-         VALUES (?, ?, ?, ?)`,
-        [user_id, date, shift, department_id]
-      );
+    if (!Array.isArray(schedules) || schedules.length === 0) {
+        return res.status(400).json({ error: "Invalid data format or empty list" });
     }
+
+    await workScheduleRepository.bulkUpsertSchedules(schedules);
 
     res.json({ message: "บันทึกข้อมูลสำเร็จ" });
   } catch (err) {

@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
-import pool from "../config/db";   // ✅ default import
-import { DbUser } from "../types";
+import authRepository from "../repository/authRepository";
 
 /** POST /api/auth/login  body: {username, password} */
 export const login = async (req: Request, res: Response) => {
@@ -14,27 +13,19 @@ export const login = async (req: Request, res: Response) => {
   }
 
   try {
-    const [rows] = await pool.query(
-      `
-      SELECT id, prefix_id, username, password, first_name, last_name, email, phone, role_id, department_id
-      FROM users
-      WHERE username = ? AND password = ?
-      LIMIT 1
-      `,
-      [username, password]
-    );
-
-    const list = rows as DbUser[];
+    const user = await authRepository.findUserByCredentials(username);
 
     // 🔍 LOG 2: เช็กผลลัพธ์จาก DB
-    console.log("DB RESULT:", list);
+    console.log("DB RESULT:", user ? [user] : []);
 
-    if (list.length === 0) {
+    // Check if user exists AND password matches (Plaintext check to match original SQL behavior)
+    // Note: In a production environment with hashed passwords, use bcrypt.compare here.
+    if (!user || user.password !== password) {
       return res.status(401).json({ ok: false, message: "Invalid credentials" });
     }
 
-    const { password: _pw, ...user } = list[0];
-    return res.json({ ok: true, user });
+    const { password: _pw, ...userData } = user;
+    return res.json({ ok: true, user: userData });
   } catch (err) {
     console.error("login error:", err);
     return res.status(500).json({ ok: false, message: "Server error" });

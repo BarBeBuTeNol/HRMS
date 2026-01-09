@@ -1,10 +1,9 @@
 import { Request, Response } from "express";
-import pool from "../config/db";
-import { RowDataPacket } from "mysql2";
+import masterDataRepository from "../repository/masterDataRepository";
 
 export const getAllDepartments = async (req: Request, res: Response) => {
   try {
-    const [rows] = await pool.query<RowDataPacket[]>("SELECT id, department_name FROM departments ORDER BY id ASC");
+    const rows = await masterDataRepository.getAllDepartments();
     res.json(rows);
   } catch (err: any) {
     console.error("Get Departments Error:", err);

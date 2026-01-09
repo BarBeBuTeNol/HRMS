@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
-import pool from "../config/db";
+import masterDataRepository from "../repository/masterDataRepository";
 
 export const getAllRoles = async (req: Request, res: Response) => {
   try {
-    const [rows] = await pool.query("SELECT id, role_name FROM roles ORDER BY id ASC");
+    const rows = await masterDataRepository.getAllRoles();
     res.json(rows);
   } catch (err: any) {
     console.error("Get Roles Error:", err);

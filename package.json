@@ -9,6 +9,8 @@
   },
   "dependencies": {
     "axios": "^1.11.0",
+    "import": "^0.0.6",
+    "jsonwebtoken": "^9.0.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.30.1"

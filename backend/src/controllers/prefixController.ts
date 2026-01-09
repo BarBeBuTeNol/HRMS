@@ -1,10 +1,9 @@
 import { Request, Response } from "express";
-import pool from "../config/db";
-import { RowDataPacket } from "mysql2";
+import masterDataRepository from "../repository/masterDataRepository";
 
 export const getAllPrefixes = async (req: Request, res: Response) => {
   try {
-    const [rows] = await pool.query<RowDataPacket[]>("SELECT id, prefix_name FROM prefixes ORDER BY id ASC");
+    const rows = await masterDataRepository.getAllPrefixes();
     res.json(rows);
   } catch (err: any) {
     console.error("Get Prefixes Error:", err);

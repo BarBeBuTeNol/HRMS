@@ -1,45 +1,25 @@
 import { Request, Response } from 'express';
-import pool from '../config/db';
+import announcementRepository from '../repository/announcementRepository';
 
 // Get all announcements
 export const getAnnouncements = async (req: Request, res: Response) => {
-    const userId = req.query.userId;
+    const userId = req.query.userId as string;
     try {
-        let query = `
-            SELECT a.*, CONCAT(u.first_name, ' ', u.last_name) as poster_name, d.department_name
-            FROM announcements a
-            LEFT JOIN users u ON a.posted_by = u.id
-            LEFT JOIN departments d ON a.target_department_id = d.id
-        `;
-        
-        // If userId is provided, check read status
-        if (userId) {
-            query = `
-                SELECT a.*, CONCAT(u.first_name, ' ', u.last_name) as poster_name, d.department_name,
-                CASE WHEN n.id IS NOT NULL AND n.is_read = 1 THEN 1 ELSE 0 END as is_read
-                FROM announcements a
-                LEFT JOIN users u ON a.posted_by = u.id
-                LEFT JOIN departments d ON a.target_department_id = d.id
-                LEFT JOIN notifications n ON n.reference_id = a.id AND n.user_id = ${pool.escape(userId)}
-            `;
-        }
-        
-        query += ` ORDER BY a.created_at DESC`;
-
-        const [rows]: any = await pool.query(query);
+        const rows = await announcementRepository.findAll(userId);
 
         // OPTIONAL: If no announcements, seed one for demo purposes
         if (rows.length === 0) {
-           const [userExists]: any = await pool.query("SELECT id FROM users LIMIT 1");
-           if (userExists.length > 0) {
-               const uid = userExists[0].id;
-               await pool.query(`
-                   INSERT INTO announcements (title, content, posted_by, priority, created_at, updated_at)
-                   VALUES ('Welcome to the new HR System', 'We are excited to launch the new HR Management System. Please update your profile.', ?, 'Important', NOW(), NOW())
-               `, [uid]);
+           const user = await announcementRepository.getFirstUser();
+           if (user) {
+               await announcementRepository.create(
+                   'Welcome to the new HR System',
+                   'We are excited to launch the new HR Management System. Please update your profile.',
+                   user.id
+               );
                
                // Re-fetch (simple)
-               return getAnnouncements(req, res);
+               const newRows = await announcementRepository.findAll(userId);
+               return res.json(newRows);
            }
         }
 
@@ -54,7 +34,7 @@ export const getAnnouncements = async (req: Request, res: Response) => {
 export const deleteAnnouncement = async (req: Request, res: Response) => {
     const { id } = req.params;
     try {
-        await pool.query('DELETE FROM announcements WHERE id = ?', [id]);
+        await announcementRepository.delete(id);
         res.json({ message: "Announcement deleted successfully" });
     } catch (error: any) {
         console.error("Error deleting announcement:", error);
@@ -68,10 +48,7 @@ export const updateAnnouncement = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { title, content } = req.body;
     try {
-        await pool.query(
-            'UPDATE announcements SET title = ?, content = ?, updated_at = NOW() WHERE id = ?',
-            [title, content, id]
-        );
+        await announcementRepository.update(id, title, content);
         res.json({ message: "Announcement updated successfully" });
     } catch (error: any) {
         console.error("Error updating announcement:", error);
@@ -86,22 +63,16 @@ export const markRead = async (req: Request, res: Response) => {
 
     try {
         // Check if notification exists
-        const [existing]: any = await pool.query(
-            'SELECT id FROM notifications WHERE user_id = ? AND reference_id = ?',
-            [userId, id]
-        );
+        const existing = await announcementRepository.findNotification(userId, id);
 
-        if (existing.length > 0) {
-            await pool.query('UPDATE notifications SET is_read = 1 WHERE id = ?', [existing[0].id]);
+        if (existing) {
+            await announcementRepository.updateNotificationReadStatus(existing.id);
         } else {
             // Get announcement title
-            const [ann]: any = await pool.query('SELECT title FROM announcements WHERE id = ?', [id]);
-            if (ann.length > 0) {
-                 const message = `Read Announcement: ${ann[0].title}`;
-                 await pool.query(
-                     'INSERT INTO notifications (user_id, message, is_read, created_at, reference_id) VALUES (?, ?, 1, NOW(), ?)',
-                     [userId, message, id]
-                 );
+            const ann = await announcementRepository.findById(id);
+            if (ann) {
+                 const message = `Read Announcement: ${ann.title}`;
+                 await announcementRepository.createReadNotification(userId, message, id);
             }
         }
         res.json({ success: true });

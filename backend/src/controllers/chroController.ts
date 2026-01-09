@@ -1,32 +1,16 @@
 import { Request, Response } from "express";
-import pool from "../config/db";
-import { RowDataPacket } from "mysql2";
+import chroRepository from "../repository/chroRepository";
 
 export const getDashboardStats = async (req: Request, res: Response) => {
   try {
-    const connection = await pool.getConnection();
-
-    try {
       // 1. Total Employees
-      const [totalRows] = await connection.query<RowDataPacket[]>(
-        "SELECT COUNT(*) as count FROM users"
-      );
-      const totalEmployees = totalRows[0].count;
+      const totalEmployees = await chroRepository.getTotalEmployees();
 
       // 2. Active Personnel (using user_sessions - users active in last 15 mins)
-      const [activeRows] = await connection.query<RowDataPacket[]>(
-        "SELECT COUNT(DISTINCT user_id) as count FROM user_sessions WHERE last_activity >= NOW() - INTERVAL 15 MINUTE"
-      );
-      const activeEmployees = activeRows[0].count;
+      const activeEmployees = await chroRepository.getActiveEmployees();
 
       // 3. Department Stats
-      const [deptRows] = await connection.query<RowDataPacket[]>(
-        `SELECT d.id, d.department_name as name, COUNT(u.id) as count, SUM(ei.salary) as budget
-         FROM departments d
-         LEFT JOIN users u ON d.id = u.department_id
-         LEFT JOIN emp_info ei ON u.id = ei.user_id
-         GROUP BY d.id`
-      );
+      const deptRows = await chroRepository.getDepartmentStats();
       
       // Calculate a mock "score" for departments based on some logic or random for now as it's not in DB
       // In a real app, this might come from KPIs. We'll simulate it for visual consistency.
@@ -37,12 +21,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
       }));
 
       // 4. Demographics (Gender)
-      const [genderRows] = await connection.query<RowDataPacket[]>(
-        `SELECT ud.gender, COUNT(*) as count 
-         FROM user_detail ud 
-         JOIN users u ON ud.user_id = u.id
-         GROUP BY ud.gender`
-      );
+      const genderRows = await chroRepository.getGenderDistribution();
       
       const genderDistribution = {
         male: 0,
@@ -58,18 +37,10 @@ export const getDashboardStats = async (req: Request, res: Response) => {
       });
 
       // 5. Avg Salary
-      const [salaryRow] = await connection.query<RowDataPacket[]>(
-        "SELECT AVG(salary) as avg_salary FROM emp_info"
-      );
-      const avgSalary = parseFloat(salaryRow[0].avg_salary || 0);
+      const avgSalary = await chroRepository.getAverageSalary();
 
       // 6. Recent Activities
-      const [activityRows] = await connection.query<RowDataPacket[]>(
-        `SELECT id, action as message, created_at as time, 'info' as type 
-         FROM user_logs 
-         ORDER BY id DESC 
-         LIMIT 5`
-      );
+      const activityRows = await chroRepository.getRecentActivities();
       
       // Format time to "X hours ago" style could be done here or frontend. 
       // We'll send raw date and let frontend handle relative time or do simple format.
@@ -85,9 +56,6 @@ export const getDashboardStats = async (req: Request, res: Response) => {
         recentActivities: activityRows
       });
 
-    } finally {
-      connection.release();
-    }
   } catch (err: any) {
     console.error("CHRO Stats Error:", err);
     res.status(500).json({ message: err.message });
