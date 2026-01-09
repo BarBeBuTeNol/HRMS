@@ -5,6 +5,7 @@ import pool from "./config/db";
 import { RowDataPacket } from "mysql2"; 
 import userRoutes from "./routes/userRoutes"; 
 import roleRoutes from "./routes/roleRoutes"; 
+import chroRoutes from "./routes/chroRoutes";
 
 dotenv.config();
 
@@ -26,6 +27,9 @@ app.get("/api/health", async (_req, res) => {
 app.use("/api/users", userRoutes);
 console.log("Registering role routes...");
 app.use("/api/roles", roleRoutes);
+
+// ✅ CHRO Routes
+app.use("/api/chro", chroRoutes);
 app.get("/api/debug", (req, res) => res.json({ message: "Server is running" }));
 
 app.listen(5000, () => console.log("✅ Backend running at http://localhost:5000"));

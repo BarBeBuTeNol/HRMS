@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import SidebarCHRO from "../../../Component/CHRO/SidebarCHRO";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -26,6 +27,28 @@ import "./MainCHRO.css";
 const MainCHRO = () => {
   const navigate = useNavigate();
 
+  // --- Sidebar State ---
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+    if (window.innerWidth < 1024) return false; // Default closed on mobile
+    const saved = localStorage.getItem("chroSidebarOpen");
+    return saved !== null ? JSON.parse(saved) : false; // Default closed if no save (per user request "we open it ourselves") OR true? "We must open it ourselves" might mean they want it closed by default. Let's stick to respecting save, defaulting to true or false.
+    // User said: "It opens itself... we must open it ourselves right?" -> Implies they expect it to be closed unless they open it? Or they just want it to NOT open if they closed it.
+    // I will default to `true` (standard dashboard) BUT respect the save.
+    // The previous bug was `handleResize` running on mount.
+  });
+
+  // --- Effects ---
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024) {
+        setIsSidebarOpen(false);
+      }
+      // Removed 'else setIsSidebarOpen(true)' to prevent overriding user preference on desktop
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   // --- State ---
   const [currentUser, setCurrentUser] = useState({});
   const [employees, setEmployees] = useState([]);
@@ -37,14 +60,8 @@ const MainCHRO = () => {
     turnoverRate: 0,
     avgSalary: 0,
     genderDistribution: { male: 0, female: 0, other: 0 },
-    ageDistribution: {
-      "18-25": 0,
-      "26-35": 0,
-      "36-45": 0,
-      "46-55": 0,
-      "55+": 0,
-    },
     departmentStats: [],
+    ageDistribution: {},
   });
   const [recentActivities, setRecentActivities] = useState([]);
   const [activeTab, setActiveTab] = useState("dashboard"); // dashboard | employees | departments | analytics
@@ -63,9 +80,6 @@ const MainCHRO = () => {
   const [deletePassword, setDeletePassword] = useState("");
   const [deleteError, setDeleteError] = useState("");
 
-  // --- Sidebar State ---
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-
   // --- Effects ---
   useEffect(() => {
     const handleResize = () => {
@@ -77,97 +91,50 @@ const MainCHRO = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+  const toggleSidebar = () => {
+    setIsSidebarOpen((prev) => {
+      const newState = !prev;
+      localStorage.setItem("chroSidebarOpen", JSON.stringify(newState));
+      return newState;
+    });
+  };
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
     setCurrentUser(user);
-
-    const storedEmployees = JSON.parse(
-      localStorage.getItem("employees") || "[]"
-    );
-
-    // Fallback if no employees in LS
-    let empData = storedEmployees;
-    if (storedEmployees.length === 0) {
-      const users = JSON.parse(localStorage.getItem("users") || "[]");
-      empData = users.filter(
-        (u) => u.role === "Employee" || u.role === "Manager"
-      );
-    }
-    setEmployees(empData);
-
-    // Mock Departments
-    const mockDepartments = [
-      { id: 1, name: "Human Resources", count: 12, budget: 850000, score: 92 },
-      { id: 2, name: "Engineering", count: 45, budget: 3200000, score: 88 },
-      { id: 3, name: "Marketing", count: 18, budget: 1200000, score: 95 },
-      { id: 4, name: "Sales", count: 25, budget: 1800000, score: 85 },
-      { id: 5, name: "Finance", count: 15, budget: 950000, score: 90 },
-      { id: 6, name: "Operations", count: 30, budget: 2100000, score: 82 },
-    ];
-    setDepartments(mockDepartments);
-
-    generateAnalytics(empData, mockDepartments);
-    generateRecentActivities();
+    fetchDashboardStats();
+    fetchEmployees();
   }, []);
 
-  const generateAnalytics = (empData, deptData) => {
-    const total = empData.length;
-    const active = Math.floor(total * 0.95); // Mock active calculation
-
-    // Advanced Mock Stats
-    const genderDist = {
-      male: Math.floor(total * 0.55),
-      female: Math.floor(total * 0.4),
-      other: total - Math.floor(total * 0.55) - Math.floor(total * 0.4),
-    };
-
-    setAnalytics({
-      totalEmployees: total,
-      activeEmployees: active,
-      departments: deptData.length,
-      turnoverRate: 2.3, // Mock KPI
-      avgSalary: 65000,
-      genderDistribution: genderDist,
-      departmentStats: deptData,
-      ageDistribution: {
-        "18-25": 12,
-        "26-35": 38,
-        "36-45": 25,
-        "46-55": 15,
-        "55+": 10,
-      }, // Mock
-    });
+  const fetchDashboardStats = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/chro/stats");
+      const data = res.data;
+      setAnalytics({
+        totalEmployees: data.totalEmployees,
+        activeEmployees: data.activeEmployees,
+        departments: data.departments,
+        turnoverRate: data.turnoverRate,
+        avgSalary: data.avgSalary,
+        genderDistribution: data.genderDistribution,
+        departmentStats: data.departmentStats,
+        ageDistribution: {}, // Not implemented in backend yet
+      });
+      setDepartments(data.departmentStats);
+      setRecentActivities(data.recentActivities);
+    } catch (err) {
+      console.error("Failed to fetch dashboard stats", err);
+    }
   };
 
-  const generateRecentActivities = () => {
-    setRecentActivities([
-      {
-        id: 1,
-        message: "Strategic Hiring Plan Approved",
-        time: "2 hours ago",
-        type: "strategy",
-      },
-      {
-        id: 2,
-        message: "Quarterly Review Completed",
-        time: "5 hours ago",
-        type: "review",
-      },
-      {
-        id: 3,
-        message: "New Benefits Package Live",
-        time: "1 day ago",
-        type: "benefit",
-      },
-      {
-        id: 4,
-        message: "Engineering Head Onboarded",
-        time: "2 days ago",
-        type: "hiring",
-      },
-    ]);
+  const fetchEmployees = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/users");
+      // Assuming api/users returns { data: [...] } structure based on userController
+      setEmployees(res.data.data || []);
+    } catch (err) {
+      console.error("Failed to fetch employees", err);
+    }
   };
 
   // --- Filtering & Sorting ---
