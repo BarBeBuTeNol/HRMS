@@ -1,262 +1,351 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import SidebarCHRO from '../../../Component/CHRO/SidebarCHRO';
-import './Show-Log.css';
+import React, { useState, useEffect, useMemo } from "react";
+import CHROLayout from "../../../Component/CHRO/CHROLayout";
+import LogService from "../../../../services/LogService";
+import PopupNotification from "../../../Component/popup_notifications/PopupNotification";
+import "./Show-Log.css";
 
 const ShowLog = () => {
-  // state ทั้งหมดถูกจำกัดการใช้งานในหน้านี้เท่านั้น
   const [logs, setLogs] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState('all');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [logsPerPage] = useState(10);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [expandedRow, setExpandedRow] = useState(null);
 
-  // mock data
-  useEffect(() => {
-    const mockLogs = [
-      { id: 1, timestamp: '2024-01-15 09:30:15', action: 'LOGIN', user: 'สมชาย ใจดี', userId: 'EMP001', details: 'เข้าสู่ระบบด้วย role Employee', ip: '192.168.1.100', status: 'SUCCESS' },
-      { id: 2, timestamp: '2024-01-15 10:15:22', action: 'LEAVE_REQUEST', user: 'สมหญิง รักงาน', userId: 'HR001', details: 'ส่งคำขอลาป่วย วันที่ 2024-01-20', ip: '192.168.1.105', status: 'PENDING' },
-      { id: 3, timestamp: '2024-01-15 11:45:33', action: 'EMPLOYEE_UPDATE', user: 'วิชัย มุ่งมั่น', userId: 'CHRO001', details: 'อัปเดตข้อมูลพนักงาน EMP003 - เปลี่ยนตำแหน่งเป็น Senior Developer', ip: '192.168.1.102', status: 'SUCCESS' },
-      { id: 4, timestamp: '2024-01-15 14:20:11', action: 'ANNOUNCEMENT', user: 'รัตนา สดใส', userId: 'HR002', details: 'สร้างประกาศเรื่อง "การอบรมพัฒนาทักษะ Q1 2024"', ip: '192.168.1.110', status: 'SUCCESS' },
-      { id: 5, timestamp: '2024-01-15 16:05:44', action: 'LOGOUT', user: 'ธนวัฒน์ เก่งกล้า', userId: 'MGR001', details: 'ออกจากระบบ', ip: '192.168.1.115', status: 'SUCCESS' },
-      { id: 6, timestamp: '2024-01-14 08:15:20', action: 'FAILED_LOGIN', user: 'Unknown', userId: 'N/A', details: 'ความพยายามเข้าสู่ระบบที่ล้มเหลว - รหัสผ่านไม่ถูกต้อง', ip: '192.168.1.200', status: 'FAILED' },
-      { id: 7, timestamp: '2024-01-14 13:30:15', action: 'POSITION_CHANGE', user: 'สมชาย ใจดี', userId: 'CHRO001', details: 'เปลี่ยนตำแหน่ง EMP005 จาก Junior Developer เป็น Mid-level Developer', ip: '192.168.1.102', status: 'SUCCESS' },
-      { id: 8, timestamp: '2024-01-14 15:45:30', action: 'LEAVE_APPROVAL', user: 'วิชัย มุ่งมั่น', userId: 'CHRO001', details: 'อนุมัติการลาของ EMP002 วันที่ 2024-01-18', ip: '192.168.1.102', status: 'SUCCESS' },
-    ];
-
-    const timer = setTimeout(() => {
-      setLogs(mockLogs);
-      setLoading(false);
-    }, 600);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  // กรองข้อมูล (memo เพื่อประสิทธิภาพ)
-  const filteredLogs = useMemo(() => {
-    let filtered = logs;
-
-    if (searchTerm.trim()) {
-      const q = searchTerm.toLowerCase();
-      filtered = filtered.filter((log) =>
-        log.user.toLowerCase().includes(q) ||
-        log.userId.toLowerCase().includes(q) ||
-        log.action.toLowerCase().includes(q) ||
-        log.details.toLowerCase().includes(q) ||
-        log.ip.toLowerCase().includes(q)
-      );
-    }
-
-    if (selectedFilter !== 'all') {
-      filtered = filtered.filter((log) => log.action === selectedFilter);
-    }
-
-    return filtered;
-  }, [logs, searchTerm, selectedFilter]);
-
-  // pagination
-  const totalPages = Math.ceil(filteredLogs.length / logsPerPage) || 1;
-  const indexOfLastLog = currentPage * logsPerPage;
-  const indexOfFirstLog = indexOfLastLog - logsPerPage;
-  const currentLogs = filteredLogs.slice(indexOfFirstLog, indexOfLastLog);
-
-  const goPage = (page) => {
-    if (page < 1 || page > totalPages) return;
-    setCurrentPage(page);
-    // เลื่อนขึ้นเล็กน้อยเวลาเปลี่ยนหน้า
-    const content = document.querySelector('.show-log-page .show-log-content');
-    if (content) content.scrollTo({ top: 0, behavior: 'smooth' });
+  // Helper to get today's date in YYYY-MM-DD format
+  const getTodayDate = () => {
+    return new Date().toISOString().split("T")[0];
   };
 
-  // สถิติ
-  const successCount = useMemo(() => filteredLogs.filter((l) => l.status === 'SUCCESS').length, [filteredLogs]);
-  const failedCount = useMemo(() => filteredLogs.filter((l) => l.status === 'FAILED').length, [filteredLogs]);
-  const pendingCount = useMemo(() => filteredLogs.filter((l) => l.status === 'PENDING').length, [filteredLogs]);
+  const getThreeDaysAgo = () => {
+    const date = new Date();
+    date.setDate(date.getDate() - 3);
+    return date.toISOString().split("T")[0];
+  };
 
-  // mapping คลาสสำหรับ badge (ทั้งหมดไปจัดสีใน CSS)
-  const getStatusClass = (status) => `status-badge ${String(status || '').toLowerCase()}`;
-  const getActionClass = (action) => `action-badge action-${String(action || '').toLowerCase()}`;
+  // Filter States
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedAction, setSelectedAction] = useState("all");
+  // Default to Last 3 Days
+  const [startDate, setStartDate] = useState(getThreeDaysAgo());
+  const [endDate, setEndDate] = useState(getTodayDate());
 
-  if (loading) {
-    return (
-      <div className="show-log-page">
-        <SidebarCHRO />
-        <div className="show-log-content">
-          <div className="loading">
-            <div className="loading__spinner" />
-            <p className="loading__text">กำลังโหลดข้อมูล Log...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Pagination States
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalLogs, setTotalLogs] = useState(0);
+
+  // Fetch Data
+  const fetchLogs = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Artificial delay for CHRO Loading Popup visibility (Premium feel)
+      await new Promise((resolve) => setTimeout(resolve, 800));
+
+      const data = await LogService.getLogs({
+        page: currentPage,
+        limit: 10,
+        search: searchTerm,
+        action: selectedAction !== "all" ? selectedAction : undefined,
+        startDate,
+        endDate,
+      });
+
+      setLogs(data.logs);
+      setTotalPages(data.totalPages);
+      setTotalLogs(data.total);
+    } catch (error) {
+      console.error("Failed to fetch logs:", error);
+      // If 401, LogService handles redirect, but we can set a message just in case
+      if (error.response && error.response.status === 401) {
+        setError("Session expired. Redirecting to login...");
+      } else {
+        setError("Failed to load logs. Please try again later.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // Debounce search
+    const timer = setTimeout(() => {
+      fetchLogs();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [currentPage, searchTerm, selectedAction, startDate, endDate]);
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
+  const handleRefresh = () => {
+    fetchLogs();
+  };
+
+  const handleToday = () => {
+    const today = getTodayDate();
+    setStartDate(today);
+    setEndDate(today);
+  };
+
+  const handleClearFilters = () => {
+    setSearchTerm("");
+    setSelectedAction("all");
+    setStartDate("");
+    setEndDate("");
+  };
+
+  const handleExport = () => {
+    window.print();
+  };
+
+  const toggleRow = (id) => {
+    if (expandedRow === id) {
+      setExpandedRow(null);
+    } else {
+      setExpandedRow(id);
+    }
+  };
+
+  // Helper for badges
+  const getSeverityClass = (severity) => {
+    switch (severity) {
+      case "Critical":
+        return "severity-critical";
+      case "Warning":
+        return "severity-warning";
+      default:
+        return "severity-info";
+    }
+  };
 
   return (
-    <div className="show-log-page">
-      <SidebarCHRO />
-
-      <main className="show-log-content" role="main">
-        {/* Header */}
+    <CHROLayout>
+      <main className="show-log-content fade-in-up">
         <header className="sl-header">
-          <h1 className="sl-title">
-            <span className="sl-title__icon" aria-hidden="true">📋</span>
-            ประวัติการใช้งานระบบ
-          </h1>
-          <p className="sl-subtitle">ตรวจสอบและติดตามกิจกรรมของผู้ใช้งานทั้งหมดในระบบ</p>
+          <div className="sl-header-left">
+            <h1 className="sl-title">
+              <span className="sl-icon">🛡️</span> System Audit Logs
+            </h1>
+            <p className="sl-subtitle">
+              Monitor all system activities, security events, and user actions.
+            </p>
+          </div>
+          <div className="sl-actions">
+            <button className="sl-btn" onClick={handleToday}>
+              📅 Today
+            </button>
+            <button className="sl-btn" onClick={handleClearFilters}>
+              ❌ Clear Filters
+            </button>
+            <button className="sl-btn" onClick={handleRefresh}>
+              🔄 Refresh
+            </button>
+            <button className="sl-btn" onClick={handleExport}>
+              📥 Export Report
+            </button>
+          </div>
         </header>
 
-        {/* Controls */}
-        <section className="sl-controls" aria-label="ตัวกรองและค้นหา">
-          <div className="sl-search">
-            <input
-              type="text"
-              className="sl-input"
-              placeholder="ค้นหาตามชื่อผู้ใช้, ID, กิจกรรม, รายละเอียด หรือ IP..."
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
-              }}
-              aria-label="กล่องค้นหา"
-            />
-            {searchTerm && (
-              <button
-                className="sl-btn sl-btn--ghost"
-                onClick={() => {
-                  setSearchTerm('');
-                  setCurrentPage(1);
-                }}
-                aria-label="ล้างคำค้นหา"
-              >
-                ล้าง
-              </button>
-            )}
+        <PopupNotification
+          isOpen={loading}
+          title="Loading Data"
+          message="Please wait while we fetch the latest system logs..."
+          type="chro-loading"
+          onClose={() => {}} // Block close while loading
+        />
+
+        {/* Filters Section */}
+        <section className="sl-filters-card">
+          <div className="sl-filter-group">
+            <label>Search</label>
+            <div className="sl-input-wrapper">
+              <span className="sl-input-icon">🔍</span>
+              <input
+                type="text"
+                placeholder="Search user, IP, details..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
           </div>
 
-          <div className="sl-filter">
+          <div className="sl-filter-group">
+            <label>Category</label>
             <select
-              value={selectedFilter}
-              onChange={(e) => {
-                setSelectedFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="sl-select"
-              aria-label="เลือกประเภทกิจกรรม"
+              value={selectedAction}
+              onChange={(e) => setSelectedAction(e.target.value)}
             >
-              <option value="all">ทุกกิจกรรม</option>
-              <option value="LOGIN">เข้าสู่ระบบ</option>
-              <option value="LOGOUT">ออกจากระบบ</option>
-              <option value="LEAVE_REQUEST">คำขอลา</option>
-              <option value="LEAVE_APPROVAL">อนุมัติการลา</option>
-              <option value="EMPLOYEE_UPDATE">อัปเดตข้อมูลพนักงาน</option>
-              <option value="POSITION_CHANGE">เปลี่ยนตำแหน่ง</option>
-              <option value="ANNOUNCEMENT">ประกาศ</option>
-              <option value="FAILED_LOGIN">เข้าสู่ระบบไม่สำเร็จ</option>
+              <option value="all">All Activities</option>
+              <option value="LOGIN">Login</option>
+              <option value="LOGOUT">Logout</option>
+              <option value="CHANGE_REQUEST_SUBMIT">Change Requests</option>
+              <option value="LEAVE_REQUEST">Leave Requests</option>
+              {/* Add more as needed */}
             </select>
           </div>
+
+          <div className="sl-filter-group">
+            <label>Date Range</label>
+            <div className="sl-date-row">
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
+              <span
+                style={{ margin: "0 0.5rem", color: "var(--sl-text-muted)" }}
+              >
+                to
+              </span>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+            </div>
+          </div>
         </section>
 
-        {/* Stats */}
-        <section className="sl-stats" aria-label="สถิติ log">
-          <article className="sl-stat">
-            <div className="sl-stat__number">{filteredLogs.length}</div>
-            <div className="sl-stat__label">รายการทั้งหมด</div>
-          </article>
-          <article className="sl-stat sl-stat--success">
-            <div className="sl-stat__number">{successCount}</div>
-            <div className="sl-stat__label">สำเร็จ</div>
-          </article>
-          <article className="sl-stat sl-stat--failed">
-            <div className="sl-stat__number">{failedCount}</div>
-            <div className="sl-stat__label">ล้มเหลว</div>
-          </article>
-          <article className="sl-stat sl-stat--pending">
-            <div className="sl-stat__number">{pendingCount}</div>
-            <div className="sl-stat__label">รอดำเนินการ</div>
-          </article>
-        </section>
-
-        {/* Table */}
-        {filteredLogs.length > 0 ? (
-          <section className="sl-table__wrap" aria-label="ตารางประวัติการใช้งาน">
+        {/* Exclusive Table */}
+        <section className="sl-table-container">
+          {error ? (
+            <div
+              className="sl-error-state"
+              style={{ padding: "2rem", textAlign: "center", color: "#dc3545" }}
+            >
+              <h3>⚠️ Error</h3>
+              <p>{error}</p>
+              <button
+                className="sl-btn"
+                onClick={handleRefresh}
+                style={{ marginTop: "1rem" }}
+              >
+                Try Again
+              </button>
+            </div>
+          ) : loading && logs.length === 0 ? (
+            <div className="loading-container">
+              <div className="spinner"></div>
+              <p>Loading System Logs...</p>
+            </div>
+          ) : (
             <table className="sl-table">
               <thead>
                 <tr>
-                  <th>เวลา</th>
-                  <th>กิจกรรม</th>
-                  <th>ผู้ใช้</th>
-                  <th>รหัสผู้ใช้</th>
-                  <th>รายละเอียด</th>
-                  <th>IP Address</th>
-                  <th>สถานะ</th>
+                  <th width="15%">Created At</th>
+                  <th width="10%">Action</th>
+                  <th width="15%">User</th>
+                  <th width="12%">IP Address</th>
+                  <th width="13%">Target</th>
+                  <th width="10%">Severity</th>
+                  <th width="20%">Details</th>
                 </tr>
               </thead>
               <tbody>
-                {currentLogs.map((log) => (
-                  <tr key={log.id} className="sl-row">
-                    <td data-label="เวลา" className="cell-time">{log.timestamp}</td>
-                    <td data-label="กิจกรรม" className="cell-action">
-                      <span className={getActionClass(log.action)}>{log.action}</span>
-                    </td>
-                    <td data-label="ผู้ใช้" className="cell-user">{log.user}</td>
-                    <td data-label="รหัสผู้ใช้" className="cell-userid">{log.userId}</td>
-                    <td data-label="รายละเอียด" className="cell-details">{log.details}</td>
-                    <td data-label="IP Address" className="cell-ip">{log.ip}</td>
-                    <td data-label="สถานะ" className="cell-status">
-                      <span className={getStatusClass(log.status)}>
-                        <span className="dot" aria-hidden="true" />
-                        {log.status}
-                      </span>
+                {logs.map((log) => (
+                  <React.Fragment key={log.id}>
+                    <tr
+                      className={`sl-row ${
+                        expandedRow === log.id ? "sl-row-expanded" : ""
+                      }`}
+                      onClick={() => toggleRow(log.id)}
+                    >
+                      <td className="sl-time">
+                        {new Date(log.created_at).toLocaleString()}
+                      </td>
+                      <td>
+                        <span
+                          className={`sl-action-badge action-${log.action}`}
+                        >
+                          {log.action}
+                        </span>
+                      </td>
+                      <td className="sl-user">
+                        <div className="user-name">
+                          {log.first_name} {log.last_name}
+                        </div>
+                        <div className="user-role">{log.username}</div>
+                        {log.emp_code && (
+                          <div
+                            className="user-role"
+                            style={{ fontSize: "0.7rem" }}
+                          >
+                            ID: {log.emp_code}
+                          </div>
+                        )}
+                      </td>
+                      <td>{log.ip_address || "N/A"}</td>
+                      <td>{log.target || "-"}</td>
+                      <td>
+                        <span
+                          className={`sl-severity-badge ${getSeverityClass(
+                            log.severity
+                          )}`}
+                        >
+                          {log.severity || "Info"}
+                        </span>
+                      </td>
+                      <td
+                        className="sl-details-preview"
+                        title="Click to expand"
+                      >
+                        {log.details}
+                      </td>
+                    </tr>
+                    {expandedRow === log.id && (
+                      <tr className="sl-expanded-details">
+                        <td colSpan={6}>
+                          <div className="sl-details-content">
+                            <strong>Full Details:</strong>
+                            <br />
+                            {log.details}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                ))}
+                {!loading && logs.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="sl-empty-state">
+                      No logs found matching your criteria.
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
-          </section>
-        ) : (
-          <div className="sl-empty" aria-live="polite">
-            <div className="sl-empty__icon" aria-hidden="true">📊</div>
-            <h3>ไม่พบข้อมูล Log</h3>
-            <p>ไม่มีข้อมูลที่ตรงกับเงื่อนไขการค้นหา</p>
-          </div>
-        )}
+          )}
+        </section>
 
         {/* Pagination */}
-        {filteredLogs.length > 0 && totalPages > 1 && (
-          <nav className="sl-pagination" role="navigation" aria-label="เปลี่ยนหน้า">
+        <footer className="sl-pagination">
+          <span className="sl-page-info">
+            Showing {logs.length} of {totalLogs} events
+          </span>
+          <div className="sl-page-controls">
             <button
-              className="sl-pagebtn"
-              onClick={() => goPage(currentPage - 1)}
               disabled={currentPage === 1}
+              onClick={() => handlePageChange(currentPage - 1)}
             >
-              ก่อนหน้า
+              Previous
             </button>
-
-            {Array.from({ length: totalPages }).map((_, i) => {
-              const page = i + 1;
-              return (
-                <button
-                  key={page}
-                  className={`sl-pagebtn ${page === currentPage ? 'is-active' : ''}`}
-                  onClick={() => goPage(page)}
-                  aria-current={page === currentPage ? 'page' : undefined}
-                >
-                  {page}
-                </button>
-              );
-            })}
-
+            <span className="current-page">
+              Page {currentPage} of {totalPages}
+            </span>
             <button
-              className="sl-pagebtn"
-              onClick={() => goPage(currentPage + 1)}
               disabled={currentPage === totalPages}
+              onClick={() => handlePageChange(currentPage + 1)}
             >
-              ถัดไป
+              Next
             </button>
-          </nav>
-        )}
+          </div>
+        </footer>
       </main>
-    </div>
+    </CHROLayout>
   );
 };
 

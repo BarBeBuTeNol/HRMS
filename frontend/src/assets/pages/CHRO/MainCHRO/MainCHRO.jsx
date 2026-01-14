@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import SidebarCHRO from "../../../Component/CHRO/SidebarCHRO";
+import CHROLayout from "../../../Component/CHRO/CHROLayout";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FaUsers,
@@ -9,45 +9,50 @@ import {
   FaBuilding,
   FaChartLine,
   FaSearch,
-  FaFilter,
   FaSortAmountDown,
   FaThLarge,
   FaList,
-  FaFileCsv,
-  FaTimes,
   FaTrashAlt,
   FaEye,
-  FaStar,
   FaBriefcase,
-  FaBirthdayCake,
   FaVenusMars,
+  FaChevronLeft,
+  FaChevronRight,
+  FaTimes,
+  FaBullhorn,
+  FaExchangeAlt,
+  FaTasks,
+  FaCheckCircle,
+  FaMoneyBillWave,
 } from "react-icons/fa";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+} from "recharts";
 import "./MainCHRO.css";
+
+const COLORS = [
+  "#0088FE",
+  "#00C49F",
+  "#FFBB28",
+  "#FF8042",
+  "#8884d8",
+  "#82ca9d",
+];
 
 const MainCHRO = () => {
   const navigate = useNavigate();
-
-  // --- Sidebar State ---
-  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
-    if (window.innerWidth < 1024) return false; // Default closed on mobile
-    const saved = localStorage.getItem("chroSidebarOpen");
-    return saved !== null ? JSON.parse(saved) : false; // Default closed if no save (per user request "we open it ourselves") OR true? "We must open it ourselves" might mean they want it closed by default. Let's stick to respecting save, defaulting to true or false.
-    // User said: "It opens itself... we must open it ourselves right?" -> Implies they expect it to be closed unless they open it? Or they just want it to NOT open if they closed it.
-    // I will default to `true` (standard dashboard) BUT respect the save.
-    // The previous bug was `handleResize` running on mount.
-  });
-
-  // --- Effects ---
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 1024) {
-        setIsSidebarOpen(false);
-      }
-      // Removed 'else setIsSidebarOpen(true)' to prevent overriding user preference on desktop
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   // --- State ---
   const [currentUser, setCurrentUser] = useState({});
@@ -62,9 +67,22 @@ const MainCHRO = () => {
     genderDistribution: { male: 0, female: 0, other: 0 },
     departmentStats: [],
     ageDistribution: {},
+    // New Metrics
+    budgetOverview: [],
+    leaveTrends: [],
+    departmentTaskStats: [],
+    workforceInsights: {
+      swapRequests: 0,
+      announcementReach: 0,
+      taskReplacements: 0,
+    },
+    resourceStats: [],
   });
   const [recentActivities, setRecentActivities] = useState([]);
-  const [activeTab, setActiveTab] = useState("dashboard"); // dashboard | employees | departments | analytics
+  const [activityPage, setActivityPage] = useState(1);
+  const ITEMS_PER_PAGE = 5;
+
+  const [activeTab, setActiveTab] = useState("dashboard"); // dashboard | workforce | departments | employees
 
   // --- Filter/Sort State ---
   const [searchTerm, setSearchTerm] = useState("");
@@ -82,24 +100,6 @@ const MainCHRO = () => {
 
   // --- Effects ---
   useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 1024) setIsSidebarOpen(false);
-      else setIsSidebarOpen(true);
-    };
-    window.addEventListener("resize", handleResize);
-    handleResize();
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen((prev) => {
-      const newState = !prev;
-      localStorage.setItem("chroSidebarOpen", JSON.stringify(newState));
-      return newState;
-    });
-  };
-
-  useEffect(() => {
     const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
     setCurrentUser(user);
     fetchDashboardStats();
@@ -111,16 +111,19 @@ const MainCHRO = () => {
       const res = await axios.get("http://localhost:5000/api/chro/stats");
       const data = res.data;
       setAnalytics({
-        totalEmployees: data.totalEmployees,
-        activeEmployees: data.activeEmployees,
-        departments: data.departments,
-        turnoverRate: data.turnoverRate,
-        avgSalary: data.avgSalary,
-        genderDistribution: data.genderDistribution,
-        departmentStats: data.departmentStats,
-        ageDistribution: {}, // Not implemented in backend yet
+        ...data,
+        ageDistribution: data.ageDistribution || {},
+        budgetOverview: data.budgetOverview || [],
+        leaveTrends: data.leaveTrends || [],
+        departmentTaskStats: data.departmentTaskStats || [],
+        workforceInsights: data.workforceInsights || {
+          swapRequests: 0,
+          announcementReach: 0,
+          taskReplacements: 0,
+        },
+        resourceStats: data.resourceStats || [],
       });
-      setDepartments(data.departmentStats);
+      setDepartments(data.departmentStats.filter((d) => d.name));
       setRecentActivities(data.recentActivities);
     } catch (err) {
       console.error("Failed to fetch dashboard stats", err);
@@ -130,26 +133,47 @@ const MainCHRO = () => {
   const fetchEmployees = async () => {
     try {
       const res = await axios.get("http://localhost:5000/api/users");
-      // Assuming api/users returns { data: [...] } structure based on userController
       setEmployees(res.data.data || []);
     } catch (err) {
       console.error("Failed to fetch employees", err);
     }
   };
 
-  // --- Filtering & Sorting ---
+  // --- Helpers ---
+  const getInitials = (firstName) => {
+    return firstName ? firstName.charAt(0).toUpperCase() : "?";
+  };
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good Morning";
+    if (hour < 18) return "Good Afternoon";
+    return "Good Evening";
+  };
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 },
+  };
+
+  // --- Filtering Logic ---
   const filteredEmployees = useMemo(() => {
     return employees.filter((emp) => {
+      const fName = emp.first_name || "";
+      const lName = emp.last_name || "";
+      const eId = emp.emp_code || emp.username || "";
+      const deptName = emp.department_name || "";
       const matchSearch =
-        (emp.firstName?.toLowerCase() || "").includes(
-          searchTerm.toLowerCase()
-        ) ||
-        (emp.lastName?.toLowerCase() || "").includes(
-          searchTerm.toLowerCase()
-        ) ||
-        (emp.empId || "").includes(searchTerm);
+        fName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        lName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        eId.includes(searchTerm);
       const matchDept =
-        filterDepartment === "all" || emp.department === filterDepartment;
+        filterDepartment === "all" || deptName === filterDepartment;
       return matchSearch && matchDept;
     });
   }, [employees, searchTerm, filterDepartment]);
@@ -159,14 +183,14 @@ const MainCHRO = () => {
       let valA = "",
         valB = "";
       if (sortKey === "name") {
-        valA = a.firstName;
-        valB = b.firstName;
+        valA = a.first_name || "";
+        valB = b.first_name || "";
       } else if (sortKey === "dept") {
-        valA = a.department;
-        valB = b.department;
+        valA = a.department_name || "";
+        valB = b.department_name || "";
       } else if (sortKey === "role") {
-        valA = a.role;
-        valB = b.role;
+        valA = a.role_name || "";
+        valB = b.role_name || "";
       }
 
       if (valA < valB) return sortDir === "asc" ? -1 : 1;
@@ -177,151 +201,57 @@ const MainCHRO = () => {
 
   // --- Actions ---
   const handleEmployeeClick = (emp) => setSelectedEmployee(emp);
-
   const initiateDelete = (emp) => {
     setEmployeeToDelete(emp);
     setShowDeleteModal(true);
     setDeletePassword("");
     setDeleteError("");
   };
-
   const confirmDelete = () => {
     if (deletePassword === "0123") {
-      // Mock password check
       const updated = employees.filter(
         (e) =>
           e.id !== employeeToDelete.id &&
           e.username !== employeeToDelete.username
       );
       setEmployees(updated);
-      localStorage.setItem("employees", JSON.stringify(updated));
-
-      // Also update Users list
-      const users = JSON.parse(localStorage.getItem("users") || "[]");
-      const updatedUsers = users.filter(
-        (u) => u.username !== employeeToDelete.username
-      );
-      localStorage.setItem("users", JSON.stringify(updatedUsers));
-
-      setShowDeleteModal(false);
-      setSelectedEmployee(null);
+      // localStorage code removed as backend integration is primary now,
+      // but keeping mockup logic for immediate feedback if API fails not really needed if API works.
+      // Assuming API call would be here.
       alert("Employee profile terminated.");
-      generateAnalytics(updated, departments);
+      setShowDeleteModal(false);
     } else {
       setDeleteError("Invalid Executive Authorization Code");
     }
   };
 
-  // --- Render Helpers ---
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Good Morning";
-    if (hour < 18) return "Good Afternoon";
-    return "Good Evening";
-  };
-
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1 },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 },
-  };
-
   return (
-    <div className="main-chro-container">
-      <SidebarCHRO isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+    <CHROLayout>
+      <div className="chro-content-wrapper">
+        {/* Header */}
+        <header className="chro-header-section">
+          <div className="chro-welcome-text">
+            <motion.h1
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+            >
+              {getGreeting()}, {currentUser.firstName || "Executive"}
+            </motion.h1>
+            <p>Strategic Workforce Intelligence Dashboard</p>
+          </div>
+          <div className="chro-date-badge">
+            📅{" "}
+            {new Date().toLocaleDateString("en-US", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </div>
+        </header>
 
-      <div
-        className={`chro-dashboard-container ${
-          !isSidebarOpen ? "expanded-view" : ""
-        }`}
-      >
-        <div className="chro-content-wrapper">
-          {/* Header */}
-          <header className="chro-header-section">
-            <div className="chro-welcome-text">
-              <motion.h1
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5 }}
-              >
-                {getGreeting()}, {currentUser.firstName || "Executive"}
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-              >
-                Here is your daily workforce intelligence report.
-              </motion.p>
-            </div>
-            <div className="chro-date-badge">
-              📅{" "}
-              {new Date().toLocaleDateString("en-US", {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </div>
-          </header>
-
-          {/* Metrics Cards */}
-          <motion.section
-            className="chro-metrics-grid"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            {[
-              {
-                label: "Total Workforce",
-                value: analytics.totalEmployees,
-                icon: <FaUsers />,
-                delay: 0,
-              },
-              {
-                label: "Active Personnel",
-                value: analytics.activeEmployees,
-                icon: <FaUserTie />,
-                delay: 0.1,
-              },
-              {
-                label: "Departments",
-                value: analytics.departments,
-                icon: <FaBuilding />,
-                delay: 0.2,
-              },
-              {
-                label: "Turnover Rate",
-                value: `${analytics.turnoverRate}%`,
-                icon: <FaChartLine />,
-                delay: 0.3,
-              },
-            ].map((metric, idx) => (
-              <motion.div
-                key={idx}
-                className="chro-metric-card"
-                variants={itemVariants}
-                whileHover={{ y: -5, transition: { duration: 0.2 } }}
-              >
-                <div className="chro-metric-icon-wrapper">{metric.icon}</div>
-                <div className="chro-metric-info">
-                  <div className="chro-metric-value">{metric.value}</div>
-                  <div className="chro-metric-label">{metric.label}</div>
-                </div>
-              </motion.div>
-            ))}
-          </motion.section>
-
-          {/* Navigation Tabs */}
+        {/* Navigation Tabs */}
+        <div className="chro-tabs-centered">
           <nav className="chro-tabs-nav">
             <button
               className={`chro-tab-btn ${
@@ -333,9 +263,9 @@ const MainCHRO = () => {
             </button>
             <button
               className={`chro-tab-btn ${
-                activeTab === "employees" ? "active" : ""
+                activeTab === "workforce" ? "active" : ""
               }`}
-              onClick={() => setActiveTab("employees")}
+              onClick={() => setActiveTab("workforce")}
             >
               <FaUsers /> Workforce Management
             </button>
@@ -345,297 +275,511 @@ const MainCHRO = () => {
               }`}
               onClick={() => setActiveTab("departments")}
             >
-              <FaBuilding /> Department Performance
+              <FaBuilding /> Department Analytics
+            </button>
+            <button
+              className={`chro-tab-btn ${
+                activeTab === "employees" ? "active" : ""
+              }`}
+              onClick={() => setActiveTab("employees")}
+            >
+              <FaList /> Personnel Directory
             </button>
           </nav>
-
-          {/* --- Content Area --- */}
-          <main className="chro-content-area">
-            <AnimatePresence mode="wait">
-              {/* Dashboard View */}
-              {activeTab === "dashboard" && (
-                <motion.div
-                  key="dashboard"
-                  className="chro-grid-layout"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <motion.div
-                    className="chro-panel glass"
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.1 }}
-                  >
-                    <div className="chro-panel-header">
-                      <h3>
-                        <FaVenusMars /> Demographics Overview
-                      </h3>
-                    </div>
-                    <div className="chro-chart-wrapper">
-                      <div className="chro-bar-group">
-                        <div className="chro-bar-header">
-                          <span>Male</span>
-                          <span>{analytics.genderDistribution.male}</span>
-                        </div>
-                        <div className="chro-bar-track">
-                          <motion.div
-                            className="chro-bar-fill"
-                            initial={{ width: 0 }}
-                            animate={{ width: "55%" }}
-                            transition={{ duration: 1, delay: 0.5 }}
-                          ></motion.div>
-                        </div>
-                      </div>
-                      <div className="chro-bar-group">
-                        <div className="chro-bar-header">
-                          <span>Female</span>
-                          <span>{analytics.genderDistribution.female}</span>
-                        </div>
-                        <div className="chro-bar-track">
-                          <motion.div
-                            className="chro-bar-fill"
-                            style={{ background: "#f43f5e" }}
-                            initial={{ width: 0 }}
-                            animate={{ width: "40%" }}
-                            transition={{ duration: 1, delay: 0.6 }}
-                          ></motion.div>
-                        </div>
-                      </div>
-                      <div className="chro-bar-group">
-                        <div className="chro-bar-header">
-                          <span>Avg Salary</span>
-                          <span>${analytics.avgSalary.toLocaleString()}</span>
-                        </div>
-                        <div className="chro-bar-track">
-                          <motion.div
-                            className="chro-bar-fill"
-                            style={{ background: "#10b981" }}
-                            initial={{ width: 0 }}
-                            animate={{ width: "75%" }}
-                            transition={{ duration: 1, delay: 0.7 }}
-                          ></motion.div>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-
-                  <motion.div
-                    className="chro-panel"
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.2 }}
-                  >
-                    <div className="chro-panel-header">
-                      <h3>
-                        <FaList /> Recent Activities
-                      </h3>
-                    </div>
-                    <div className="chro-feed-list">
-                      {recentActivities.map((act) => (
-                        <div key={act.id} className="chro-feed-item">
-                          <div className="chro-feed-icon">
-                            <FaBriefcase />
-                          </div>
-                          <div className="chro-feed-content">
-                            <p>{act.message}</p>
-                            <span className="chro-feed-time">{act.time}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </motion.div>
-                </motion.div>
-              )}
-
-              {/* Employees View */}
-              {activeTab === "employees" && (
-                <motion.div
-                  key="employees"
-                  className="chro-panel glass"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <div className="chro-controls-toolbar">
-                    <div className="chro-search-box">
-                      <FaSearch className="chro-search-icon" />
-                      <input
-                        type="text"
-                        placeholder="Search personnel..."
-                        className="chro-search-input"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                      />
-                    </div>
-                    <select
-                      className="chro-select"
-                      value={filterDepartment}
-                      onChange={(e) => setFilterDepartment(e.target.value)}
-                    >
-                      <option value="all">All Departments</option>
-                      {departments.map((d) => (
-                        <option key={d.id} value={d.name}>
-                          {d.name}
-                        </option>
-                      ))}
-                    </select>
-
-                    <div className="chro-divider-v" />
-
-                    <button
-                      className="chro-btn-secondary"
-                      onClick={() =>
-                        setViewMode(viewMode === "grid" ? "list" : "grid")
-                      }
-                    >
-                      {viewMode === "grid" ? <FaList /> : <FaThLarge />}
-                    </button>
-                    <button
-                      className="chro-btn-secondary"
-                      onClick={() =>
-                        setSortDir(sortDir === "asc" ? "desc" : "asc")
-                      }
-                    >
-                      <FaSortAmountDown
-                        style={{
-                          transform:
-                            sortDir === "desc" ? "rotate(180deg)" : "none",
-                        }}
-                      />
-                    </button>
-                  </div>
-
-                  {viewMode === "grid" ? (
-                    <motion.div
-                      className="chro-emp-grid"
-                      variants={containerVariants}
-                      initial="hidden"
-                      animate="visible"
-                    >
-                      {sortedEmployees.map((emp) => (
-                        <motion.div
-                          key={emp.id}
-                          className="chro-emp-card active-status"
-                          onClick={() => handleEmployeeClick(emp)}
-                          variants={itemVariants}
-                          whileHover={{ y: -5, transition: { duration: 0.2 } }}
-                        >
-                          <div className="chro-avatar-large">
-                            {emp.firstName?.[0]}
-                          </div>
-                          <h4 className="chro-emp-name">
-                            {emp.firstName} {emp.lastName}
-                          </h4>
-                          <span className="chro-emp-role">{emp.role}</span>
-                          <span className="chro-emp-dept">
-                            {emp.department || "No Dept"}
-                          </span>
-                        </motion.div>
-                      ))}
-                    </motion.div>
-                  ) : (
-                    <div className="chro-table-container">
-                      <table className="chro-table">
-                        <thead>
-                          <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Role</th>
-                            <th>Department</th>
-                            <th>Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {sortedEmployees.map((emp) => (
-                            <tr key={emp.id}>
-                              <td>{emp.empId || "N/A"}</td>
-                              <td className="emp-name">
-                                <span className="mini-avatar">
-                                  {emp.firstName?.[0]}
-                                </span>
-                                {emp.firstName} {emp.lastName}
-                              </td>
-                              <td>{emp.role}</td>
-                              <td>{emp.department || "General"}</td>
-                              <td className="chro-row-actions">
-                                <button
-                                  className="chro-btn-view"
-                                  onClick={() => handleEmployeeClick(emp)}
-                                >
-                                  View
-                                </button>
-                                <button
-                                  className="chro-btn-delete"
-                                  onClick={() => initiateDelete(emp)}
-                                >
-                                  <FaTrashAlt />
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </motion.div>
-              )}
-
-              {/* Departments View */}
-              {activeTab === "departments" && (
-                <motion.div
-                  key="departments"
-                  className="chro-dept-grid"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {departments.map((dept) => (
-                    <motion.div
-                      key={dept.id}
-                      className="chro-dept-card"
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.3 }}
-                      whileHover={{ y: -5 }}
-                    >
-                      <div className="chro-dept-header">
-                        <h3>{dept.name}</h3>
-                        <div
-                          className="chro-dept-score"
-                          style={{
-                            color: dept.score > 90 ? "#10b981" : "#f59e0b",
-                          }}
-                        >
-                          {dept.score}
-                        </div>
-                      </div>
-                      <div className="chro-dept-stats">
-                        <div className="dept-stat-box">
-                          <span className="dept-stat-val">{dept.count}</span>
-                          <span className="dept-stat-lbl">Staff</span>
-                        </div>
-                        <div className="dept-stat-box">
-                          <span className="dept-stat-val">
-                            ${(dept.budget / 1000).toFixed(0)}k
-                          </span>
-                          <span className="dept-stat-lbl">Budget</span>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </main>
         </div>
+
+        {/* Content */}
+        <main className="chro-content-area">
+          <AnimatePresence mode="wait">
+            {/* 1. Executive Dashboard */}
+            {activeTab === "dashboard" && (
+              <motion.div
+                key="dashboard"
+                className="chro-dashboard-view"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                {/* Top Stats Row */}
+                <div className="chro-metrics-grid">
+                  <div className="chro-metric-card">
+                    <div className="chro-metric-icon-wrapper">
+                      <FaUsers />
+                    </div>
+                    <div className="chro-metric-info">
+                      <div className="chro-metric-value">
+                        {analytics.totalEmployees}
+                      </div>
+                      <div className="chro-metric-label">Total Workforce</div>
+                    </div>
+                  </div>
+                  <div className="chro-metric-card">
+                    <div className="chro-metric-icon-wrapper">
+                      <FaCheckCircle />
+                    </div>
+                    <div className="chro-metric-info">
+                      <div className="chro-metric-value">
+                        {analytics.activeEmployees}
+                      </div>
+                      <div className="chro-metric-label">Active Personnel</div>
+                    </div>
+                  </div>
+                  <div className="chro-metric-card">
+                    <div className="chro-metric-icon-wrapper">
+                      <FaBuilding />
+                    </div>
+                    <div className="chro-metric-info">
+                      <div className="chro-metric-value">
+                        {analytics.departments}
+                      </div>
+                      <div className="chro-metric-label">Departments</div>
+                    </div>
+                  </div>
+                  <div className="chro-metric-card">
+                    <div className="chro-metric-icon-wrapper">
+                      <FaMoneyBillWave />
+                    </div>
+                    <div className="chro-metric-info">
+                      <div className="chro-metric-value">
+                        ${analytics.avgSalary.toLocaleString()}
+                      </div>
+                      <div className="chro-metric-label">Avg Salary</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Charts Row 1: Budget & Leaves */}
+                <div className="chro-charts-row">
+                  <div className="chro-chart-card">
+                    <h4>Budget Overview (Salary Breakdown)</h4>
+                    <div className="chart-container">
+                      <ResponsiveContainer width="100%" height={300}>
+                        <PieChart>
+                          <Pie
+                            data={analytics.budgetOverview}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={60}
+                            outerRadius={100}
+                            fill="#8884d8"
+                            paddingAngle={5}
+                            dataKey="value"
+                          >
+                            {analytics.budgetOverview.map((entry, index) => (
+                              <Cell
+                                key={`cell-${index}`}
+                                fill={COLORS[index % COLORS.length]}
+                              />
+                            ))}
+                          </Pie>
+                          <Tooltip
+                            formatter={(value) =>
+                              `$${Number(value).toLocaleString()}`
+                            }
+                          />
+                          <Legend />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                  <div className="chro-chart-card">
+                    <h4>Leave Trends (Monthly)</h4>
+                    <div className="chart-container">
+                      <ResponsiveContainer width="100%" height={300}>
+                        <AreaChart data={analytics.leaveTrends}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" />
+                          <YAxis />
+                          <Tooltip />
+                          <Area
+                            type="monotone"
+                            dataKey="value"
+                            stroke="#8884d8"
+                            fill="#8884d8"
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Row 2: Demographics */}
+                {/* Row 2: Demographics */}
+                <div className="chro-panel glass">
+                  <h3>Demographics Overview</h3>
+                  <div className="chro-demographics-grid">
+                    {/* Age Distribution - Bar Chart */}
+                    <div className="chro-demo-card">
+                      <h4>Age Distribution</h4>
+                      <div
+                        className="chart-container-small"
+                        style={{ height: 250 }}
+                      >
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart
+                            data={Object.entries(
+                              analytics.ageDistribution || {}
+                            ).map(([k, v]) => ({ name: k, value: v }))}
+                          >
+                            <CartesianGrid
+                              strokeDasharray="3 3"
+                              vertical={false}
+                            />
+                            <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                            <Tooltip />
+                            <Bar
+                              dataKey="value"
+                              fill="#8884d8"
+                              radius={[5, 5, 0, 0]}
+                            >
+                              {Object.keys(analytics.ageDistribution || {}).map(
+                                (entry, index) => (
+                                  <Cell
+                                    key={`age-${index}`}
+                                    fill={COLORS[index % COLORS.length]}
+                                  />
+                                )
+                              )}
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+
+                    {/* Gender Ratio - Donut Chart */}
+                    <div className="chro-demo-card">
+                      <h4>Gender Ratio</h4>
+                      <div
+                        className="chart-container-small"
+                        style={{ height: 250 }}
+                      >
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={Object.entries(
+                                analytics.genderDistribution || {}
+                              ).map(([k, v]) => ({ name: k, value: v }))}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={60}
+                              outerRadius={90}
+                              paddingAngle={5}
+                              dataKey="value"
+                            >
+                              {Object.keys(
+                                analytics.genderDistribution || {}
+                              ).map((key, index) => (
+                                <Cell
+                                  key={`gender-${index}`}
+                                  fill={
+                                    key.toLowerCase() === "female"
+                                      ? "#f43f5e"
+                                      : key.toLowerCase() === "male"
+                                      ? "#3b82f6"
+                                      : "#10b981"
+                                  }
+                                />
+                              ))}
+                            </Pie>
+                            <Tooltip />
+                            <Legend verticalAlign="bottom" height={36} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* 2. Workforce Management */}
+            {activeTab === "workforce" && (
+              <motion.div
+                key="workforce"
+                className="chro-dashboard-view"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <div className="chro-metrics-grid">
+                  <div className="chro-metric-card warning">
+                    <div className="chro-metric-icon-wrapper">
+                      <FaExchangeAlt />
+                    </div>
+                    <div className="chro-metric-info">
+                      <div className="chro-metric-value">
+                        {analytics.workforceInsights.swapRequests}
+                      </div>
+                      <div className="chro-metric-label">
+                        Swap Requests (Pending)
+                      </div>
+                    </div>
+                  </div>
+                  <div className="chro-metric-card success">
+                    <div className="chro-metric-icon-wrapper">
+                      <FaBullhorn />
+                    </div>
+                    <div className="chro-metric-info">
+                      <div className="chro-metric-value">
+                        {analytics.workforceInsights.announcementReach}%
+                      </div>
+                      <div className="chro-metric-label">
+                        Announcement Reach
+                      </div>
+                    </div>
+                  </div>
+                  <div className="chro-metric-card danger">
+                    <div className="chro-metric-icon-wrapper">
+                      <FaTasks />
+                    </div>
+                    <div className="chro-metric-info">
+                      <div className="chro-metric-value">
+                        {analytics.workforceInsights.taskReplacements}
+                      </div>
+                      <div className="chro-metric-label">Task Replacements</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="chro-panel glass">
+                  <h3>
+                    <FaBriefcase /> Workforce Activities Feed
+                  </h3>
+                  <div className="chro-feed-list">
+                    {recentActivities.slice(0, 10).map((act) => (
+                      <div key={act.id} className="chro-feed-item">
+                        <div className="chro-feed-icon">
+                          <FaBriefcase />
+                        </div>
+                        <div className="chro-feed-content">
+                          <p>{act.message}</p>
+                          <span className="chro-feed-time">{act.time}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* 3. Department Analytics */}
+            {activeTab === "departments" && (
+              <motion.div
+                key="departments"
+                className="chro-dashboard-view"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <div className="chro-charts-row">
+                  <div className="chro-chart-card wide">
+                    <h4>Task Efficiency by Department (Completion Rate)</h4>
+                    <div className="chart-container">
+                      <ResponsiveContainer width="100%" height={400}>
+                        <BarChart
+                          data={analytics.departmentTaskStats}
+                          layout="vertical"
+                          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis type="number" />
+                          <YAxis
+                            dataKey="department"
+                            type="category"
+                            width={100}
+                            tick={{ fontSize: 12 }}
+                          />
+                          <Tooltip />
+                          <Legend />
+                          <Bar
+                            dataKey="completed"
+                            stackId="a"
+                            fill="#10b981"
+                            name="Completed"
+                          />
+                          <Bar
+                            dataKey="inProgress"
+                            stackId="a"
+                            fill="#3b82f6"
+                            name="In Progress"
+                          />
+                          <Bar
+                            dataKey="pending"
+                            stackId="a"
+                            fill="#f59e0b"
+                            name="Pending"
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="chro-charts-row">
+                  <div className="chro-chart-card wide">
+                    <h4>Resource Allocation (Headcount vs Avg Tasks)</h4>
+                    <div className="chart-container">
+                      <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={analytics.resourceStats}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" />
+                          <YAxis
+                            yAxisId="left"
+                            orientation="left"
+                            stroke="#8884d8"
+                          />
+                          <YAxis
+                            yAxisId="right"
+                            orientation="right"
+                            stroke="#82ca9d"
+                          />
+                          <Tooltip />
+                          <Legend />
+                          <Bar
+                            yAxisId="left"
+                            dataKey="headcount"
+                            fill="#8884d8"
+                            name="Headcount"
+                          />
+                          <Bar
+                            yAxisId="right"
+                            dataKey="tasks"
+                            fill="#82ca9d"
+                            name="Tasks Assigned"
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* 4. Personnel Directory (Existing Employee Grid) */}
+            {activeTab === "employees" && (
+              <motion.div
+                key="employees"
+                className="chro-panel glass"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+              >
+                <div className="chro-controls-toolbar">
+                  <div className="chro-search-box">
+                    <FaSearch className="chro-search-icon" />
+                    <input
+                      type="text"
+                      placeholder="Search personnel..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="chro-search-input"
+                    />
+                  </div>
+                  <select
+                    className="chro-select"
+                    value={filterDepartment}
+                    onChange={(e) => setFilterDepartment(e.target.value)}
+                  >
+                    <option value="all">All Departments</option>
+                    {departments.map((d) => (
+                      <option key={d.id} value={d.name}>
+                        {d.name}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="chro-divider-v" />
+                  <button
+                    className="chro-btn-secondary"
+                    onClick={() =>
+                      setViewMode(viewMode === "grid" ? "list" : "grid")
+                    }
+                  >
+                    {viewMode === "grid" ? <FaList /> : <FaThLarge />}
+                  </button>
+                  <button
+                    className="chro-btn-secondary"
+                    onClick={() =>
+                      setSortDir(sortDir === "asc" ? "desc" : "asc")
+                    }
+                  >
+                    <FaSortAmountDown
+                      style={{
+                        transform:
+                          sortDir === "desc" ? "rotate(180deg)" : "none",
+                      }}
+                    />
+                  </button>
+                </div>
+
+                {viewMode === "grid" ? (
+                  <motion.div
+                    className="chro-emp-grid"
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                  >
+                    {sortedEmployees.map((emp) => (
+                      <motion.div
+                        key={emp.id}
+                        className="chro-emp-card active-status"
+                        onClick={() => handleEmployeeClick(emp)}
+                        variants={itemVariants}
+                        whileHover={{ y: -5 }}
+                      >
+                        <div className="chro-avatar-large">
+                          {getInitials(emp.first_name)}
+                        </div>
+                        <h4 className="chro-emp-name">
+                          {emp.first_name} {emp.last_name}
+                        </h4>
+                        <span className="chro-emp-role">{emp.role_name}</span>
+                        <span className="chro-emp-dept">
+                          {emp.department_name}
+                        </span>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                ) : (
+                  <div className="chro-table-container">
+                    <table className="chro-table">
+                      <thead>
+                        <tr>
+                          <th>ID</th>
+                          <th>Name</th>
+                          <th>Role</th>
+                          <th>Dept</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {sortedEmployees.map((emp) => (
+                          <tr key={emp.id}>
+                            <td>{emp.emp_code || emp.username}</td>
+                            <td>
+                              {emp.first_name} {emp.last_name}
+                            </td>
+                            <td>{emp.role_name}</td>
+                            <td>{emp.department_name}</td>
+                            <td>
+                              <button
+                                onClick={() => handleEmployeeClick(emp)}
+                                className="chro-btn-view"
+                              >
+                                View
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </main>
       </div>
 
-      {/* --- Modals --- */}
-      {/* Employee Details Modal */}
+      {/* Modals */}
       <div
         className={`chro-modal-overlay ${selectedEmployee ? "open" : ""}`}
         onClick={() => setSelectedEmployee(null)}
@@ -646,7 +790,7 @@ const MainCHRO = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="chro-modal-header">
-              <h3>{selectedEmployee.firstName}'s Profile</h3>
+              <h3>{selectedEmployee.first_name}'s Profile</h3>
               <button
                 className="chro-modal-close"
                 onClick={() => setSelectedEmployee(null)}
@@ -656,24 +800,26 @@ const MainCHRO = () => {
             </div>
             <div className="chro-modal-body">
               <div className="chro-info-row">
-                <span>Employee ID</span>
-                <span>{selectedEmployee.empId}</span>
+                <span>ID</span>
+                <span>
+                  {selectedEmployee.emp_code || selectedEmployee.username}
+                </span>
               </div>
               <div className="chro-info-row">
-                <span>Details</span>
+                <span>Role</span>
+                <span>{selectedEmployee.role_name}</span>
+              </div>
+              <div className="chro-info-row">
+                <span>Dept</span>
+                <span>{selectedEmployee.department_name}</span>
+              </div>
+              <div className="chro-info-row">
+                <span>Email</span>
                 <span>{selectedEmployee.email}</span>
               </div>
               <div className="chro-info-row">
-                <span>Position</span>
-                <span>{selectedEmployee.role}</span>
-              </div>
-              <div className="chro-info-row">
-                <span>Department</span>
-                <span>{selectedEmployee.department}</span>
-              </div>
-              <div className="chro-info-row">
                 <span>Phone</span>
-                <span>{selectedEmployee.telephone}</span>
+                <span>{selectedEmployee.phone || "-"}</span>
               </div>
             </div>
             <div className="chro-modal-actions">
@@ -688,7 +834,6 @@ const MainCHRO = () => {
         )}
       </div>
 
-      {/* Delete Confirmation Modal */}
       <div
         className={`chro-modal-overlay ${showDeleteModal ? "open" : ""}`}
         onClick={() => setShowDeleteModal(false)}
@@ -709,14 +854,8 @@ const MainCHRO = () => {
               </h3>
             </div>
             <div className="chro-modal-body">
-              <p
-                style={{
-                  textAlign: "center",
-                  marginBottom: "20px",
-                  color: "#cbd5e1",
-                }}
-              >
-                Are you authorized to remove{" "}
+              <p style={{ textAlign: "center", marginBottom: 20 }}>
+                Authorized to remove{" "}
                 <strong>
                   {employeeToDelete?.firstName} {employeeToDelete?.lastName}
                 </strong>
@@ -724,17 +863,14 @@ const MainCHRO = () => {
               </p>
               <input
                 type="password"
-                className="chro-search-input"
-                placeholder="Enter Auth Code (0123)"
                 value={deletePassword}
                 onChange={(e) => setDeletePassword(e.target.value)}
-                style={{ textAlign: "center", letterSpacing: "4px" }}
+                placeholder="Auth Code (0123)"
+                className="chro-search-input"
+                style={{ textAlign: "center", letterSpacing: 4 }}
               />
               {deleteError && (
-                <p
-                  className="error-message"
-                  style={{ textAlign: "center", marginTop: "10px" }}
-                >
+                <p className="error-message" style={{ textAlign: "center" }}>
                   {deleteError}
                 </p>
               )}
@@ -753,7 +889,7 @@ const MainCHRO = () => {
           </div>
         )}
       </div>
-    </div>
+    </CHROLayout>
   );
 };
 

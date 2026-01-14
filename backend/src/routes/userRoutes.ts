@@ -1,7 +1,8 @@
 import { Router } from "express";
 import pool from "../config/db";
 import { RowDataPacket } from "mysql2";
-import { createUser, deleteUser, getUserById, listUsers } from "../controllers/userController";
+import { createUser, deleteUser, getUserById, listUsers, updateUser, bulkUpdateUsers, resetUserPassword } from "../controllers/userController";
+import { requireAuth } from "../middlewares/authMiddleware";
 
 const router = Router();
 
@@ -189,7 +190,14 @@ router.get("/employee/:id/detail", async (req, res) => {
 
 
 // POST /api/users
-router.post("/", createUser);
+router.patch("/bulk", requireAuth, bulkUpdateUsers);
+router.post("/", createUser); // Create might be public or require auth depending on logic, leaving as is for now or add if needed. Usually Create User is Admin only.
+// If create user is used by admin page, it should probably be protected too, but focusing on user request for Direct Position logging first. 
+// Actually, Direct Position page uses create? No, it uses list, update, bulk. 
+// Let's protect the ones relevant to Direct Position specifically first to be safe, or just protect update/bulk as planned.
+
+router.post("/:id/reset-password", requireAuth, resetUserPassword);
+router.put("/:id", requireAuth, updateUser);
 router.delete("/:id", deleteUser);
 
 // Endpoint /active-status moved to top

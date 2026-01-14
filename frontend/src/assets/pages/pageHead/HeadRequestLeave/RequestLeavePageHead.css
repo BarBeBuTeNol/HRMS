@@ -10,7 +10,6 @@ html, body, #root {
   margin: 0;
   padding: 0;
 
-  display: flex;           /* เปิด flex */
   flex-direction: column;  /* เอียงเป็นแนวตั้ง (เหมาะกับหน้าเว็บทั่วไป) */
   align-items: center;     /* จัดให้อยู่ตรงกลางแนวนอน */
   justify-content: center; /* จัดให้อยู่ตรงกลางแนวตั้ง */

@@ -16,6 +16,12 @@ class MasterDataRepository {
         const [rows] = await pool.query<RowDataPacket[]>("SELECT id, role_name FROM roles ORDER BY id ASC");
         return rows;
     }
+
+    async createDepartment(departmentName: string) {
+        const [result] = await pool.query("INSERT INTO departments (department_name) VALUES (?)", [departmentName]);
+        return result;
+    }
+
 }
 
 export default new MasterDataRepository();

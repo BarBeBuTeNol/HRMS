@@ -38,13 +38,19 @@ import Show_leave from "./assets/pages/HR/Show_leave/Show_leave";
 import Show_static_switch from "./assets/pages/HR/Show_static_switch/Show_static_switch";
 import Send_notifi from "./assets/pages/HR/Send_notifi/Send_notifi";
 import Announcements from "./assets/pages/HR/Announcements/Announcements";
+
 import Leave_info from "./assets/pages/HR/Leave_info/Leave_info";
+import AddDepartment from "./assets/pages/HR/add_department/add_department";
 
 // ---------------- CHRO ----------------
 import MainCHRO from "./assets/pages/CHRO/MainCHRO/MainCHRO";
 import DecideCHRO from "./assets/pages/CHRO/DecideCHRO/DecideCHRO";
 import DirectPosition from "./assets/pages/CHRO/Direct_Position/Direct-Position";
 import ShowLog from "./assets/pages/CHRO/Show-Log/Show-Log";
+import AnnouncementsCHRO from "./assets/pages/CHRO/announcements/AnnouncementsCHRO";
+import EmployeeDirectoryCHRO from "./assets/pages/CHRO/emp_directory/EmployeeDirectoryCHRO";
+import EditEmployeeCHRO from "./assets/pages/CHRO/emp_directory/EditEmployeeCHRO";
+
 function App() {
   return (
     <Routes>
@@ -97,11 +103,18 @@ function App() {
       <Route path="/hr/send-notification" element={<Send_notifi />} />
       <Route path="/hr/announcements" element={<Announcements />} />
       <Route path="/hr/leave-info" element={<Leave_info />} />
+      <Route path="/hr/add-department" element={<AddDepartment />} />
 
       {/* ---------- CHRO ---------- */}
       <Route path="/chro/decide" element={<DecideCHRO />} />
       <Route path="/chro/direct-position" element={<DirectPosition />} />
       <Route path="/chro/show-log" element={<ShowLog />} />
+      <Route path="/chro/announcements" element={<AnnouncementsCHRO />} />
+      <Route
+        path="/chro/employee-directory"
+        element={<EmployeeDirectoryCHRO />}
+      />
+      <Route path="/chro/edit-employee" element={<EditEmployeeCHRO />} />
     </Routes>
   );
 }

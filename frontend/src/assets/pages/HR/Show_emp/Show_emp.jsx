@@ -26,6 +26,7 @@ import {
 } from "react-icons/fa";
 import HRLayout from "../../../Component/HR/HRLayout";
 import PopupNotification from "../../../Component/popup_notifications/PopupNotification";
+import LogService from "../../../../services/LogService";
 import "./Show_emp.css";
 
 const Show_emp = () => {
@@ -59,6 +60,9 @@ const Show_emp = () => {
   });
 
   const [error, setError] = useState(null);
+
+  // Tab State for Detail Modal
+  const [empTab, setEmpTab] = useState("personal");
 
   // Toggle View Handler
   const toggleView = (mode) => setViewMode(mode);
@@ -166,6 +170,22 @@ const Show_emp = () => {
         method: "DELETE",
       });
       if (res.ok) {
+        // LOGGING
+        try {
+          const currentUser = JSON.parse(
+            localStorage.getItem("currentUser") || "{}"
+          );
+          await LogService.createLog({
+            userId: currentUser.id || currentUser.user_id,
+            action: "Delete User",
+            details: `Deleted employee ${deleteConfirm.empName} (ID: ${deleteConfirm.empId})`,
+            target: deleteConfirm.empName,
+            severity: "Critical", // Deletion is critical
+          });
+        } catch (logErr) {
+          console.warn("Logging failed", logErr);
+        }
+
         setEmployeeList((prev) =>
           prev.filter((e) => e.id !== deleteConfirm.empId)
         );
@@ -642,10 +662,10 @@ const Show_emp = () => {
               <motion.div
                 className="detail-modal"
                 onClick={(e) => e.stopPropagation()}
-                initial={{ x: "100%" }}
-                animate={{ x: 0 }}
-                exit={{ x: "100%" }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.2 }}
               >
                 <div className="detail-header">
                   <div className="detail-profile-summary">

@@ -14,6 +14,7 @@ import {
   FaChevronLeft,
   FaChevronRight,
   FaUserCircle,
+  FaBuilding,
 } from "react-icons/fa";
 import "./Sidebar_HR.css";
 
@@ -40,7 +41,11 @@ const Sidebar_HR = () => {
       items: [
         { path: "/hr/dashboard", icon: <FaHome />, label: "Dashboard" },
         { path: "/hr/add-user", icon: <FaUserPlus />, label: "Create User" },
-
+        {
+          path: "/hr/add-department",
+          icon: <FaBuilding />,
+          label: "Add Department",
+        },
         { path: "/hr/show-emp", icon: <FaUsers />, label: "Show Employees" },
       ],
     },
@@ -83,72 +88,73 @@ const Sidebar_HR = () => {
 
   return (
     <motion.div
-      animate={{ width: open ? "260px" : "80px" }}
+      animate={{ width: open ? "280px" : "80px" }}
       transition={{ duration: 0.5, type: "spring", damping: 12 }}
-      className="sidebar-hr-container"
+      className={`hr-sidebar-container ${!open ? "collapsed" : ""}`}
     >
-      <div className="sidebar-header">
+      <div className="hr-sidebar-header">
+        <div className="hr-user-avatar">
+          <FaUserCircle />
+        </div>
+
         <AnimatePresence>
           {open && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="user-info"
+              className="hr-user-info"
             >
-              <FaUserCircle className="user-avatar" />
-              <div className="user-text">
-                <h3 className="user-name">{displayUsername}</h3>
-                <span className="user-role">{displayRole}</span>
-              </div>
+              <div className="hr-user-name">{displayUsername}</div>
+              <div className="hr-user-role">{displayRole}</div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        <button className="toggle-btn" onClick={() => setOpen(!open)}>
+        <button className="hr-toggle-btn" onClick={() => setOpen(!open)}>
           {open ? <FaChevronLeft /> : <FaChevronRight />}
         </button>
       </div>
 
-      <div className="sidebar-menu">
+      <div className="hr-sidebar-menu">
         {menuItems.map((group, index) => (
-          <div key={index} className="menu-group">
-            {open && <h4 className="group-title">{group.title}</h4>}
+          <div key={index} className="hr-menu-group">
+            {open && <h4 className="hr-group-title">{group.title}</h4>}
             {group.items.map((item) => (
               <div
                 key={item.path}
-                className={`menu-item ${isActive(item.path) ? "active" : ""}`}
+                className={`hr-menu-item ${
+                  isActive(item.path) ? "active" : ""
+                }`}
                 onClick={() => navigate(item.path)}
                 title={!open ? item.label : ""}
               >
-                <span className="menu-icon">{item.icon}</span>
+                <span className="hr-menu-icon">{item.icon}</span>
                 <AnimatePresence>
                   {open && (
                     <motion.span
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -10 }}
-                      className="menu-label"
+                      className="hr-menu-label"
                     >
                       {item.label}
                     </motion.span>
                   )}
                 </AnimatePresence>
-                {isActive(item.path) && (
-                  <motion.div
-                    layoutId="active-pill"
-                    className="active-indicator"
-                  />
-                )}
               </div>
             ))}
           </div>
         ))}
       </div>
 
-      <div className="sidebar-footer">
-        <div className="menu-item logout" onClick={handleLogout} title="Logout">
-          <span className="menu-icon">
+      <div className="hr-sidebar-footer">
+        <div
+          className="hr-menu-item logout"
+          onClick={handleLogout}
+          title="Logout"
+        >
+          <span className="hr-menu-icon">
             <FaSignOutAlt />
           </span>
           <AnimatePresence>
@@ -157,7 +163,7 @@ const Sidebar_HR = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="menu-label"
+                className="hr-menu-label"
               >
                 Logout
               </motion.span>

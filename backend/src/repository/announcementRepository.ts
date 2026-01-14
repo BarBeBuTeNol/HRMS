@@ -32,11 +32,11 @@ class AnnouncementRepository {
         return rows[0];
     }
 
-    async create(title: string, content: string, postedBy: number) {
+    async create(title: string, content: string, postedBy: number, targetDepartmentId: number | null, priority: string = 'Normal') {
         const [result] = await pool.query<ResultSetHeader>(`
-            INSERT INTO announcements (title, content, posted_by, priority, created_at, updated_at)
-            VALUES (?, ?, ?, 'Important', NOW(), NOW())
-        `, [title, content, postedBy]);
+            INSERT INTO announcements (title, content, posted_by, target_department_id, priority, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, NOW(), NOW())
+        `, [title, content, postedBy, targetDepartmentId, priority]);
         return result;
     }
 
@@ -66,7 +66,7 @@ class AnnouncementRepository {
     }
 
     async findById(id: string) {
-        const [rows] = await pool.query<RowDataPacket[]>('SELECT title FROM announcements WHERE id = ?', [id]);
+        const [rows] = await pool.query<RowDataPacket[]>('SELECT title, posted_by FROM announcements WHERE id = ?', [id]);
         return rows[0];
     }
 

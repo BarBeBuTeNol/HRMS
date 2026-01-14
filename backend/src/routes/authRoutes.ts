@@ -63,11 +63,23 @@ router.post("/login", async (req, res) => {
     // ✅ บันทึกการกระทำ (User Log)
     await logUserAction(user.id, "LOGIN", "User logged in via Web");
 
-    // 4. ส่งข้อมูลกลับ (ไม่ส่ง password)
+    // 4. Generate JWT Token
+    const jwt = require("jsonwebtoken");
+    const token = jwt.sign(
+      { 
+        id: user.id, 
+        role: user.role_name, // Ensure this matches middleware expectation
+        username: user.username 
+      },
+      process.env.JWT_SECRET || 'fallback-secret-key-change-me',
+      { expiresIn: '1d' }
+    );
+
+    // 5. ส่งข้อมูลกลับ (ไม่ส่ง password)
     const { password: _pw, ...safeUser } = user;
 
     console.log("✅ Login Success:", safeUser);
-    return res.json({ ok: true, user: safeUser }); 
+    return res.json({ ok: true, user: safeUser, token }); // Return token
   } catch (err) {
     console.error("login error:", err);
     return res.status(500).json({ ok: false, message: "⚠️ Server error" });

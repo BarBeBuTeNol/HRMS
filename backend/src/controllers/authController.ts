@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
+import jwt from "jsonwebtoken";
 import authRepository from "../repository/authRepository";
+import userRepository from "../repository/userRepository";
 
 /** POST /api/auth/login  body: {username, password} */
 export const login = async (req: Request, res: Response) => {
@@ -25,7 +27,27 @@ export const login = async (req: Request, res: Response) => {
     }
 
     const { password: _pw, ...userData } = user;
-    return res.json({ ok: true, user: userData });
+
+    // ✅ Generate Token
+    // TODO: Add JWT_SECRET to .env
+    const token = jwt.sign(
+        { id: user.id, role: (user as any).role_name }, 
+       process.env.JWT_SECRET || 'fallback-secret-key-change-me', 
+        { expiresIn: '1d' }
+    );
+
+    // Log the successful login
+    const ip = req.ip || req.socket.remoteAddress || 'Unknown';
+    // Use userRepository for logging
+    await userRepository.logAction(
+        userData.id, 
+        'LOGIN', 
+        `User ${userData.username} logged in successfully using ${(userData as any).role_name || 'unknown role'} role.`, 
+        ip as string, 
+        'Info'
+    );
+
+    return res.json({ ok: true, user: userData, token });
   } catch (err) {
     console.error("login error:", err);
     return res.status(500).json({ ok: false, message: "Server error" });

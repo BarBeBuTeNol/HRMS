@@ -20,6 +20,29 @@
   --popup-btn-text: #374151;
 }
 
+/* CHRO/Executive Theme Overrides */
+.notification-popup-content.chro-theme {
+  --popup-bg-color: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  --popup-text-color: #f1f5f9;
+  --popup-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.notification-popup-content.chro-theme .notification-popup-body p {
+  color: #cbd5e1;
+}
+
+.notification-popup-content.chro-theme .notification-popup-btn {
+  background: linear-gradient(135deg, #fbbf24, #d97706);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+}
+
+.notification-popup-content.chro-theme .notification-popup-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+}
+
 .notification-popup-overlay {
   position: fixed;
   top: 0;
@@ -50,8 +73,8 @@
   width: 90%;
   max-width: 420px;
   text-align: center;
-  transform: translateY(20px) scale(0.95);
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: scale(0.95);
+  transition: opacity 0.3s ease, transform 0.3s ease;
   font-family: var(--popup-font-family);
   position: relative;
   overflow: hidden;
@@ -61,7 +84,7 @@
 }
 
 .notification-popup-overlay.open .notification-popup-content {
-  transform: translateY(0) scale(1);
+  transform: scale(1);
 }
 
 .notification-popup-header {
@@ -228,4 +251,105 @@
 }
 .notification-popup-content.info .notification-popup-btn {
   background-color: var(--popup-info-color);
+}
+
+/* =========================================
+   CHRO Executive Exclusive Theme
+   ========================================= */
+.notification-popup-content.chro-executive {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  border: 2px solid #b45309; /* Dark Gold/Bronze border */
+  box-shadow: 0 0 50px rgba(251, 191, 36, 0.15), 0 20px 40px rgba(0, 0, 0, 0.6);
+  min-width: 450px;
+}
+
+.notification-popup-content.chro-executive h3 {
+  font-size: 2rem;
+  background: linear-gradient(90deg, #fbbf24, #f59e0b);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.notification-popup-content.chro-executive p {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+/* Force Icon to Gold */
+.notification-popup-content.chro-executive .popup-icon path {
+  fill: #f59e0b; /* Gold */
+  filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.5));
+}
+
+/* Timer Circle Gold */
+.notification-popup-content.chro-executive .popup-circular-timer .circle {
+  stroke: #fbbf24;
+}
+.notification-popup-content.chro-executive .timer-text {
+  color: #fbbf24;
+}
+
+/* Redirect Text */
+.notification-popup-content.chro-executive .popup-redirect-message {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Action Button */
+.notification-popup-content.chro-executive .notification-popup-btn {
+  background: linear-gradient(90deg, #d97706, #fbbf24);
+  color: #1e293b;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 12px 32px;
+  box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
+}
+
+.notification-popup-content.chro-executive .notification-popup-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 25px rgba(251, 191, 36, 0.5);
+}
+/* =========================================
+   CHRO Loading Exclusive Theme
+   ========================================= */
+.notification-popup-content.chro-loading {
+  background: linear-gradient(135deg, #0b1120 0%, #1e293b 100%);
+  border: 2px solid #d4af37; /* Gold border */
+  box-shadow: 0 0 50px rgba(212, 175, 55, 0.2), 0 20px 40px rgba(0, 0, 0, 0.8);
+  min-width: 400px;
+}
+
+.notification-popup-content.chro-loading h3 {
+  font-size: 1.75rem;
+  color: #d4af37;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.notification-popup-content.chro-loading p {
+  color: #94a3b8;
+  font-size: 1.1rem;
+}
+
+/* Force Icon to Gold */
+.notification-popup-content.chro-loading .popup-icon path {
+  fill: #d4af37;
+  filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.6));
+}
+
+/* Hide standard close button during loading if desired, 
+   but logic in JSX handles onClose blocking. 
+   We style it just in case it appears. */
+.notification-popup-content.chro-loading .notification-popup-btn {
+  display: none; /* Hide button for cleaner loading look */
 }

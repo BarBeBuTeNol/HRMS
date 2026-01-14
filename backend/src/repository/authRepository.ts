@@ -6,9 +6,10 @@ class AuthRepository {
     async findUserByCredentials(username: string): Promise<DbUser | null> {
         const [rows] = await pool.query<RowDataPacket[]>(
             `
-            SELECT id, prefix_id, username, password, first_name, last_name, email, phone, role_id, department_id
-            FROM users
-            WHERE username = ?
+            SELECT u.id, u.prefix_id, u.username, u.password, u.first_name, u.last_name, u.email, u.phone, u.role_id, u.department_id, r.role_name
+            FROM users u
+            LEFT JOIN roles r ON u.role_id = r.id
+            WHERE u.username = ?
             LIMIT 1
             `,
             [username]

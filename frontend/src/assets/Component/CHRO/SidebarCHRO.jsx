@@ -1,45 +1,63 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
-  FaHome,
-  FaCheckDouble,
+  FaTachometerAlt,
+  FaCheckCircle,
   FaUsers,
-  FaClipboardList,
+  FaBullhorn,
+  FaChartPie,
+  FaHistory,
+  FaCogs,
   FaSignOutAlt,
-  FaBars,
-  FaTimes, // Used for close if needed, but we use toggle
-  FaUserTie, // For CHRO icon
+  FaChevronLeft,
+  FaChevronRight,
+  FaUserTie,
 } from "react-icons/fa";
 import "./SidebarCHRO.css";
 
 const SidebarCHRO = ({ isOpen, toggleSidebar }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [currentUser, setCurrentUser] = useState({});
 
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
-    setCurrentUser(user);
-  }, []);
-
-  const handleLogout = () => {
-    if (window.confirm("Are you sure you want to logout?")) {
-      localStorage.removeItem("currentUser");
-      localStorage.removeItem("token");
-      navigate("/login");
-    }
-  };
-
-  const navItems = [
-    { label: "Dashboard", path: "/chro/dashboard", icon: <FaHome /> },
-    { label: "Approvals", path: "/chro/decide", icon: <FaCheckDouble /> },
+  const menuItems = [
     {
-      label: "Direct Position",
-      path: "/chro/direct-position",
+      path: "/chro/dashboard",
+      label: "Dashboard",
+      icon: <FaTachometerAlt />,
+    },
+    {
+      path: "/chro/decide",
+      label: "Approvals Center",
+      icon: <FaCheckCircle />,
+    },
+    {
+      path: "/chro/employee-directory",
+      label: "Employee Directory",
       icon: <FaUsers />,
     },
-    { label: "Audit Logs", path: "/chro/show-log", icon: <FaClipboardList /> },
+    {
+      path: "/chro/announcements",
+      label: "Announcements",
+      icon: <FaBullhorn />,
+    },
+    {
+      path: "/chro/show-log",
+      label: "Audit Logs",
+      icon: <FaHistory />,
+    },
+    {
+      path: "/chro/direct-position",
+      label: "Settings / Roles",
+      icon: <FaCogs />,
+    },
   ];
+
+  const handleLogout = () => {
+    // Clear user session data
+    localStorage.removeItem("currentUser");
+    localStorage.removeItem("userRole");
+    navigate("/login");
+  };
 
   return (
     <>
@@ -51,17 +69,16 @@ const SidebarCHRO = ({ isOpen, toggleSidebar }) => {
 
       <aside className={`chro-sidebar ${isOpen ? "open" : "closed"}`}>
         {/* Toggle Button (Floating) */}
-        {/* Toggle Button (Floating) */}
         <button
-          className="chro-toggle-btn"
+          className="chro-sidebar-toggle-btn"
           onClick={toggleSidebar}
           aria-label="Toggle Sidebar"
         >
-          {isOpen ? <FaBars /> : <FaBars />}
+          {isOpen ? <FaChevronLeft /> : <FaChevronRight />}
         </button>
 
         <div className="chro-sidebar-content">
-          {/* Header / Logo Area */}
+          {/* Logo Section */}
           <div className="chro-logo-section">
             <div className="chro-logo-icon">
               <FaUserTie />
@@ -76,10 +93,13 @@ const SidebarCHRO = ({ isOpen, toggleSidebar }) => {
 
           <div className="chro-divider" />
 
-          {/* Navigation */}
+          {/* Navigation Menu */}
           <nav className="chro-nav-menu">
-            {navItems.map((item) => {
-              const isActive = location.pathname === item.path;
+            {menuItems.map((item) => {
+              // Simple check for active path
+              // For Dashboard tab params, we just check base path
+              const isActive = location.pathname === item.path.split("?")[0];
+
               return (
                 <button
                   key={item.path}
@@ -87,11 +107,11 @@ const SidebarCHRO = ({ isOpen, toggleSidebar }) => {
                   onClick={() => navigate(item.path)}
                   title={!isOpen ? item.label : ""}
                 >
-                  <span className="chro-nav-icon">{item.icon}</span>
+                  <div className="chro-nav-icon">{item.icon}</div>
                   {isOpen && (
                     <span className="chro-nav-label">{item.label}</span>
                   )}
-                  {isActive && isOpen && (
+                  {isOpen && isActive && (
                     <div className="chro-active-indicator" />
                   )}
                 </button>
@@ -101,24 +121,17 @@ const SidebarCHRO = ({ isOpen, toggleSidebar }) => {
 
           {/* User Profile Footer */}
           <div className="chro-sidebar-footer">
-            <div className={`chro-user-profile ${isOpen ? "expanded" : ""}`}>
-              <div className="chro-avatar">
-                {currentUser?.firstName?.[0] || "C"}
-              </div>
+            <div className="chro-user-profile">
+              <div className="chro-avatar">C</div>
               {isOpen && (
                 <div className="chro-user-info">
-                  <div className="chro-user-name">
-                    {currentUser?.firstName || "User"}
-                  </div>
+                  <div className="chro-user-name">User</div>
                   <div className="chro-user-role">CHRO Admin</div>
                 </div>
               )}
             </div>
-            <button
-              className="chro-logout-btn"
-              onClick={handleLogout}
-              title="Logout"
-            >
+
+            <button className="chro-logout-btn" onClick={handleLogout}>
               <FaSignOutAlt />
               {isOpen && <span>Logout</span>}
             </button>

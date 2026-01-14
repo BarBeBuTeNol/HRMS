@@ -1,0 +1,58 @@
+/* CHROLayout.css - Standardized Layout for CHRO Pages */
+
+/* Page Layout - Full Screen Fix */
+.chro-layout-container {
+  min-height: 100vh;
+  /* width: auto; Default block behavior fills available space */
+  background-color: var(--chro-bg-page, #0f172a);
+  color: var(--chro-text-primary, #f9fafb);
+  margin-left: 260px; /* Default open width */
+  padding: 32px 40px;
+  font-family: "Inter", system-ui, sans-serif;
+  overflow-x: hidden;
+  transition: margin-left 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  box-sizing: border-box;
+
+  /* Background Gimmick: Subtle animated gradient mesh matches MainCHRO */
+  background-image: radial-gradient(
+      circle at 15% 15%,
+      rgba(59, 130, 246, 0.08) 0%,
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 85% 85%,
+      rgba(16, 185, 129, 0.05) 0%,
+      transparent 40%
+    );
+  background-attachment: fixed;
+}
+
+.chro-layout-container.expanded {
+  margin-left: 110px; /* Collapsed width */
+}
+
+/* Content Wrapper */
+.chro-layout-content {
+  max-width: 100%;
+  margin: 0 auto;
+  width: 100%;
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 1024px) {
+  .chro-layout-container {
+    margin-left: 0 !important;
+    padding: 20px;
+  }
+}

@@ -136,3 +136,134 @@ export const deleteUser = async (req: Request, res: Response) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+// PUT /api/users/:id
+export const updateUser = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { firstName, lastName, email, role_id, department_id, status, position } = req.body;
+
+    const data: any = {};
+    if (firstName) data.firstName = firstName;
+    if (lastName) data.lastName = lastName;
+    if (email) data.email = email;
+    if (role_id) data.role_id = role_id;
+    if (department_id) data.department_id = department_id;
+    if (status) data.status = status;
+
+    const success = await userRepository.update(id, data);
+    
+    // Update Job Position if provided
+    if (position) {
+        await userRepository.updateJobPosition(id, position);
+    }
+    
+    // Let's rely on the new repository methods or update the repo update method? 
+    // I missed updating the repo `update` method to include role/dept/status.
+    // I will fix `userRepository.ts` in the previous step? No, I can't go back.
+    // I will add a patch to `userRepository.ts` OR just use `bulkUpdate` for single update too effectively? 
+    // No, I'll update `userRepository.ts` AGAIN in a bit or utilize `bulkUpdate` for single by passing [id].
+    
+    // Actually, for this controller, I'll just call the repository methods.
+    // Since I didn't update repo.update to handle role/dept, I should probably use `bulkUpdate` for single complex updates 
+    // OR create a better `update` in repo. 
+    // checking repo code... `update` only had 3 fields. 
+    // I shall fix the repo first OR update the controller to handle it manually.
+    // Better: Update controller to use `bulkUpdate` for single user if complex fields are present.
+    
+    if (role_id || department_id || status) {
+         await userRepository.bulkUpdate([id], { role_id, department_id, status });
+    }
+
+    // Log the action
+    if (req.user && req.user.id) {
+        const changes = [];
+        if (firstName) changes.push(`Name to ${firstName} ${lastName || ''}`);
+        if (role_id) changes.push(`Role ID to ${role_id}`);
+        if (department_id) changes.push(`Dept ID to ${department_id}`);
+        if (status) changes.push(`Status to ${status}`);
+        if (position) changes.push(`Position to ${position}`);
+        
+        await userRepository.logAction(
+            req.user.id, 
+            "Update User", 
+            `Updated User ID ${id}. Changes: ${changes.join(', ')}`, 
+            req.ip || '', 
+            'Info', 
+            `User ID ${id}`
+        );
+    }
+    
+    res.json({ message: "User updated successfully" });
+  } catch (err: any) {
+    console.error("Update User Error:", err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// PATCH /api/users/bulk
+export const bulkUpdateUsers = async (req: Request, res: Response) => {
+    try {
+        const { ids, role_id, department_id, status } = req.body;
+        if (!Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ message: "Invalid IDs provided" });
+        }
+
+        const success = await userRepository.bulkUpdate(ids, { role_id, department_id, status });
+        
+        if (success && req.user && req.user.id) {
+            const updates = [];
+            if (role_id) updates.push(`Role ID: ${role_id}`);
+            if (department_id) updates.push(`Dept ID: ${department_id}`);
+            if (status) updates.push(`Status: ${status}`);
+
+            await userRepository.logAction(
+                req.user.id,
+                "Bulk Update Users",
+                `Bulk updated ${ids.length} users. Set: ${updates.join(', ')}`,
+                req.ip || '',
+                'Info',
+                `User IDs: ${ids.join(', ')}`
+            );
+        }
+
+        res.json({ message: "Users updated successfully", success });
+    } catch (err: any) {
+        res.status(500).json({ message: err.message });
+    }
+}
+
+// POST /api/users/:id/reset-password
+export const resetUserPassword = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { newPassword } = req.body; // Check for custom password
+        
+        // Use provided password or fallback to default
+        const passwordToSet = newPassword || "ChangeMe123!"; 
+        
+        const bcrypt = require("bcryptjs");
+        const hashedPassword = await bcrypt.hash(passwordToSet, 10);
+
+        // await userRepository.resetPassword(id, hashedPassword); // Duplicate removed
+
+        
+        await userRepository.resetPassword(id, hashedPassword);
+        
+        // Log action with Actor ID (req.user.id) not target ID
+        if (req.user && req.user.id) {
+             await userRepository.logAction(
+                 req.user.id, 
+                 "Reset Password", 
+                 `Reset password for User ID ${id}`, 
+                 req.ip || '', 
+                 'Warning', 
+                 `User ID ${id}`
+            );
+        }
+
+        res.json({ message: "Password reset successfully", isDefault: !newPassword });
+    } catch (err: any) {
+        res.status(500).json({ message: err.message });
+    }
+}

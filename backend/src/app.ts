@@ -30,6 +30,10 @@ app.use("/api/roles", roleRoutes);
 
 // ✅ CHRO Routes
 app.use("/api/chro", chroRoutes);
+
+// ✅ Log Routes
+import logRoutes from './routes/logRoutes';
+app.use("/api/logs", logRoutes);
 app.get("/api/debug", (req, res) => res.json({ message: "Server is running" }));
 
 app.listen(5000, () => console.log("✅ Backend running at http://localhost:5000"));

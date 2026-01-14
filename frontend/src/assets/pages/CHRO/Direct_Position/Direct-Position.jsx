@@ -1,240 +1,723 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import SidebarCHRO from '../../../Component/CHRO/SidebarCHRO';
-import './Direct-Position.css';
-
-
-
-const ROLE_OPTIONS = ['EMPLOYEE', 'HEAD', 'HR', 'CHRO'];
-const DEPT_OPTIONS = ['ฝ่ายขาย', 'ฝ่ายบุคคล', 'ฝ่าย IT', 'ฝ่ายการเงิน', 'ฝ่ายผลิต'];
-
-const POSITION_OPTIONS = [
-  'ผู้จัดการฝ่ายขาย',
-  'ผู้จัดการฝ่ายบุคคล',
-  'ผู้จัดการฝ่าย IT',
-  'ผู้จัดการฝ่ายการเงิน',
-  'ผู้จัดการฝ่ายผลิต',
-  'หัวหน้าทีมขาย',
-  'หัวหน้าทีมพัฒนา',
-  'หัวหน้าทีมบัญชี',
-  'ผู้เชี่ยวชาญระบบ',
-  'ที่ปรึกษาด้านธุรกิจ',
-];
+import React, { useEffect, useMemo, useState } from "react";
+import CHROLayout from "../../../Component/CHRO/CHROLayout";
+import LogService from "../../../../services/LogService";
+import api from "../../../../services/api";
+import "./Direct-Position.css";
 
 export default function DirectPosition() {
   const [employees, setEmployees] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [roles, setRoles] = useState([]);
+  const [departments, setDepartments] = useState([]);
 
+  // Search & Filter
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterRole, setFilterRole] = useState("");
+  const [filterDept, setFilterDept] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+
+  // Modal State
   const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [selectedPosition, setSelectedPosition] = useState('');
-  const [selectedRole, setSelectedRole] = useState('');
-  const [selectedDept, setSelectedDept] = useState('');
-  const [effectiveDate, setEffectiveDate] = useState('');
-  const [note, setNote] = useState('');
+  const [editForm, setEditForm] = useState({
+    position: "",
+    role_id: "",
+    department_id: "",
+    status: "",
+    effectiveDate: "",
+    note: "",
+  });
+
+  // Bulk Action State
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [bulkActionType, setBulkActionType] = useState(""); // 'department' | 'role' | 'status'
+  const [bulkValue, setBulkValue] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [successMsg, setSuccessMsg] = useState("Operation Successful");
 
-  // --- Mock data (ตัวอย่าง) — ภายหลังดึงจาก API ได้ ---
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [pageSize, setPageSize] = useState(15);
+  const [totalCount, setTotalCount] = useState(0);
+
+  // Fetch Data
+  const fetchData = async () => {
+    try {
+      // Use dynamic page and pageSize
+      const [usersRes, rolesRes, deptsRes] = await Promise.all([
+        api.get(`/api/users?page=${currentPage}&pageSize=${pageSize}`),
+        api.get("/api/roles"),
+        api.get("/api/departments"),
+      ]);
+
+      // Process Users
+      const fetchedUsers = usersRes.data.data.map((u) => ({
+        ...u,
+        displayStatus: u.status || "Active",
+        lastActiveFormatted: u.last_active
+          ? new Date(u.last_active).toLocaleString("th-TH")
+          : "Never",
+      }));
+
+      setEmployees(fetchedUsers);
+
+      // Update pagination info from response
+      if (usersRes.data.pagination) {
+        setTotalPages(usersRes.data.pagination.totalPages);
+        setTotalCount(usersRes.data.pagination.total);
+      }
+
+      setRoles(rolesRes.data || []);
+      setDepartments(deptsRes.data || []);
+    } catch (error) {
+      console.error("Failed to fetch data", error);
+    }
+  };
+
   useEffect(() => {
-    const mockEmployees = [
-      { id: 1, name: 'สมชาย ใจดี', position: 'พนักงานขาย', department: 'ฝ่ายขาย', email: 'somchai@company.com', role: 'EMPLOYEE' },
-      { id: 2, name: 'สมหญิง รักงาน', position: 'ผู้ช่วยผู้จัดการ', department: 'ฝ่ายบุคคล', email: 'somying@company.com', role: 'HR' },
-      { id: 3, name: 'วิชัย มุ่งมั่น', position: 'โปรแกรมเมอร์', department: 'ฝ่าย IT', email: 'wichai@company.com', role: 'EMPLOYEE' },
-      { id: 4, name: 'รัตนา สดใส', position: 'นักบัญชี', department: 'ฝ่ายการเงิน', email: 'rattana@company.com', role: 'EMPLOYEE' },
-      { id: 5, name: 'ธนวัฒน์ เก่งกล้า', position: 'วิศวกร', department: 'ฝ่ายผลิต', email: 'thanawat@company.com', role: 'EMPLOYEE' },
-    ];
-    setEmployees(mockEmployees);
-  }, []);
+    fetchData();
+  }, [currentPage, pageSize]); // Re-fetch on page change
 
+  // Filter Logic
   const filteredEmployees = useMemo(() => {
-    const s = searchTerm.trim().toLowerCase();
-    if (!s) return employees;
-    return employees.filter((e) =>
-      e.name.toLowerCase().includes(s) ||
-      e.position.toLowerCase().includes(s) ||
-      e.department.toLowerCase().includes(s) ||
-      e.email.toLowerCase().includes(s)
+    return employees.filter((e) => {
+      const matchSearch =
+        (e.username || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (e.first_name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (e.last_name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (e.email || "").toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchRole = filterRole ? e.role_name === filterRole : true;
+      const matchDept = filterDept ? e.department_name === filterDept : true;
+      const matchStatus = filterStatus
+        ? e.displayStatus === filterStatus
+        : true;
+
+      return matchSearch && matchRole && matchDept && matchStatus;
+    });
+  }, [employees, searchTerm, filterRole, filterDept, filterStatus]);
+
+  // Handlers
+  const handleToggleSelect = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
-  }, [employees, searchTerm]);
+  };
 
-  // เปิด modal และเติมค่าตั้งต้น
-  const openModal = (emp) => {
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedIds(filteredEmployees.map((e) => e.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const openEditModal = async (emp) => {
     setSelectedEmployee(emp);
-    setSelectedPosition(emp.position || '');
-    setSelectedRole(emp.role || '');
-    setSelectedDept(emp.department || '');
-    setEffectiveDate('');
-    setNote('');
+
+    // Pre-fill with existing data first while loading
+    setEditForm({
+      position: emp.job_position || "",
+      role_id: emp.role_id,
+      department_id: emp.department_id,
+      status: emp.displayStatus || "Active",
+      effectiveDate: "",
+      note: "",
+    });
+
+    try {
+      // Fetch fresh details to ensure we have latest Position etc.
+      const res = await api.get(`/api/users/${emp.id}`);
+      const user = res.data;
+      if (user) {
+        setEditForm((prev) => ({
+          ...prev,
+          position: user.job_position || "",
+          role_id: user.role_id,
+          department_id: user.department_id,
+          status: user.status || prev.status,
+        }));
+      }
+    } catch (err) {
+      console.error("Failed to fetch fresh user details", err);
+    }
   };
 
-  const closeModal = () => {
+  // New Password State
+  const [showPwdInput, setShowPwdInput] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+
+  const closeEditModal = () => {
     setSelectedEmployee(null);
-    setSelectedPosition('');
-    setSelectedRole('');
-    setSelectedDept('');
-    setEffectiveDate('');
-    setNote('');
+    setShowPwdInput(false);
+    setNewPassword("");
+    setEditForm({
+      position: "",
+      role_id: "",
+      department_id: "",
+      status: "",
+      effectiveDate: "",
+      note: "",
+    });
   };
 
-  const handleConfirm = async () => {
+  const handleSaveChanges = async () => {
     if (!selectedEmployee) return;
-    if (!selectedPosition || !selectedRole || !selectedDept) return;
-
     setLoading(true);
+    try {
+      await api.put(`/api/users/${selectedEmployee.id}`, {
+        role_id: editForm.role_id,
+        department_id: editForm.department_id,
+        status: editForm.status,
+        position: editForm.position, // Send Position
+      });
 
-    // TODO: เรียก API จริง เช่น
-    // await api.put(`/employees/${selectedEmployee.id}/position`, {
-    //   position: selectedPosition,
-    //   role: selectedRole,
-    //   department: selectedDept,
-    //   effectiveDate,
-    //   note,
-    //   approvedBy: 'CHRO', // อาจอ่านจาก session ผู้ใช้ที่ล็อกอิน
-    // });
+      // LOGGING
+      try {
+        const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+        await LogService.createLog({
+          userId: currentUser.id || currentUser.user_id,
+          action: "Edit User", // Matching valid enum if strict, else string
+          details: `Updated user ${selectedEmployee.username}. Pos: ${editForm.position}, RoleID: ${editForm.role_id}, DeptID: ${editForm.department_id}, Status: ${editForm.status}`,
+          target: selectedEmployee.username,
+          severity: "Info",
+        });
+      } catch (logErr) {
+        console.warn("Logging failed", logErr);
+      }
 
-    setTimeout(() => {
-      setEmployees((prev) =>
-        prev.map((e) =>
-          e.id === selectedEmployee.id
-            ? { ...e, position: selectedPosition, role: selectedRole, department: selectedDept }
-            : e
-        )
-      );
-
-      setLoading(false);
-      closeModal();
+      setSuccessMsg("Updated User Successfully");
       setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 2500);
-    }, 900);
+      fetchData(); // Refresh
+      closeEditModal();
+    } catch (error) {
+      alert("Failed to update user: " + error.message);
+    } finally {
+      setLoading(false);
+      setTimeout(() => setShowSuccess(false), 3000);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!selectedEmployee) return;
+
+    // If input not shown, just toggle it
+    if (!showPwdInput) {
+      setShowPwdInput(true);
+      return;
+    }
+
+    // If input shown but empty, ask to confirm default? or alert?
+    // Let's assume if they click "Confirm Reset" (which this button becomes)
+    const pwdToSend = newPassword.trim();
+    const confirmMsg = pwdToSend
+      ? `Reset password for ${selectedEmployee.username} to custom value?`
+      : `Reset password for ${selectedEmployee.username}? Default will be 'ChangeMe123!'`;
+
+    if (!confirm(confirmMsg)) return;
+
+    try {
+      await api.post(`/api/users/${selectedEmployee.id}/reset-password`, {
+        newPassword: pwdToSend,
+      });
+      alert(
+        pwdToSend
+          ? "Password updated successfully!"
+          : "Password reset to 'ChangeMe123!'"
+      );
+      setShowPwdInput(false);
+      setNewPassword("");
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
+  };
+
+  const initBulkAction = (type) => {
+    if (selectedIds.length === 0) return alert("Please select users first");
+    setBulkActionType(type);
+    setBulkValue("");
+    setShowBulkModal(true);
+  };
+
+  const executeBulkAction = async () => {
+    if (!bulkValue) return;
+    setLoading(true);
+    try {
+      const payload = { ids: selectedIds };
+      if (bulkActionType === "department") payload.department_id = bulkValue;
+      else if (bulkActionType === "role") payload.role_id = bulkValue;
+      else if (bulkActionType === "status") payload.status = bulkValue;
+
+      await api.patch("/api/users/bulk", payload);
+
+      // LOGGING
+      try {
+        const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+        await LogService.createLog({
+          userId: currentUser.id || currentUser.user_id,
+          action: "Bulk Update",
+          details: `Bulk updated ${selectedIds.length} users. Type: ${bulkActionType}, Value: ${bulkValue}`,
+          target: "Multiple Users",
+          severity: "Info",
+        });
+      } catch (logErr) {
+        console.warn("Logging failed", logErr);
+      }
+
+      setSuccessMsg(`Bulk Update (${selectedIds.length} users) Successful`);
+      setShowSuccess(true);
+      fetchData();
+      setSelectedIds([]);
+      setShowBulkModal(false);
+    } catch (err) {
+      alert("Bulk Action Failed: " + err.message);
+    } finally {
+      setLoading(false);
+      setTimeout(() => setShowSuccess(false), 3000);
+    }
   };
 
   return (
-    <div className="direct-position-layout">{/* Layout หลัก (Sidebar + Main) */}
-      <SidebarCHRO />
-
+    <CHROLayout>
       <main className="dp-main">
-        {/* Header / Title */}
-        <header className="direct-position-header">
-          <h1 className="direct-position-title">จัดการตำแหน่งพนักงาน</h1>
-          <p className="direct-position-subtitle">กำหนดและเปลี่ยนแปลงตำแหน่ง/บทบาท ตามสิทธิของ CHRO</p>
-        </header>
+        {/* Container for Centered Content */}
+        <div className="direct-position-container">
+          <header className="direct-position-header">
+            <h1 className="direct-position-title">User Management Center</h1>
+            <p className="direct-position-subtitle">
+              Exclusive Control Panel for Human Resources & Operations
+            </p>
+          </header>
 
-        <div className="direct-position-content">
-          {/* Search */}
-          <section className="search-section">
-            <div className="search-container">
+          {/* Controls & Metrics */}
+          <section className="controls-section">
+            <div className="metrics-cards">
+              <div className="metric-card">
+                <h3>Total Users</h3>
+                <div className="metric-value">{employees.length}</div>
+              </div>
+              <div className="metric-card active">
+                <h3>Active</h3>
+                <div className="metric-value">
+                  {employees.filter((e) => e.displayStatus === "Active").length}
+                </div>
+              </div>
+              <div className="metric-card warning">
+                <h3>Inactive/Suspended</h3>
+                <div className="metric-value">
+                  {employees.filter((e) => e.displayStatus !== "Active").length}
+                </div>
+              </div>
+            </div>
+
+            <div className="filters-bar">
               <input
                 type="text"
+                className="search-input-premium"
+                placeholder="Search Users (Name, Email)..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="ค้นหาด้วยชื่อ / ตำแหน่ง / แผนก / อีเมล"
-                className="search-input"
-                aria-label="ค้นหาพนักงาน"
               />
-              <div className="search-icon" aria-hidden>🔍</div>
+
+              <select
+                className="filter-select"
+                value={filterRole}
+                onChange={(e) => setFilterRole(e.target.value)}
+              >
+                <option value="">All Roles</option>
+                {roles.map((r) => (
+                  <option key={r.id} value={r.role_name}>
+                    {r.role_name}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                className="filter-select"
+                value={filterDept}
+                onChange={(e) => setFilterDept(e.target.value)}
+              >
+                <option value="">All Departments</option>
+                {departments.map((d) => (
+                  <option key={d.id} value={d.department_name}>
+                    {d.department_name}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                className="filter-select"
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+              >
+                <option value="">All Status</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+                <option value="Suspended">Suspended</option>
+              </select>
             </div>
           </section>
 
-          {/* Employees Grid */}
-          <section className="employees-grid" aria-label="รายการพนักงาน">
-            {filteredEmployees.map((emp) => (
-              <article
-                key={emp.id}
-                className={`employee-card ${selectedEmployee?.id === emp.id ? 'selected' : ''}`}
-                onClick={() => openModal(emp)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => (e.key === 'Enter' ? openModal(emp) : null)}
-                aria-label={`แก้ไขตำแหน่งของ ${emp.name}`}
-              >
-                <div className="employee-avatar">{emp.name.charAt(0)}</div>
-                <div className="employee-info">
-                  <h3 className="employee-name">{emp.name}</h3>
-                  <p className="employee-position">{emp.position}</p>
-                  <p className="employee-department">{emp.department}</p>
-                  <p className="employee-email">{emp.email}</p>
-                </div>
-                <div className="employee-status"><span className="status-badge">Active</span></div>
-              </article>
-            ))}
+          {/* Table View */}
+          <section className="table-container">
+            <table className="premium-table">
+              <thead>
+                <tr>
+                  <th style={{ width: "60px", paddingLeft: "30px" }}>
+                    <input
+                      type="checkbox"
+                      className="custom-checkbox"
+                      onChange={handleSelectAll}
+                      checked={
+                        selectedIds.length === filteredEmployees.length &&
+                        filteredEmployees.length > 0
+                      }
+                    />
+                  </th>
+                  <th>User Profile</th>
+                  <th>Access Role</th>
+                  <th>Department</th>
+                  <th>Status</th>
+                  <th>Last Active</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredEmployees.map((emp) => (
+                  <tr
+                    key={emp.id}
+                    className={
+                      selectedIds.includes(emp.id) ? "row-selected" : ""
+                    }
+                  >
+                    <td style={{ paddingLeft: "30px" }}>
+                      <input
+                        type="checkbox"
+                        className="custom-checkbox"
+                        checked={selectedIds.includes(emp.id)}
+                        onChange={() => handleToggleSelect(emp.id)}
+                      />
+                    </td>
+                    <td>
+                      <div className="user-cell">
+                        <div className="user-avatar">{emp.first_name?.[0]}</div>
+                        <div className="user-info">
+                          <div className="user-name">
+                            {emp.first_name} {emp.last_name}
+                          </div>
+                          <div className="user-email">{emp.email}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span className="role-badge">{emp.role_name}</span>
+                    </td>
+                    <td>{emp.department_name || "-"}</td>
+                    <td>
+                      <span
+                        className={`status-pill ${emp.displayStatus.toLowerCase()}`}
+                      >
+                        {emp.displayStatus}
+                      </span>
+                    </td>
+                    <td className="last-active">{emp.lastActiveFormatted}</td>
+                    <td>
+                      <button
+                        className="btn-edit-icon"
+                        title="Edit User"
+                        onClick={() => openEditModal(emp)}
+                      >
+                        ⚙️
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </section>
+
+          {/* Pagination Controls */}
+          <div className="pagination-controls">
+            <button
+              className="pagination-btn"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            >
+              Previous
+            </button>
+
+            <span className="pagination-info">
+              Showing {(currentPage - 1) * pageSize + 1} -{" "}
+              {Math.min(currentPage * pageSize, totalCount)} of {totalCount}
+            </span>
+
+            <button
+              className="pagination-btn"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            >
+              Next
+            </button>
+          </div>
         </div>
 
-        {/* Modal แก้ไขตำแหน่ง */}
+        {/* Floating Bulk Action Toolbar */}
+        {selectedIds.length > 0 && (
+          <div className="bulk-toolbar">
+            <div className="bulk-count-badge">
+              {selectedIds.length} Selected
+            </div>
+            <div className="bulk-actions-group">
+              <button onClick={() => initBulkAction("department")}>
+                Change Dept
+              </button>
+              <button onClick={() => initBulkAction("role")}>
+                Change Role
+              </button>
+              <button onClick={() => initBulkAction("status")}>
+                Set Status
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Modal (Redesigned) */}
         {selectedEmployee && (
-          <div className="position-change-modal" role="dialog" aria-modal="true" aria-label="เปลี่ยนตำแหน่งพนักงาน">
-            <div className="modal-content">
-              <h2 className="modal-title">เปลี่ยนตำแหน่ง/บทบาท</h2>
-
-              <div className="selected-employee-info">
-                <div className="selected-avatar">{selectedEmployee.name.charAt(0)}</div>
-                <div>
-                  <h3>{selectedEmployee.name}</h3>
-                  <p>ตำแหน่งปัจจุบัน: {selectedEmployee.position} • แผนก: {selectedEmployee.department}</p>
-                  <p>บทบาทปัจจุบัน: {selectedEmployee.role}</p>
+          <div className="position-change-modal" role="dialog">
+            <div className="modal-content premium-modal">
+              {/* Modal Header */}
+              <div className="modal-user-header">
+                <div className="modal-avatar-large">
+                  {selectedEmployee.first_name?.[0]}
+                </div>
+                <div className="modal-user-details">
+                  <h2>{selectedEmployee.username}</h2>
+                  <p>
+                    {selectedEmployee.first_name} {selectedEmployee.last_name} |{" "}
+                    {selectedEmployee.email}
+                  </p>
                 </div>
               </div>
 
-              <div className="position-selector">
-                <label htmlFor="pos">ตำแหน่งใหม่</label>
-                <select id="pos" className="position-select" value={selectedPosition} onChange={(e) => setSelectedPosition(e.target.value)}>
-                  <option value="">-- เลือกตำแหน่ง --</option>
-                  {POSITION_OPTIONS.map((p) => (
-                    <option key={p} value={p}>{p}</option>
-                  ))}
-                </select>
-              </div>
+              <div className="modal-body">
+                <div className="dp-form-grid">
+                  <div className="dp-form-item">
+                    <label>Assigned Role</label>
+                    <select
+                      className="position-select"
+                      value={editForm.role_id}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, role_id: e.target.value })
+                      }
+                    >
+                      {roles.map((r) => (
+                        <option key={r.id} value={r.id}>
+                          {r.role_name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-              <div className="dp-form-grid">
-                <div className="dp-form-item">
-                  <label htmlFor="role">บทบาท (สิทธิการใช้งาน)</label>
-                  <select id="role" className="position-select" value={selectedRole} onChange={(e) => setSelectedRole(e.target.value)}>
-                    <option value="">-- เลือกบทบาท --</option>
-                    {ROLE_OPTIONS.map((r) => (
-                      <option key={r} value={r}>{r}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="dp-form-item">
-                  <label htmlFor="dept">แผนก</label>
-                  <select id="dept" className="position-select" value={selectedDept} onChange={(e) => setSelectedDept(e.target.value)}>
-                    <option value="">-- เลือกแผนก --</option>
-                    {DEPT_OPTIONS.map((d) => (
-                      <option key={d} value={d}>{d}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="dp-form-item">
-                  <label htmlFor="eff">วันที่มีผล</label>
-                  <input id="eff" type="date" className="position-select dp-input" value={effectiveDate} onChange={(e) => setEffectiveDate(e.target.value)} />
-                </div>
-              </div>
+                  <div className="dp-form-item">
+                    <label>Job Position</label>
+                    <input
+                      type="text"
+                      className="position-select"
+                      placeholder="e.g. Senior Manager"
+                      value={editForm.position}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, position: e.target.value })
+                      }
+                    />
+                  </div>
 
-              <div className="dp-form-item">
-                <label htmlFor="note">หมายเหตุ</label>
-                <textarea id="note" rows={3} className="position-select dp-input" placeholder="เช่น ย้ายตามโครงสร้างใหม่ไตรมาส 4" value={note} onChange={(e) => setNote(e.target.value)} />
-              </div>
+                  <div className="dp-form-item">
+                    <label>Department</label>
+                    <select
+                      className="position-select"
+                      value={editForm.department_id}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          department_id: e.target.value,
+                        })
+                      }
+                    >
+                      {departments.map((d) => (
+                        <option key={d.id} value={d.id}>
+                          {d.department_name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-              <div className="modal-actions">
-                <button className="btn-cancel" onClick={closeModal}>ยกเลิก</button>
-                <button className={`btn-confirm ${loading || !selectedPosition || !selectedRole || !selectedDept ? 'disabled' : ''}`} disabled={loading || !selectedPosition || !selectedRole || !selectedDept} onClick={handleConfirm}>
-                  {loading ? 'กำลังดำเนินการ...' : 'ยืนยันการเปลี่ยนแปลง'}
-                </button>
+                  <div className="dp-form-item full-width">
+                    <label>Account Status</label>
+                    <select
+                      className="position-select"
+                      value={editForm.status}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, status: e.target.value })
+                      }
+                    >
+                      <option value="Active">Active</option>
+                      <option value="Inactive">Inactive</option>
+                      <option value="Suspended">Suspended</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="modal-actions-special">
+                  {showPwdInput && (
+                    <div
+                      className="dp-form-item"
+                      style={{
+                        marginBottom: "15px",
+                        animation: "slideDown 0.3s ease",
+                      }}
+                    >
+                      <label style={{ color: "#f87171" }}>
+                        New Password (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        className="position-select" // reuse style
+                        style={{ borderColor: "#f87171" }}
+                        placeholder="Leave empty for default 'ChangeMe123!'"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                      />
+                    </div>
+                  )}
+                  <button
+                    className="btn-reset-pwd"
+                    onClick={handleResetPassword}
+                  >
+                    {showPwdInput
+                      ? "⚠️ Confirm Password Reset"
+                      : "🔒 Reset Password"}
+                  </button>
+                  {showPwdInput && (
+                    <button
+                      className="btn-link-cancel"
+                      onClick={() => {
+                        setShowPwdInput(false);
+                        setNewPassword("");
+                      }}
+                      style={{
+                        marginLeft: "10px",
+                        background: "none",
+                        border: "none",
+                        color: "#94a3b8",
+                        cursor: "pointer",
+                        textDecoration: "underline",
+                      }}
+                    >
+                      Cancel Reset
+                    </button>
+                  )}
+                </div>
+
+                <div className="modal-actions">
+                  <button className="btn-cancel" onClick={closeEditModal}>
+                    Cancel
+                  </button>
+                  <button
+                    className="btn-confirm"
+                    onClick={handleSaveChanges}
+                    disabled={loading}
+                  >
+                    {loading ? "Saving..." : "Save Changes"}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Toast สำเร็จ */}
+        {/* Bulk Action Modal */}
+        {showBulkModal && (
+          <div className="position-change-modal">
+            <div
+              className="modal-content premium-modal"
+              style={{ maxWidth: "450px" }}
+            >
+              <div className="modal-user-header" style={{ padding: "20px" }}>
+                <div
+                  className="modal-user-details"
+                  style={{ textAlign: "center", width: "100%" }}
+                >
+                  <h2>Bulk Update</h2>
+                  <p>{selectedIds.length} users selected</p>
+                </div>
+              </div>
+
+              <div className="modal-body">
+                <div className="dp-form-item" style={{ marginTop: "10px" }}>
+                  <label>Select New {bulkActionType}</label>
+                  <select
+                    className="position-select"
+                    value={bulkValue}
+                    onChange={(e) => setBulkValue(e.target.value)}
+                  >
+                    <option value="">-- Select --</option>
+                    {bulkActionType === "role" &&
+                      roles.map((r) => (
+                        <option key={r.id} value={r.id}>
+                          {r.role_name}
+                        </option>
+                      ))}
+                    {bulkActionType === "department" &&
+                      departments.map((d) => (
+                        <option key={d.id} value={d.id}>
+                          {d.department_name}
+                        </option>
+                      ))}
+                    {bulkActionType === "status" && (
+                      <>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                        <option value="Suspended">Suspended</option>
+                      </>
+                    )}
+                  </select>
+                </div>
+
+                <div
+                  className="modal-actions"
+                  style={{ justifyContent: "space-between" }}
+                >
+                  <button
+                    className="btn-cancel"
+                    onClick={() => setShowBulkModal(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="btn-confirm"
+                    onClick={executeBulkAction}
+                    disabled={loading || !bulkValue}
+                  >
+                    Confirm Update
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Toast */}
         {showSuccess && (
-          <div className="success-notification" role="status" aria-live="polite">
+          <div className="success-notification">
             <div className="success-content">
-              <div className="success-icon">✅</div>
-              <p>อัปเดตตำแหน่ง/บทบาทสำเร็จแล้ว</p>
+              <span>✅</span>
+              <span style={{ fontWeight: 600 }}>{successMsg}</span>
             </div>
           </div>
         )}
       </main>
-    </div>
+    </CHROLayout>
   );
 }

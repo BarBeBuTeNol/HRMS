@@ -16,6 +16,7 @@ import {
 } from "react-icons/fa";
 import EditEmpNav from "../../../Component/HR/EditEmpNav";
 import HRLayout from "../../../Component/HR/HRLayout";
+import LogService from "../../../../services/LogService";
 import "./Add_emp_personal.css";
 import PopupNotification from "../../../Component/popup_notifications/PopupNotification";
 
@@ -227,6 +228,22 @@ const AddEmpPersonal = () => {
       });
 
       if (res.ok) {
+        // LOGGING
+        try {
+          const currentUser = JSON.parse(
+            localStorage.getItem("currentUser") || "{}"
+          );
+          await LogService.createLog({
+            userId: currentUser.id || currentUser.user_id,
+            action: "Update Personal Info",
+            details: `Updated personal info for ${form.firstName} ${form.lastName}`,
+            target: `${form.firstName} ${form.lastName}`,
+            severity: "Info",
+          });
+        } catch (logErr) {
+          console.warn("Logging failed", logErr);
+        }
+
         // Update original form after successful save
         const { image, ...currentRest } = form;
         setOriginalForm(JSON.stringify(currentRest));

@@ -1,63 +1,75 @@
-import { Request, Response } from "express";
-import chroRepository from "../repository/chroRepository";
+import { Request, Response } from 'express';
+import chroRepository from '../repository/chroRepository';
 
-export const getDashboardStats = async (req: Request, res: Response) => {
-  try {
-      // 1. Total Employees
-      const totalEmployees = await chroRepository.getTotalEmployees();
+class ChroController {
+    async getDashboardStats(req: Request, res: Response) {
+        try {
+            const stats = await chroRepository.getDashboardStats();
+            res.json(stats);
+        } catch (error) {
+            console.error('Error fetching CHRO dashboard stats:', error);
+            res.status(500).json({ message: 'Internal server error' });
+        }
+    }
 
-      // 2. Active Personnel (using user_sessions - users active in last 15 mins)
-      const activeEmployees = await chroRepository.getActiveEmployees();
+    async getApprovals(req: Request, res: Response) {
+        try {
+            const approvals = await chroRepository.getPendingApprovals();
+            res.json(approvals);
+        } catch (error) {
+            console.error('Error fetching CHRO approvals:', error);
+            res.status(500).json({ message: 'Internal server error' });
+        }
+    }
 
-      // 3. Department Stats
-      const deptRows = await chroRepository.getDepartmentStats();
-      
-      // Calculate a mock "score" for departments based on some logic or random for now as it's not in DB
-      // In a real app, this might come from KPIs. We'll simulate it for visual consistency.
-      const departmentStats = deptRows.map((d: any) => ({
-        ...d,
-        budget: d.budget || 0,
-        score: Math.floor(Math.random() * (98 - 80) + 80) // Placeholder Score
-      }));
+    async handleLeaveAction(req: Request, res: Response) {
+        try {
+            const { requestId, status, reason, approverId } = req.body;
+            if (!requestId || !status) {
+                 res.status(400).json({ message: 'Missing requestId or status' });
+                 return;
+            }
 
-      // 4. Demographics (Gender)
-      const genderRows = await chroRepository.getGenderDistribution();
-      
-      const genderDistribution = {
-        male: 0,
-        female: 0,
-        other: 0
-      };
-      
-      genderRows.forEach((row: any) => {
-        const g = row.gender?.toLowerCase();
-        if (g === 'male' || g === 'ชาย') genderDistribution.male = row.count;
-        else if (g === 'female' || g === 'หญิง') genderDistribution.female = row.count;
-        else genderDistribution.other += row.count;
-      });
+            // Use provided approverId or default to 999 (System)
+            await chroRepository.updateLeaveStatus(requestId, status, approverId || 999, reason);
+            res.json({ message: `Leave request ${status} successfully` });
+        } catch (error) {
+            console.error('Error updating leave status:', error);
+            res.status(500).json({ message: 'Internal server error' });
+        }
+    }
 
-      // 5. Avg Salary
-      const avgSalary = await chroRepository.getAverageSalary();
+    async handleDelegationAction(req: Request, res: Response) {
+        try {
+            const { requestId, action } = req.body;
+            if (!requestId || action !== 'acknowledge') {
+                 res.status(400).json({ message: 'Invalid request' });
+                 return;
+            }
 
-      // 6. Recent Activities
-      const activityRows = await chroRepository.getRecentActivities();
-      
-      // Format time to "X hours ago" style could be done here or frontend. 
-      // We'll send raw date and let frontend handle relative time or do simple format.
+            await chroRepository.acknowledgeDelegation(requestId);
+            res.json({ message: 'Delegation acknowledged successfully' });
+        } catch (error) {
+            console.error('Error acknowledging delegation:', error);
+            res.status(500).json({ message: 'Internal server error' });
+        }
+    }
 
-      res.json({
-        totalEmployees,
-        activeEmployees,
-        departments: departmentStats.length,
-        turnoverRate: 0, // Placeholder as we don't have historical firing data easily yet
-        avgSalary,
-        genderDistribution,
-        departmentStats,
-        recentActivities: activityRows
-      });
+    async handleMarkAsRead(req: Request, res: Response) {
+        try {
+            const { requestId } = req.body;
+            if (!requestId) {
+                 res.status(400).json({ message: 'Missing requestId' });
+                 return;
+            }
 
-  } catch (err: any) {
-    console.error("CHRO Stats Error:", err);
-    res.status(500).json({ message: err.message });
-  }
-};
+            await chroRepository.markAsRead(requestId);
+            res.json({ message: 'Marked as read successfully' });
+        } catch (error) {
+            console.error('Error marking as read:', error);
+            res.status(500).json({ message: 'Internal server error' });
+        }
+    }
+}
+
+export default new ChroController();

@@ -11,6 +11,7 @@ import {
 } from "react-icons/fa";
 import HRLayout from "../../../Component/HR/HRLayout";
 import PopupNotification from "../../../Component/popup_notifications/PopupNotification";
+import LogService from "../../../../services/LogService";
 import "./Leave_info.css";
 
 const Leave_info = () => {
@@ -134,6 +135,24 @@ const Leave_info = () => {
       });
 
       if (res.ok) {
+        // LOGGING
+        try {
+          await LogService.createLog({
+            userId: currentHrId, // HR who submitted
+            action: "Leave Request",
+            details: `Submitted ${formData.leave_type} for ${
+              isOnBehalf && selectedUser ? selectedUser.first_name : "Self"
+            } (${formData.start_date} to ${formData.end_date})`,
+            target:
+              isOnBehalf && selectedUser
+                ? `${selectedUser.first_name} ${selectedUser.last_name}`
+                : "Self",
+            severity: "Info",
+          });
+        } catch (logErr) {
+          console.warn("Logging failed", logErr);
+        }
+
         setPopup({
           isOpen: true,
           title: "Success",

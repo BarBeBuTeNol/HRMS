@@ -38,12 +38,13 @@ class EmployeeDataRepository {
     async saveJobData(data: any) {
         const { userId, empCode, departmentId, jobPosition, employmentStatus, workStartTime, workEndTime, hireDate, salary, benefits, performanceReview, trainingInfo } = data;
 
+        // jobPosition here is expected to be the ID from the frontend select
         await pool.query(
             `INSERT INTO emp_info
-            (user_id, emp_code, department_id, job_position, employment_status, work_start_time, work_end_time, hire_date, salary, benefits, performance_review, training_info, created_at, updated_at)
+            (user_id, emp_code, department_id, job_position_id, employment_status, work_start_time, work_end_time, hire_date, salary, benefits, performance_review, training_info, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
             ON DUPLICATE KEY UPDATE
-            emp_code=VALUES(emp_code), department_id=VALUES(department_id), job_position=VALUES(job_position),
+            emp_code=VALUES(emp_code), department_id=VALUES(department_id), job_position_id=VALUES(job_position_id),
             employment_status=VALUES(employment_status), work_start_time=VALUES(work_start_time), work_end_time=VALUES(work_end_time),
             hire_date=VALUES(hire_date), salary=VALUES(salary), benefits=VALUES(benefits), 
             performance_review=VALUES(performance_review), training_info=VALUES(training_info), updated_at=NOW()`,

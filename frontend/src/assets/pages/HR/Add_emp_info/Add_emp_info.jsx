@@ -27,6 +27,8 @@ const AddEmpInfo = () => {
 
   const [imageUrl, setImageUrl] = useState("");
   const [departmentId, setDepartmentId] = useState(null);
+  const [jobPositions, setJobPositions] = useState([]); // Store all positions
+  const [filteredPositions, setFilteredPositions] = useState([]); // Store positions for current department
 
   // Popup State
   const [popup, setPopup] = useState({
@@ -139,6 +141,42 @@ const AddEmpInfo = () => {
     }
   }, [userId, isEditMode]); // Clean dependencies
 
+  // Fetch Job Positions
+  useEffect(() => {
+    const fetchPositions = async () => {
+      try {
+        const res = await fetch("/api/job-positions");
+        if (res.ok) {
+          const data = await res.json();
+          setJobPositions(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch job positions", err);
+      }
+    };
+    fetchPositions();
+  }, []);
+
+  // Filter positions when departmentId or jobPositions change
+  useEffect(() => {
+    if (jobPositions.length > 0) {
+      if (departmentId) {
+        // Use loose equality to handle string/number mismatches
+        const filtered = jobPositions.filter(
+          (pos) => pos.department_id == departmentId
+        );
+        // If no positions found for this department, maybe show all or keep empty?
+        // Let's show all if filtered is empty to avoid "nothing to choose" if data is inconsistent
+        setFilteredPositions(filtered.length > 0 ? filtered : jobPositions);
+      } else {
+        // If no department assigned, show ALL positions
+        setFilteredPositions(jobPositions);
+      }
+    } else {
+      setFilteredPositions([]);
+    }
+  }, [departmentId, jobPositions]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === "salary") {
@@ -148,6 +186,16 @@ const AddEmpInfo = () => {
       setForm((prev) => ({ ...prev, salary: raw }));
       return;
     }
+
+    if (name === "jobPosition") {
+      // When job position changes, if departmentId is not set (or we want to enforce consistency),
+      // we can update the departmentId to match the position's department.
+      const selectedPos = jobPositions.find((p) => p.id == value);
+      if (selectedPos) {
+        setDepartmentId(selectedPos.department_id);
+      }
+    }
+
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -368,14 +416,21 @@ const AddEmpInfo = () => {
                     <label>Job Position</label>
                     <div className="input-group">
                       <FaBriefcase className="input-icon" />
-                      <input
-                        type="text"
+                      <select
                         name="jobPosition"
                         value={form.jobPosition}
                         onChange={handleChange}
                         required
-                        placeholder="e.g. Software Engineer"
-                      />
+                        className="form-select" // Ensure styling
+                        style={{ paddingLeft: "2.5rem" }}
+                      >
+                        <option value="">-- Select Position --</option>
+                        {filteredPositions.map((pos) => (
+                          <option key={pos.id} value={pos.id}>
+                            {pos.position_name}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                   <div className="form-group span-1">
@@ -515,20 +570,8 @@ const AddEmpInfo = () => {
                 </div>
               </div>
 
-              <div
-                className="form-actions"
-                style={{
-                  display: "flex",
-                  gap: "1rem",
-                  justifyContent: "center", // Centered
-                }}
-              >
-                <button
-                  type="button"
-                  className="btn-back"
-                  onClick={handleBack}
-                  style={{ width: "300px" }} // Expanded width
-                >
+              <div className="form-actions">
+                <button type="button" className="btn-back" onClick={handleBack}>
                   Back
                 </button>
                 <button
@@ -536,8 +579,6 @@ const AddEmpInfo = () => {
                   className="btn-save"
                   disabled={isEditMode ? !isDirty : !isFormFilled}
                   style={{
-                    width: isEditMode ? "300px" : "100%", // Expanded width
-                    flex: isEditMode ? "none" : 1,
                     opacity:
                       (isEditMode && !isDirty) || (!isEditMode && !isFormFilled)
                         ? 0.5

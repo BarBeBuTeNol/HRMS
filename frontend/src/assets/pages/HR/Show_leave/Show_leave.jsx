@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom"; // Added useNavigate
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FaPlus,
@@ -25,10 +26,10 @@ const getDaysDifference = (start, end) => {
 };
 
 export default function ShowLeave() {
+  const navigate = useNavigate(); // Initialize hook
   const [leaves, setLeaves] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  // Removed isModalOpen, submitting
   const [selectedLeave, setSelectedLeave] = useState(null); // For viewing details
 
   // Filter & UI State
@@ -36,13 +37,7 @@ export default function ShowLeave() {
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState("list"); // 'list' or 'grid'
 
-  // New Request Form State
-  const [formData, setFormData] = useState({
-    leave_type: "",
-    start_date: "",
-    end_date: "",
-    reason: "",
-  });
+  // Removed formData state
 
   const userId = localStorage.getItem("userId");
   const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
@@ -73,42 +68,7 @@ export default function ShowLeave() {
     if (userId) fetchLeaves();
   }, [userId]);
 
-  const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!userId) return;
-    setSubmitting(true);
-    try {
-      const payload = { ...formData, user_id: userId };
-      const res = await fetch("/api/leave-requests", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        setIsModalOpen(false);
-        setFormData({
-          leave_type: "",
-          start_date: "",
-          end_date: "",
-          reason: "",
-        });
-        fetchLeaves();
-        alert("Leave request submitted successfully!");
-      } else {
-        alert("Failed to create request.");
-      }
-    } catch (err) {
-      console.error("Error submitting request:", err);
-      alert("Error submitting request.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  // Removed handleInputChange and handleSubmit
 
   const stats = {
     total: leaves.length,
@@ -192,7 +152,7 @@ export default function ShowLeave() {
               }}
               whileTap={{ scale: 0.95 }}
               className="sl-btn-primary"
-              onClick={() => setIsModalOpen(true)}
+              onClick={() => navigate("/hr/leave-info")} // Changed navigation
             >
               <FaPlus /> New Request
             </motion.button>
@@ -520,100 +480,7 @@ export default function ShowLeave() {
           )}
         </div>
 
-        {/* New Request Modal */}
-        <AnimatePresence>
-          {isModalOpen && (
-            <div className="sl-modal-overlay">
-              <motion.div
-                className="sl-modal-content"
-                initial={{ opacity: 0, scale: 0.9, y: 50 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 50 }}
-              >
-                <h3 className="sl-modal-title">New Leave Request</h3>
-                <form onSubmit={handleSubmit}>
-                  <div className="sl-form-group">
-                    <label>Leave Type</label>
-                    <select
-                      name="leave_type"
-                      className="sl-form-control"
-                      required
-                      value={formData.leave_type}
-                      onChange={handleInputChange}
-                    >
-                      <option value="">Select Type</option>
-                      <option value="Sick Leave">Sick Leave</option>
-                      <option value="Annual Leave">Annual Leave</option>
-                      <option value="Personal Leave">Personal Leave</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr 1fr",
-                      gap: "1.5rem",
-                    }}
-                  >
-                    <div className="sl-form-group">
-                      <label>Start Date</label>
-                      <input
-                        type="date"
-                        name="start_date"
-                        className="sl-form-control"
-                        required
-                        value={formData.start_date}
-                        onChange={handleInputChange}
-                      />
-                    </div>
-                    <div className="sl-form-group">
-                      <label>End Date</label>
-                      <input
-                        type="date"
-                        name="end_date"
-                        className="sl-form-control"
-                        required
-                        value={formData.end_date}
-                        onChange={handleInputChange}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="sl-form-group">
-                    <label>Reason</label>
-                    <textarea
-                      name="reason"
-                      className="sl-form-control"
-                      rows="4"
-                      required
-                      placeholder="Please provide a detailed reason..."
-                      value={formData.reason}
-                      onChange={handleInputChange}
-                    ></textarea>
-                  </div>
-
-                  <div className="sl-modal-actions">
-                    <button
-                      type="button"
-                      className="sl-btn-secondary"
-                      onClick={() => setIsModalOpen(false)}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="sl-btn-primary"
-                      disabled={submitting}
-                    >
-                      {submitting ? "Submitting..." : "Submit Request"}
-                    </button>
-                  </div>
-                </form>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
+        {/* Removed New Request Modal */}
 
         {/* Advanced Cinematic Details Modal */}
         <AnimatePresence>

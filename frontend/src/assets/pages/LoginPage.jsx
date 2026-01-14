@@ -28,6 +28,9 @@ const LoginPage = () => {
         // ✅ เก็บข้อมูลผู้ใช้ใน localStorage
         localStorage.setItem("currentUser", JSON.stringify(user));
         localStorage.setItem("userId", String(user.id));
+        if (res.data.token) {
+          localStorage.setItem("token", res.data.token);
+        }
 
         // ✅ เปลี่ยนหน้า dashboard ตาม role (ใช้ role_name จาก DB)
         const roleName = user.role_name || ""; // fallback

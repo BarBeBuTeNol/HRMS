@@ -16,6 +16,7 @@ import roleRoutes from "./routes/roleRoutes";
 import departmentRoutes from "./routes/departmentRoutes";
 import employeeDataRoutes from "./routes/employeeDataRoutes";
 import prefixRoutes from "./routes/prefixRoutes";
+import jobPositionRoutes from "./routes/jobPositionRoutes";
 console.log("DEBUG shiftAssignmentRoutes >>>", shiftAssignmentRoutes);
 
 dotenv.config();
@@ -50,6 +51,7 @@ app.use("/api", taskAssignmentRoutes); // ✅ สำหรับจัดกา�
 app.use("/api", shiftAssignmentRoutes);
 app.use("/api/roles", roleRoutes);
 app.use("/api/departments", departmentRoutes);
+app.use("/api/job-positions", jobPositionRoutes);
 app.use("/api/employee-data", employeeDataRoutes);
 app.use("/api/prefixes", prefixRoutes);
 
@@ -59,6 +61,18 @@ app.use("/api/reports", swapReportRoutes);
 
 import announcementRoutes from "./routes/announcementRoutes";
 app.use("/api/announcements", announcementRoutes);
+
+import chroRoutes from "./routes/chroRoutes";
+app.use("/api/chro", chroRoutes);
+
+// ✅ Log Routes
+import logRoutes from "./routes/logRoutes";
+app.use("/api/logs", logRoutes);
+
+// ✅ Change Request Routes
+import changeRequestRoutes from "./routes/changeRequestRoutes";
+app.use("/uploads", express.static("uploads")); // Serve uploaded files
+app.use("/api/change-requests", changeRequestRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () =>

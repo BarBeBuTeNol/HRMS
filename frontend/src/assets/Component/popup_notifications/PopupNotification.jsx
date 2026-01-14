@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import "./PopupNotification.css";
 
 const PopupNotification = ({
@@ -114,7 +115,7 @@ const PopupNotification = ({
     }
   };
 
-  return (
+  return createPortal(
     <div
       className={`notification-popup-overlay ${isAnimating ? "open" : ""}`}
       onClick={onClose}
@@ -165,7 +166,8 @@ const PopupNotification = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

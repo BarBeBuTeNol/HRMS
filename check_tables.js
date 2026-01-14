@@ -1,5 +1,6 @@
 
-const pool = require('./backend/src/config/db').default;
+import db from './backend/src/config/db.js';
+const pool = db.default || db;
 
 async function checkTables() {
   try {

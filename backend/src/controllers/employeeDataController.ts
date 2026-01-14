@@ -59,9 +59,9 @@ export const getGenders = async (req: Request, res: Response) => {
         // If table doesn't exist or query fails, return standard list
         // console.warn("Could not fetch genders from DB, using defaults:", err);
         const defaults = [
-            { id: 1, name: "Male" },
-            { id: 2, name: "Female" },
-            { id: 3, name: "Other" }
+            { id: 1, gender_name: "Male" },
+            { id: 2, gender_name: "Female" },
+            { id: 3, gender_name: "Other" }
         ];
         res.json(defaults);
     }
