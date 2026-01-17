@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../../services/api";
 import HeadSidebar from "../../../Component/Head/HeadSidebar";
 import "./DataApproval.css"; // Ensure absolute or correct relative path if needed, but relative usually works
 import {
@@ -29,18 +29,13 @@ const DataApproval = () => {
   const fetchRequests = async () => {
     setLoading(true);
     try {
-      // Assuming headers handle auth token automatically via interceptor or we need to add it
-      const token = localStorage.getItem("token");
-      const config = {
-        headers: { Authorization: `Bearer ${token}` },
-      };
-
+      // Token is handled by interceptor
       const endpoint =
         activeTab === "pending"
-          ? "http://localhost:5000/api/change-requests/pending"
-          : "http://localhost:5000/api/change-requests/history";
+          ? "/change-requests/pending"
+          : "/change-requests/history";
 
-      const response = await axios.get(endpoint, config);
+      const response = await api.get(endpoint);
       setRequests(response.data);
     } catch (error) {
       console.error("Error fetching requests:", error);
@@ -54,12 +49,7 @@ const DataApproval = () => {
       return;
 
     try {
-      const token = localStorage.getItem("token");
-      await axios.put(
-        `http://localhost:5000/api/change-requests/${id}/approve`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.put(`/change-requests/${id}/approve`, {});
       // Remove from list or refresh
       setRequests((prev) => prev.filter((req) => req.id !== id));
       alert("Request approved successfully!");
@@ -81,15 +71,12 @@ const DataApproval = () => {
     }
 
     try {
-      const token = localStorage.getItem("token");
-      await axios.put(
-        `http://localhost:5000/api/change-requests/${rejectModal.requestId}/reject`,
-        { comment: rejectReason },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.put(`/change-requests/${rejectModal.requestId}/reject`, {
+        comment: rejectReason,
+      });
 
       setRequests((prev) =>
-        prev.filter((req) => req.id !== rejectModal.requestId)
+        prev.filter((req) => req.id !== rejectModal.requestId),
       );
       setRejectModal({ isOpen: false, requestId: null });
     } catch (error) {
@@ -101,7 +88,7 @@ const DataApproval = () => {
   const viewEvidence = (path) => {
     if (!path) return;
     // Normalize path just in case
-    const url = `http://localhost:5000/${path.replace(/\\/g, "/")}`;
+    const url = `${api.defaults.baseURL.replace("/api", "")}/${path.replace(/\\/g, "/")}`;
     window.open(url, "_blank");
   };
 

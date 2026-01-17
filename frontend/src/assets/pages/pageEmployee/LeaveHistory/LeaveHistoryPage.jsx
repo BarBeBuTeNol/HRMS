@@ -1,9 +1,9 @@
 // src/assets/pages/pageEmployee/LeaveHistory/LeaveHistoryPage.jsx
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import EmployeeSidebar from '../../../Component/Employee/EmployeeSidebar';
-import './LeaveHistoryPage.css';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "../../../services/api";
+import EmployeeSidebar from "../../../Component/Employee/EmployeeSidebar";
+import "./LeaveHistoryPage.css";
 
 const LeaveHistoryPage = () => {
   const navigate = useNavigate();
@@ -12,12 +12,12 @@ const LeaveHistoryPage = () => {
   const [loading, setLoading] = useState(true);
 
   // สมมุติว่า user_id เก็บไว้ใน localStorage หลัง login
-  const userId = localStorage.getItem('userId');
+  const userId = localStorage.getItem("userId");
 
   useEffect(() => {
     const fetchLeaveHistory = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/leave-requests/${userId}`);
+        const res = await api.get(`/leave-requests/${userId}`);
         setLeaveHistory(res.data);
       } catch (err) {
         console.error("Error fetching leave history:", err);
@@ -38,7 +38,10 @@ const LeaveHistoryPage = () => {
       <EmployeeSidebar />
 
       <main className="leave-history-main">
-        <button className="back-button" onClick={() => navigate('/employee/dashboard')}>
+        <button
+          className="back-button"
+          onClick={() => navigate("/employee/dashboard")}
+        >
           ⬅ กลับไปหน้าหลัก
         </button>
 
@@ -51,20 +54,36 @@ const LeaveHistoryPage = () => {
             {leaveHistory.map((leave) => (
               <li
                 key={leave.id}
-                className={`leave-item ${selectedLeaveId === leave.id ? 'active' : ''}`}
+                className={`leave-item ${selectedLeaveId === leave.id ? "active" : ""}`}
                 onClick={() =>
-                  setSelectedLeaveId((prev) => (prev === leave.id ? null : leave.id))
+                  setSelectedLeaveId((prev) =>
+                    prev === leave.id ? null : leave.id,
+                  )
                 }
               >
-                <strong>{leave.leave_type}</strong> | {leave.start_date} ถึง {leave.end_date} | สถานะ: {leave.status}
+                <strong>{leave.leave_type}</strong> | {leave.start_date} ถึง{" "}
+                {leave.end_date} | สถานะ: {leave.status}
                 {selectedLeaveId === leave.id && (
                   <div className="leave-details">
-                    <p><strong>ประเภทการลา:</strong> {leave.leave_type}</p>
-                    <p><strong>วันที่เริ่ม:</strong> {leave.start_date}</p>
-                    <p><strong>วันที่สิ้นสุด:</strong> {leave.end_date}</p>
-                    <p><strong>สถานะ:</strong> {leave.status}</p>
-                    <p><strong>เหตุผล:</strong> {leave.reason}</p>
-                    <p><strong>วันที่ส่งคำขอ:</strong> {new Date(leave.created_at).toLocaleDateString()}</p>
+                    <p>
+                      <strong>ประเภทการลา:</strong> {leave.leave_type}
+                    </p>
+                    <p>
+                      <strong>วันที่เริ่ม:</strong> {leave.start_date}
+                    </p>
+                    <p>
+                      <strong>วันที่สิ้นสุด:</strong> {leave.end_date}
+                    </p>
+                    <p>
+                      <strong>สถานะ:</strong> {leave.status}
+                    </p>
+                    <p>
+                      <strong>เหตุผล:</strong> {leave.reason}
+                    </p>
+                    <p>
+                      <strong>วันที่ส่งคำขอ:</strong>{" "}
+                      {new Date(leave.created_at).toLocaleDateString()}
+                    </p>
                   </div>
                 )}
               </li>

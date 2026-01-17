@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../../services/api";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FaTasks,
@@ -69,9 +69,7 @@ export default function MyWork() {
   const fetchDashboardData = async (id) => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        `http://localhost:5000/api/users/${id}/my-work-dashboard`
-      );
+      const response = await api.get(`/users/${id}/my-work-dashboard`);
       if (response.data.success) {
         setStats(response.data.stats || {});
         setPendingTasks(response.data.pendingTasks || []);
@@ -87,9 +85,7 @@ export default function MyWork() {
 
   const handleAcceptTask = async (taskId) => {
     try {
-      await axios.post(
-        `http://localhost:5000/api/task_assignments/${taskId}/accept`
-      );
+      await api.post(`/task_assignments/${taskId}/accept`);
       alert("รับงานเรียบร้อยแล้ว!");
       fetchDashboardData(userId);
     } catch (err) {
@@ -100,12 +96,9 @@ export default function MyWork() {
   const handleRejectTask = async () => {
     if (!rejectTaskId || !rejectReason) return alert("กรุณาระบุเหตุผล");
     try {
-      await axios.post(
-        `http://localhost:5000/api/task_assignments/${rejectTaskId}/reject`,
-        {
-          reason: rejectReason,
-        }
-      );
+      await api.post(`/task_assignments/${rejectTaskId}/reject`, {
+        reason: rejectReason,
+      });
       alert("ปฏิเสธงานเรียบร้อยแล้ว");
       setIsRejectModalOpen(false);
       setRejectReason("");
@@ -122,13 +115,10 @@ export default function MyWork() {
       if (selectedTask.progress === 100) newStatus = "Completed";
       else if (selectedTask.progress === 0) newStatus = "In Progress"; // Or logic if we had 'Not Started'
 
-      await axios.patch(
-        `http://localhost:5000/api/task_assignments/${selectedTask.id}`,
-        {
-          progress: selectedTask.progress,
-          status: newStatus,
-        }
-      );
+      await api.patch(`/task_assignments/${selectedTask.id}`, {
+        progress: selectedTask.progress,
+        status: newStatus,
+      });
 
       alert("บันทึกเรียบร้อย!");
       setIsUpdateModalOpen(false);
@@ -141,7 +131,7 @@ export default function MyWork() {
   const handleRequestReplacement = async () => {
     if (!replaceTaskId || !replaceReason) return alert("กรุณาระบุเหตุผล");
     try {
-      await axios.post(`http://localhost:5000/api/task_replacements`, {
+      await api.post(`/task_replacements`, {
         task_id: replaceTaskId,
         existing_user_id: userId,
         reason: replaceReason,
@@ -356,7 +346,7 @@ export default function MyWork() {
                           <td>
                             <span className={getDeadlineClass(task.deadline)}>
                               {new Date(task.deadline).toLocaleDateString(
-                                "th-TH"
+                                "th-TH",
                               )}
                             </span>
                           </td>
@@ -376,7 +366,7 @@ export default function MyWork() {
                           <td>
                             <span
                               className={`status-pill ${getStatusColor(
-                                task.status
+                                task.status,
                               )}`}
                             >
                               {task.status}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../../services/api";
 import { motion, AnimatePresence } from "framer-motion";
 import EmployeeSidebar from "../../../Component/Employee/EmployeeSidebar"; // Integration
 import "./NotificationPage.css";
@@ -36,9 +36,7 @@ const NotificationPage = () => {
 
   const fetchNotifications = async (userId) => {
     try {
-      const response = await axios.get(
-        `http://localhost:5000/api/notifications/${userId}`
-      );
+      const response = await api.get(`/notifications/${userId}`);
       setNotifications(response.data);
     } catch (error) {
       console.error("Error fetching notifications:", error);
@@ -51,13 +49,13 @@ const NotificationPage = () => {
     if (currentStatus === 1) return;
 
     try {
-      await axios.put(`http://localhost:5000/api/notifications/${id}/read`);
+      await api.put(`/notifications/${id}/read`);
 
       // Optimistic Update
       setNotifications((prev) =>
         prev.map((notif) =>
-          notif.id === id ? { ...notif, is_read: 1 } : notif
-        )
+          notif.id === id ? { ...notif, is_read: 1 } : notif,
+        ),
       );
     } catch (error) {
       console.error("Error marking as read:", error);

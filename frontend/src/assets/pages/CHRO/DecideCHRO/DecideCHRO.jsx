@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import api from "../../../services/api";
 import CHROLayout from "../../../Component/CHRO/CHROLayout";
 import CHROPopup from "../../../Component/popup_notifications/CHROPopup";
 import LogService from "../../../../services/LogService";
@@ -98,22 +99,20 @@ const DecideCHRO = () => {
         };
 
         const [approvalsRes, changesRes] = await Promise.all([
-          fetch("http://localhost:5000/api/chro/approvals"),
-          fetch("/api/change-requests/pending", { headers }), // Add headers
+          api.get("/chro/approvals"),
+          api.get("/change-requests/pending"),
         ]);
 
         let combinedData = [];
 
         // 1. Approvals (Leave/Delegation)
-        if (approvalsRes.ok) {
-          const approvalsData = await approvalsRes.json();
-          combinedData = [...approvalsData];
+        if (approvalsRes.data) {
+          combinedData = [...approvalsRes.data];
         }
 
         // 2. Change Requests
-        if (changesRes.ok) {
-          const changesData = await changesRes.json();
-          const changesMapped = changesData.map((c) => ({
+        if (changesRes.data) {
+          const changesMapped = changesRes.data.map((c) => ({
             id: `change_${c.id}`, // specific ID format
             requestId: c.id,
             type: "change_request",
@@ -149,15 +148,11 @@ const DecideCHRO = () => {
   // ---------- Actions ----------
   const handleMarkAsRead = async (id) => {
     setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, views: (n.views || 0) + 1 } : n))
+      prev.map((n) => (n.id === id ? { ...n, views: (n.views || 0) + 1 } : n)),
     );
 
     try {
-      await fetch("http://localhost:5000/api/chro/read", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ requestId: id }),
-      });
+      await api.post("/chro/read", { requestId: id });
     } catch (error) {
       console.error("Error marking as read:", error);
     }
@@ -198,27 +193,19 @@ const DecideCHRO = () => {
   const handleApproveLeave = async (notification) => {
     try {
       const numericId = notification.requestId;
-      const response = await fetch(
-        "http://localhost:5000/api/chro/leave/action",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            requestId: numericId,
-            status: "Approved",
-            approverId: user.id || user.user_id, // Pass CHRO ID for logging
-          }),
-        }
-      );
-      if (!response.ok) throw new Error("Failed to approve");
+      const response = await api.post("/chro/leave/action", {
+        requestId: numericId,
+        status: "Approved",
+        approverId: user.id || user.user_id, // Pass CHRO ID for logging
+      });
 
       // Optimistic Update
       setNotifications((prev) =>
         prev.map((n) =>
           n.id === notification.id
             ? { ...n, status: "approved", views: (n.views || 0) + 1 }
-            : n
-        )
+            : n,
+        ),
       );
 
       // Also update selectedNotification if open
@@ -272,25 +259,17 @@ const DecideCHRO = () => {
         await handleChangeRequestAction(
           pendingRejectItem,
           "reject",
-          rejectReason
+          rejectReason,
         );
       } else {
         // Assume Leave Request (default existing logic)
         const numericId = pendingRejectItem.requestId;
-        const response = await fetch(
-          "http://localhost:5000/api/chro/leave/action",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              requestId: numericId,
-              status: "Rejected",
-              reason: rejectReason,
-              approverId: user.id || user.user_id, // Pass CHRO ID
-            }),
-          }
-        );
-        if (!response.ok) throw new Error("Failed to reject");
+        const response = await api.post("/chro/leave/action", {
+          requestId: numericId,
+          status: "Rejected",
+          reason: rejectReason,
+          approverId: user.id || user.user_id, // Pass CHRO ID
+        });
 
         setNotifications((prev) =>
           prev.map((n) =>
@@ -301,8 +280,8 @@ const DecideCHRO = () => {
                   views: (n.views || 0) + 1,
                   leaveData: { ...n.leaveData, rejectionReason: rejectReason },
                 }
-              : n
-          )
+              : n,
+          ),
         );
       }
 
@@ -353,26 +332,17 @@ const DecideCHRO = () => {
   const handleAcknowledgeDelegation = async (notification) => {
     try {
       const numericId = notification.requestId;
-      const response = await fetch(
-        "http://localhost:5000/api/chro/delegation/action",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            requestId: numericId,
-            action: "acknowledge",
-          }),
-        }
-      );
-
-      if (!response.ok) throw new Error("Failed to acknowledge");
+      const response = await api.post("/chro/delegation/action", {
+        requestId: numericId,
+        action: "acknowledge",
+      });
 
       setNotifications((prev) =>
         prev.map((n) =>
           n.id === notification.id
             ? { ...n, isAcknowledged: true, views: (n.views || 0) + 1 }
-            : n
-        )
+            : n,
+        ),
       );
 
       if (selectedNotification?.id === notification.id) {
@@ -406,30 +376,20 @@ const DecideCHRO = () => {
   const handleChangeRequestAction = async (
     notification,
     action,
-    comment = ""
+    comment = "",
   ) => {
     try {
       const id = notification.requestId;
-      const url = `/api/change-requests/${id}/${action}`; // action = approve or reject
+      const url = `/change-requests/${id}/${action}`; // action = approve or reject
 
-      const token = localStorage.getItem("token");
-      const response = await fetch(url, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ comment }),
-      });
-
-      if (!response.ok) throw new Error("Failed to update request");
+      const response = await api.put(url, { comment });
 
       setNotifications((prev) =>
         prev.map((n) =>
           n.id === notification.id
             ? { ...n, status: action === "approve" ? "approved" : "rejected" }
-            : n
-        )
+            : n,
+        ),
       );
 
       if (selectedNotification?.id === notification.id) {
@@ -467,7 +427,10 @@ const DecideCHRO = () => {
     const confirmDo = window.confirm("มาร์คว่าอ่านทั้งหมด?");
     if (!confirmDo) return;
     setNotifications((prev) =>
-      prev.map((n) => ({ ...n, views: (n.views || 0) + (n.views > 0 ? 0 : 1) }))
+      prev.map((n) => ({
+        ...n,
+        views: (n.views || 0) + (n.views > 0 ? 0 : 1),
+      })),
     );
   };
 
@@ -475,7 +438,7 @@ const DecideCHRO = () => {
     const confirmDo = window.confirm("ลบรายการที่อ่านแล้วทั้งหมด?");
     if (!confirmDo) return;
     const idsToKeep = new Set(
-      notifications.filter((n) => statusKey(n) === "unread").map((n) => n.id)
+      notifications.filter((n) => statusKey(n) === "unread").map((n) => n.id),
     );
     setNotifications((prev) => prev.filter((n) => idsToKeep.has(n.id)));
   };
@@ -484,14 +447,14 @@ const DecideCHRO = () => {
   const counts = useMemo(() => {
     const total = notifications.length;
     const unread = notifications.filter(
-      (n) => statusKey(n) === "unread"
+      (n) => statusKey(n) === "unread",
     ).length;
     const read = notifications.filter((n) => statusKey(n) === "read").length;
     const approved = notifications.filter(
-      (n) => statusKey(n) === "approved"
+      (n) => statusKey(n) === "approved",
     ).length;
     const rejected = notifications.filter(
-      (n) => statusKey(n) === "rejected"
+      (n) => statusKey(n) === "rejected",
     ).length;
     return { total, unread, read, approved, rejected };
   }, [notifications]);
@@ -524,7 +487,7 @@ const DecideCHRO = () => {
     arr.sort((a, b) =>
       sortOrder === "latest"
         ? new Date(b.timestamp) - new Date(a.timestamp)
-        : new Date(a.timestamp) - new Date(b.timestamp)
+        : new Date(a.timestamp) - new Date(b.timestamp),
     );
     return arr;
   }, [notifications, search, typeFilter, statusFilter, sortOrder]);
@@ -714,7 +677,7 @@ const DecideCHRO = () => {
                             </span>
                             <span className="decide-chro-info-value">
                               {new Date(
-                                n.leaveData.leaveDate
+                                n.leaveData.leaveDate,
                               ).toLocaleDateString("th-TH")}
                             </span>
                           </div>
@@ -757,7 +720,7 @@ const DecideCHRO = () => {
                             </span>
                             <span className="decide-chro-info-value">
                               {new Date(
-                                n.delegationData.startDate
+                                n.delegationData.startDate,
                               ).toLocaleDateString("th-TH")}
                             </span>
                           </div>
@@ -771,10 +734,10 @@ const DecideCHRO = () => {
                           {sKey === "approved"
                             ? "อนุมัติแล้ว"
                             : sKey === "rejected"
-                            ? "ปฏิเสธแล้ว"
-                            : sKey === "read"
-                            ? "รับทราบ"
-                            : "รออนุมัติ/อ่าน"}
+                              ? "ปฏิเสธแล้ว"
+                              : sKey === "read"
+                                ? "รับทราบ"
+                                : "รออนุมัติ/อ่าน"}
                         </span>
                       </div>
                     </div>
@@ -783,10 +746,10 @@ const DecideCHRO = () => {
                         {sKey === "approved"
                           ? "อนุมัติแล้ว"
                           : sKey === "rejected"
-                          ? "ปฏิเสธแล้ว"
-                          : sKey === "read"
-                          ? "อ่านแล้ว"
-                          : "ยังไม่อ่าน"}
+                            ? "ปฏิเสธแล้ว"
+                            : sKey === "read"
+                              ? "อ่านแล้ว"
+                              : "ยังไม่อ่าน"}
                       </div>
                     </div>
                     <div className="decide-chro-actions">
@@ -984,11 +947,11 @@ const DecideCHRO = () => {
                       <span className="decide-chro-info-label">วันที่ลา:</span>
                       <span className="decide-chro-info-value modal-value">
                         {new Date(
-                          selectedNotification.leaveData.leaveDate
+                          selectedNotification.leaveData.leaveDate,
                         ).toLocaleDateString()}{" "}
                         -{" "}
                         {new Date(
-                          selectedNotification.leaveData.endDate
+                          selectedNotification.leaveData.endDate,
                         ).toLocaleDateString()}
                       </span>
                     </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../../services/api";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FaExchangeAlt,
@@ -66,15 +66,10 @@ const ShiftRequestsPage = () => {
     setLoading(true);
     setError(null);
     try {
-      const headers = { headers: getAuthHeader() };
-
       const [workRes, candidatesRes, historyRes] = await Promise.all([
-        axios.get(
-          "http://localhost:5000/api/replacements/eligible-work",
-          headers
-        ),
-        axios.get("http://localhost:5000/api/replacements/candidates", headers),
-        axios.get("http://localhost:5000/api/replacements/my-history", headers),
+        api.get("/replacements/eligible-work"),
+        api.get("/replacements/candidates"),
+        api.get("/replacements/my-history"),
       ]);
 
       setTasks(workRes.data.tasks || []);
@@ -106,9 +101,7 @@ const ShiftRequestsPage = () => {
         shift_id: formData.type === "shift" ? formData.itemId : null,
       };
 
-      await axios.post("http://localhost:5000/api/replacements", payload, {
-        headers: getAuthHeader(),
-      });
+      await api.post("/replacements", payload);
 
       // Success Alert/Notification could be improved here
       alert("✔️ ส่งคำขอสำเร็จ! ระบบได้บันทึกรายการของคุณแล้ว");
@@ -118,7 +111,7 @@ const ShiftRequestsPage = () => {
     } catch (err) {
       console.error("Error submitting request:", err);
       alert(
-        "❌ เกิดข้อผิดพลาด: " + (err.response?.data?.message || err.message)
+        "❌ เกิดข้อผิดพลาด: " + (err.response?.data?.message || err.message),
       );
     } finally {
       setSubmitting(false);
@@ -283,7 +276,7 @@ const ShiftRequestsPage = () => {
                                   <option key={t.id} value={t.id}>
                                     {t.task_name} (Deadline:{" "}
                                     {new Date(t.deadline).toLocaleDateString(
-                                      "th-TH"
+                                      "th-TH",
                                     )}
                                     )
                                   </option>
@@ -297,7 +290,7 @@ const ShiftRequestsPage = () => {
                               shifts.map((s) => (
                                 <option key={s.id} value={s.id}>
                                   {new Date(s.shift_date).toLocaleDateString(
-                                    "th-TH"
+                                    "th-TH",
                                   )}{" "}
                                   ({s.shift_type})
                                 </option>
@@ -405,7 +398,7 @@ const ShiftRequestsPage = () => {
                           <div className="history-item-header">
                             <span className="history-date">
                               {new Date(req.created_at).toLocaleDateString(
-                                "th-TH"
+                                "th-TH",
                               )}
                             </span>
                             {getStatusBadge(req.status)}
@@ -422,7 +415,7 @@ const ShiftRequestsPage = () => {
                                 {req.task_title ||
                                   (req.shift_date &&
                                     new Date(req.shift_date).toLocaleDateString(
-                                      "th-TH"
+                                      "th-TH",
                                     )) ||
                                   "Unknown"}
                               </span>

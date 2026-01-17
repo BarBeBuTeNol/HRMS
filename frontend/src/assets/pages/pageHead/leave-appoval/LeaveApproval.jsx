@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../../services/api";
 import HeadSidebar from "../../../Component/Head/HeadSidebar";
 import {
   FaCheck,
@@ -27,9 +27,7 @@ const LeaveApproval = () => {
   const fetchRequests = async () => {
     try {
       if (!userId) return;
-      const response = await axios.get(
-        `http://localhost:5000/api/leave-requests/for-head/${userId}`
-      );
+      const response = await api.get(`/leave-requests/for-head/${userId}`);
       setRequests(response.data);
     } catch (error) {
       console.error("Error fetching leave requests:", error);
@@ -41,7 +39,7 @@ const LeaveApproval = () => {
   const handleApprove = async (id) => {
     if (!window.confirm("Confirm approval?")) return;
     try {
-      await axios.put(`http://localhost:5000/api/leave-requests/${id}/status`, {
+      await api.put(`/leave-requests/${id}/status`, {
         status: "approved",
       });
       alert("Approved successfully");
@@ -64,13 +62,10 @@ const LeaveApproval = () => {
       return;
     }
     try {
-      await axios.put(
-        `http://localhost:5000/api/leave-requests/${selectedRequest.id}/status`,
-        {
-          status: "rejected",
-          rejection_reason: rejectionReason,
-        }
-      );
+      await api.put(`/leave-requests/${selectedRequest.id}/status`, {
+        status: "rejected",
+        rejection_reason: rejectionReason,
+      });
       alert("Rejected request.");
       setShowRejectModal(false);
       fetchRequests();

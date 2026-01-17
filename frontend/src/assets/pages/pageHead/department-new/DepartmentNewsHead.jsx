@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../../services/api";
 import Swal from "sweetalert2";
 import dayjs from "dayjs";
 import { motion, AnimatePresence } from "framer-motion";
@@ -36,15 +36,10 @@ const DepartmentNewsHead = () => {
   const userId = currentUser.id ? Number(currentUser.id) : null;
   const userRole = currentUser.role || "";
 
-  // API Base URL
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-
   const fetchNews = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(
-        `${API_URL}/announcements?userId=${userId}`
-      );
+      const response = await api.get(`/announcements?userId=${userId}`);
       setNews(response.data);
     } catch (error) {
       console.error("Error fetching news:", error);
@@ -102,7 +97,7 @@ const DepartmentNewsHead = () => {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          await axios.delete(`${API_URL}/announcements/${id}`, {
+          await api.delete(`/announcements/${id}`, {
             data: { userId },
           });
           Swal.fire({
@@ -150,13 +145,13 @@ const DepartmentNewsHead = () => {
           payload.targetDepartmentId = deptId;
         } else {
           console.warn(
-            "Department ID not found in current user object. Announcement might default to Company News or fail."
+            "Department ID not found in current user object. Announcement might default to Company News or fail.",
           );
         }
 
-        await axios.post(`${API_URL}/announcements`, payload);
+        await api.post(`/announcements`, payload);
       } else {
-        await axios.put(`${API_URL}/announcements/${currentNews.id}`, {
+        await api.put(`/announcements/${currentNews.id}`, {
           ...formData,
           userId,
         });

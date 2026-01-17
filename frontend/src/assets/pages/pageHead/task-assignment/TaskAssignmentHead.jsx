@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../../services/api";
 // Icons
 import {
   ClipboardList,
@@ -58,11 +58,9 @@ const TaskAssignmentHead = () => {
     try {
       setLoading(true);
       const [projRes, empRes, repRes] = await Promise.all([
-        axios.get("http://localhost:5000/api/head/projects"),
-        axios.get(`http://localhost:5000/api/head/employees/${headId}`), // Reuse employee list endpoint
-        axios.get(
-          `http://localhost:5000/api/head/replacement-requests/${headId}`
-        ),
+        api.get("/head/projects"),
+        api.get(`/head/employees/${headId}`), // Reuse employee list endpoint
+        api.get(`/head/replacement-requests/${headId}`),
       ]);
 
       setProjects(projRes.data);
@@ -81,10 +79,7 @@ const TaskAssignmentHead = () => {
       if (filterStatus !== "All") params.status = filterStatus;
       if (searchTerm) params.search = searchTerm;
 
-      const res = await axios.get(
-        `http://localhost:5000/api/head/department-tasks/${headId}`,
-        { params }
-      );
+      const res = await api.get(`/head/department-tasks/${headId}`, { params });
       setTasks(res.data);
     } catch (error) {
       console.error("Error fetching tasks:", error);
@@ -94,7 +89,7 @@ const TaskAssignmentHead = () => {
   const handleCreateTask = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:5000/api/head/tasks/create", {
+      await api.post("/head/tasks/create", {
         ...newTask,
         assigned_by_head_id: headId,
       });
@@ -116,17 +111,12 @@ const TaskAssignmentHead = () => {
 
   const handleReplacementAction = async (requestId, status) => {
     try {
-      await axios.put(
-        `http://localhost:5000/api/head/replacement-requests/${requestId}`,
-        {
-          status,
-          remarks: `Processed by Head`,
-        }
-      );
+      await api.put(`/head/replacement-requests/${requestId}`, {
+        status,
+        remarks: `Processed by Head`,
+      });
       // Refresh Requests
-      const res = await axios.get(
-        `http://localhost:5000/api/head/replacement-requests/${headId}`
-      );
+      const res = await api.get(`/head/replacement-requests/${headId}`);
       setReplacements(res.data);
     } catch (error) {
       console.error("Error processing request:", error);
@@ -441,7 +431,7 @@ const TaskAssignmentHead = () => {
                                 style={{
                                   width: `${task.progress}%`,
                                   backgroundColor: getProgressColor(
-                                    task.progress
+                                    task.progress,
                                   ),
                                 }}
                               ></div>

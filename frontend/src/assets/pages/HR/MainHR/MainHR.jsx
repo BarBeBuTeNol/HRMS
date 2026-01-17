@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../../services/api";
 import HRLayout from "../../../Component/HR/HRLayout";
 import ProfileModal from "../../../Component/common/ProfileModal/ProfileModal";
 import dayjs from "dayjs";
@@ -40,9 +40,7 @@ const MainHR = () => {
   const fetchDashboardData = async () => {
     try {
       // 1. Fetch Users & Status
-      const res = await axios.get(
-        "http://localhost:5000/api/users/active-status"
-      );
+      const res = await api.get("/users/active-status");
       if (res.data?.ok) {
         setUserList(res.data.users);
         setStats((prev) => ({
@@ -54,10 +52,10 @@ const MainHR = () => {
 
       // 2. Pending Leave (Mock logic currently, can be replaced with real API later)
       const leaveRequests = JSON.parse(
-        localStorage.getItem("leave_requests") || "[]"
+        localStorage.getItem("leave_requests") || "[]",
       );
       const pendingCount = leaveRequests.filter(
-        (req) => req.status === "Pending"
+        (req) => req.status === "Pending",
       ).length;
       setStats((prev) => ({ ...prev, pendingLeave: pendingCount }));
 
@@ -66,10 +64,8 @@ const MainHR = () => {
         // Pass userId if available to check read status
         const userId =
           currentUser?.id || JSON.parse(localStorage.getItem("userId"));
-        const annRes = await axios.get(
-          `http://localhost:5000/api/announcements${
-            userId ? `?userId=${userId}` : ""
-          }`
+        const annRes = await api.get(
+          `/announcements${userId ? `?userId=${userId}` : ""}`,
         );
         setAnnouncements(annRes.data);
       } catch (e) {
@@ -105,16 +101,13 @@ const MainHR = () => {
     // Mark as read in DB
     try {
       if (currentUser?.id) {
-        await axios.put(
-          `http://localhost:5000/api/announcements/${ann.id}/read`,
-          {
-            userId: currentUser.id,
-          }
-        );
+        await api.put(`/announcements/${ann.id}/read`, {
+          userId: currentUser.id,
+        });
         // Remove from list immediately (or mark as read if you want to keep it but style it different)
         // User requested it to "disappear", so we filter or update state.
         setAnnouncements((prev) =>
-          prev.map((a) => (a.id === ann.id ? { ...a, is_read: 1 } : a))
+          prev.map((a) => (a.id === ann.id ? { ...a, is_read: 1 } : a)),
         );
       }
     } catch (err) {
@@ -385,7 +378,7 @@ const MainHR = () => {
                 <div className="meta-divider">•</div>
                 <div className="meta-item">
                   {dayjs(selectedAnnouncement.created_at).format(
-                    "DD MMM YYYY, h:mm A"
+                    "DD MMM YYYY, h:mm A",
                   )}
                 </div>
               </div>

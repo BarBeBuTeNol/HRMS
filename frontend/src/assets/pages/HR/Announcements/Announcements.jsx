@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import HRLayout from "../../../Component/HR/HRLayout";
 import "./Announcements.css";
-import axios from "axios";
+import api from "../../../services/api";
 
 // Helper for relative time (e.g., "2 hours ago")
 const timeAgo = (dateMsg) => {
@@ -37,8 +37,8 @@ const Announcements = () => {
     setLoading(true);
     try {
       const [annRes, notiRes] = await Promise.all([
-        axios.get("http://localhost:5000/api/announcements"),
-        axios.get(`http://localhost:5000/api/notifications/${userId}`),
+        api.get("/announcements"),
+        api.get(`/notifications/${userId}`),
       ]);
       setAnnouncements(annRes.data);
       setNotifications(notiRes.data);
@@ -57,9 +57,7 @@ const Announcements = () => {
   const handleDeleteAnnouncement = async (e) => {
     e.preventDefault();
     try {
-      await axios.delete(
-        `http://localhost:5000/api/announcements/${selectedItem.id}`
-      );
+      await api.delete(`/announcements/${selectedItem.id}`);
       fetchData();
       closeModal();
     } catch (err) {
@@ -70,13 +68,10 @@ const Announcements = () => {
   const handleEditAnnouncement = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(
-        `http://localhost:5000/api/announcements/${selectedItem.id}`,
-        {
-          title: editTitle,
-          content: editMessage,
-        }
-      );
+      await api.put(`/announcements/${selectedItem.id}`, {
+        title: editTitle,
+        content: editMessage,
+      });
       fetchData();
       closeModal();
     } catch (err) {
@@ -87,9 +82,9 @@ const Announcements = () => {
   // Handler for Mark as Read (Notifications)
   const markAsRead = async (id) => {
     try {
-      await axios.put(`http://localhost:5000/api/notifications/${id}/read`);
+      await api.put(`/notifications/${id}/read`);
       setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, is_read: 1 } : n))
+        prev.map((n) => (n.id === id ? { ...n, is_read: 1 } : n)),
       );
     } catch (err) {
       console.error("Error marking read:", err);

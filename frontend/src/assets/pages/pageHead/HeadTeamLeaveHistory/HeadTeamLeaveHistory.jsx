@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../../services/api";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
@@ -123,9 +123,7 @@ const HeadTeamLeaveHistory = () => {
           return;
         }
 
-        const response = await axios.get(
-          `http://localhost:5000/api/leave-history/department/${userId}`
-        );
+        const response = await api.get(`/leave-history/department/${userId}`);
         const data = response.data;
 
         // 1. Transform to Calendar Events
@@ -199,17 +197,17 @@ const HeadTeamLeaveHistory = () => {
     // Determine Top stats
     const topType = Object.keys(typeCounts).reduce(
       (a, b) => (typeCounts[a] > typeCounts[b] ? a : b),
-      "N/A"
+      "N/A",
     );
     const topTypeCount = typeCounts[topType] || 0;
     const totalLeavesForTypeCalc = leaves.length || 1;
     const topTypePct = ((topTypeCount / totalLeavesForTypeCalc) * 100).toFixed(
-      0
+      0,
     );
 
     const topAbsenteeName = Object.keys(absenteeCounts).reduce(
       (a, b) => (absenteeCounts[a] > absenteeCounts[b] ? a : b),
-      "N/A"
+      "N/A",
     );
 
     setTeamStats({
@@ -252,7 +250,7 @@ const HeadTeamLeaveHistory = () => {
         StartDate: moment(e.start).format("YYYY-MM-DD"),
         EndDate: moment(e.end).format("YYYY-MM-DD"),
         Status: e.status,
-      }))
+      })),
     );
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Team Leaves");

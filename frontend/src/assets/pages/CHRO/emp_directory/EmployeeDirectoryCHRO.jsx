@@ -29,6 +29,7 @@ import CHROLayout from "../../../Component/CHRO/CHROLayout";
 import PopupNotification from "../../../Component/popup_notifications/PopupNotification";
 import ChangeRequestModal from "../../../Component/popup_notifications/ChangeRequestModal";
 import "./EmployeeDirectoryCHRO.css";
+import api from "../../../services/api"; // Import centralized api
 
 const EmployeeDirectoryCHRO = () => {
   const navigate = useNavigate();
@@ -70,11 +71,8 @@ const EmployeeDirectoryCHRO = () => {
 
   const fetchDepartments = async () => {
     try {
-      const res = await fetch("/api/departments");
-      if (res.ok) {
-        const data = await res.json();
-        setDepartments(data);
-      }
+      const res = await api.get("/departments");
+      setDepartments(res.data);
     } catch (err) {
       console.error("Failed to fetch departments", err);
     }
@@ -84,28 +82,25 @@ const EmployeeDirectoryCHRO = () => {
     setLoading(true);
     setError(null);
     try {
-      const query = new URLSearchParams({
-        pageSize: 100,
-        search: debouncedSearch,
-        department: selectedDept,
-      }).toString();
+      const res = await api.get("/users", {
+        params: {
+          pageSize: 100,
+          search: debouncedSearch,
+          department: selectedDept,
+        },
+      });
 
-      const res = await fetch(`/api/users?${query}`);
-      if (res.ok) {
-        const result = await res.json();
-        let data = [];
-        if (Array.isArray(result)) {
-          data = result;
-        } else if (result.data && Array.isArray(result.data)) {
-          data = result.data;
-        }
-        setEmployeeList(data);
-      } else {
-        throw new Error("Failed to fetch employees");
+      const result = res.data;
+      let data = [];
+      if (Array.isArray(result)) {
+        data = result;
+      } else if (result.data && Array.isArray(result.data)) {
+        data = result.data;
       }
+      setEmployeeList(data);
     } catch (err) {
       console.error("Error fetching employees:", err);
-      setError(err.message);
+      setError(err.message || "Failed to fetch employees");
     } finally {
       setLoading(false);
     }
@@ -130,13 +125,8 @@ const EmployeeDirectoryCHRO = () => {
 
   const fetchEmployeeDetail = async (id) => {
     try {
-      const res = await fetch(`/api/users/${id}`);
-      if (res.ok) {
-        const data = await res.json();
-        setSelectedEmp(data);
-      } else {
-        console.error("Failed to fetch detail");
-      }
+      const res = await api.get(`/users/${id}`);
+      setSelectedEmp(res.data);
     } catch (err) {
       console.error(err);
     }
@@ -173,12 +163,9 @@ const EmployeeDirectoryCHRO = () => {
       formDataPayload.append("reason", reason);
       formDataPayload.append("evidence", file);
 
-      const res = await fetch("/api/change-requests", {
-        method: "POST",
-        body: formDataPayload,
-      });
+      const res = await api.post("/change-requests", formDataPayload);
 
-      if (res.ok) {
+      if (res.status === 200 || res.status === 201) {
         setPopup({
           isOpen: true,
           title: "Delete Request Submitted",
@@ -187,15 +174,17 @@ const EmployeeDirectoryCHRO = () => {
         });
         // Optionally refresh list if we want to show immediate feedback (though it's just a request)
         // fetchEmployees();
-      } else {
-        const errData = await res.json();
-        throw new Error(errData.message || "Failed to submit request");
       }
     } catch (err) {
+      // Handle error from api.post
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to submit request";
       setPopup({
         isOpen: true,
         title: "Request Failed",
-        message: err.message,
+        message: errorMessage,
         type: "error",
       });
     } finally {
@@ -676,7 +665,7 @@ const EmployeeDirectoryCHRO = () => {
                     <div className="chro-detail-avatar">
                       {selectedEmp.profile_picture ? (
                         <img
-                          src={`http://localhost:5000${selectedEmp.profile_picture}`}
+                          src={`${api.defaults.baseURL.replace("/api", "")}${selectedEmp.profile_picture}`}
                           alt="Profile"
                         />
                       ) : (

@@ -14,7 +14,7 @@ import {
   AlignLeft,
   User,
 } from "lucide-react";
-import axios from "axios";
+import api from "../../../services/api";
 import EmployeeSidebar from "../../../Component/Employee/EmployeeSidebar";
 import "../../../Component/calendar/Calendar.css"; // Reuse Exclusive CSS
 
@@ -29,9 +29,7 @@ const MySchedulePage = () => {
     const fetchData = async () => {
       try {
         // 1. Fetch Company Events for Everyone
-        const calendarRes = await axios.get(
-          "http://localhost:5000/api/calendar"
-        );
+        const calendarRes = await api.get("/calendar");
         setCompanyEvents(calendarRes.data);
 
         // 2. Fetch User Shift Schedule
@@ -41,9 +39,7 @@ const MySchedulePage = () => {
           // Backend route: /api/work-schedules/user/:userId
           // Note: check if 'id' or 'employee_id' is correct based on your auth logic. Usually 'id'.
           const userId = user.id;
-          const scheduleRes = await axios.get(
-            `http://localhost:5000/api/work-schedules/user/${userId}`
-          );
+          const scheduleRes = await api.get(`/work-schedules/user/${userId}`);
           setSchedule(scheduleRes.data);
         }
       } catch (error) {
@@ -68,7 +64,7 @@ const MySchedulePage = () => {
       // Find User Shift (Real Data: work_schedules)
       // Schema: { id, user_id, date: "2024-01-01T00:00.000Z", shift: "Morning..." }
       const dayShift = schedule.find(
-        (s) => dayjs(s.date).format("YYYY-MM-DD") === dateStr
+        (s) => dayjs(s.date).format("YYYY-MM-DD") === dateStr,
       );
 
       const dayCompanyEvents = companyEvents.filter((e) => {
@@ -450,7 +446,7 @@ const MySchedulePage = () => {
                       ))}
                   </div>
                 </div>
-              )
+              ),
             )}
           </motion.div>
           {/* Details Modal */}
@@ -521,16 +517,16 @@ const MySchedulePage = () => {
                               ? "rgba(239, 68, 68, 0.2)"
                               : "rgba(16, 185, 129, 0.2)"
                             : selectedEvent.type === "holiday"
-                            ? "rgba(239, 68, 68, 0.2)" // Red for Holiday
-                            : "rgba(59, 130, 246, 0.2)",
+                              ? "rgba(239, 68, 68, 0.2)" // Red for Holiday
+                              : "rgba(59, 130, 246, 0.2)",
                         color:
                           selectedEvent.dataType === "shift"
                             ? selectedEvent.shift === "Day Off"
                               ? "#fca5a5"
                               : "#6ee7b7"
                             : selectedEvent.type === "holiday"
-                            ? "#fca5a5" // Red for Holiday
-                            : "#93c5fd",
+                              ? "#fca5a5" // Red for Holiday
+                              : "#93c5fd",
                       }}
                     >
                       {selectedEvent.dataType === "shift" ? (

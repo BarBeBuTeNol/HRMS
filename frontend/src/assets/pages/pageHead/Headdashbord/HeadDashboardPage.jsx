@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../../services/api";
 import HeadSidebar from "../../../Component/Head/HeadSidebar";
 import {
   FaUsers,
@@ -20,9 +20,7 @@ const HeadDashboard = () => {
         const userId = localStorage.getItem("userId");
         if (!userId) return;
 
-        const response = await axios.get(
-          `http://localhost:5000/api/head/dashboard-stats/${userId}`
-        );
+        const response = await api.get(`/head/dashboard-stats/${userId}`);
         setData(response.data);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);

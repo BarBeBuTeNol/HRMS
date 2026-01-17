@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../../services/api";
 import { Link } from "react-router-dom";
 import {
   FaSearch,
@@ -30,10 +30,11 @@ const HeadEmployeeList = () => {
   // Stats Logic
   const totalEmp = filteredEmployees.length;
   const activeEmp = filteredEmployees.filter(
-    (e) => e.employment_status === "Active"
+    (e) => e.employment_status === "Active",
   ).length;
   const onLeaveEmp = filteredEmployees.filter(
-    (e) => e.account_status === "Inactive" || e.employment_status === "On Leave"
+    (e) =>
+      e.account_status === "Inactive" || e.employment_status === "On Leave",
   ).length;
 
   useEffect(() => {
@@ -48,9 +49,7 @@ const HeadEmployeeList = () => {
     try {
       if (!headId) return;
       setLoading(true);
-      const response = await axios.get(
-        `http://localhost:5000/api/head/employees/${headId}`
-      );
+      const response = await api.get(`/head/employees/${headId}`);
       setEmployees(response.data);
     } catch (error) {
       console.error("Failed to fetch employees", error);
@@ -67,7 +66,7 @@ const HeadEmployeeList = () => {
         (e) =>
           e.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           e.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          e.emp_code?.toLowerCase().includes(searchTerm.toLowerCase())
+          e.emp_code?.toLowerCase().includes(searchTerm.toLowerCase()),
       );
     }
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../../services/api";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FaFileMedical,
@@ -69,9 +69,7 @@ const RequestLeavePage = () => {
 
   const fetchHistory = async (uid) => {
     try {
-      const res = await axios.get(
-        `http://localhost:5000/api/leave-requests/${uid}`
-      );
+      const res = await api.get(`/leave-requests/${uid}`);
       setHistory(res.data);
     } catch (err) {
       console.error("Error fetching history:", err);
@@ -92,16 +90,13 @@ const RequestLeavePage = () => {
   const checkScheduleConflict = async () => {
     setCheckingSchedule(true);
     try {
-      const res = await axios.get(
-        `http://localhost:5000/api/work-schedules/my-schedules`,
-        {
-          params: {
-            userId,
-            startDate: formData.startDate,
-            endDate: formData.endDate,
-          },
-        }
-      );
+      const res = await api.get(`/work-schedules/my-schedules`, {
+        params: {
+          userId,
+          startDate: formData.startDate,
+          endDate: formData.endDate,
+        },
+      });
 
       if (res.data.length > 0) {
         setScheduleConflict(res.data);
@@ -129,7 +124,7 @@ const RequestLeavePage = () => {
 
     setSubmitting(true);
     try {
-      await axios.post("http://localhost:5000/api/leave-requests", {
+      await api.post("/leave-requests", {
         user_id: userId,
         leave_type: formData.leaveType,
         start_date: formData.startDate,
@@ -149,7 +144,7 @@ const RequestLeavePage = () => {
     } catch (err) {
       console.error("Error submitting leave request:", err);
       alert(
-        "❌ ส่งคำขอไม่สำเร็จ: " + (err.response?.data?.message || err.message)
+        "❌ ส่งคำขอไม่สำเร็จ: " + (err.response?.data?.message || err.message),
       );
     } finally {
       setSubmitting(false);
@@ -330,7 +325,7 @@ const RequestLeavePage = () => {
                         // But for now, let's just make the UI nice.
                         if (fileName)
                           document.getElementById(
-                            "file-name-display"
+                            "file-name-display",
                           ).innerText = fileName;
                       }}
                     />
@@ -406,7 +401,7 @@ const RequestLeavePage = () => {
                           <td>
                             <div className="text-sm text-gray-300">
                               {new Date(req.start_date).toLocaleDateString(
-                                "th-TH"
+                                "th-TH",
                               )}
                             </div>
                           </td>

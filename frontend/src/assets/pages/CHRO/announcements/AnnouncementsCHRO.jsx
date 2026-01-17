@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import CHROLayout from "../../../Component/CHRO/CHROLayout";
 import "./AnnouncementsCHRO.css";
-import axios from "axios";
+import api from "../../../services/api";
 import {
   Bell,
   Megaphone,
@@ -54,9 +54,9 @@ const AnnouncementsCHRO = () => {
     setLoading(true);
     try {
       const [annRes, notiRes, deptRes] = await Promise.all([
-        axios.get(`http://localhost:5000/api/announcements?userId=${userId}`),
-        axios.get(`http://localhost:5000/api/notifications/${userId}`),
-        axios.get("http://localhost:5000/api/departments"),
+        api.get(`/announcements?userId=${userId}`),
+        api.get(`/notifications/${userId}`),
+        api.get("/departments"),
       ]);
       setAnnouncements(annRes.data);
       setNotifications(notiRes.data);
@@ -75,7 +75,7 @@ const AnnouncementsCHRO = () => {
   const handleCreateAnnouncement = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:5000/api/announcements", {
+      await api.post("/announcements", {
         title: formTitle,
         content: formContent,
         userId: userId,
@@ -93,12 +93,9 @@ const AnnouncementsCHRO = () => {
   const handleDeleteAnnouncement = async (e) => {
     e.preventDefault();
     try {
-      await axios.delete(
-        `http://localhost:5000/api/announcements/${selectedItem.id}`,
-        {
-          data: { userId },
-        }
-      );
+      await api.delete(`/announcements/${selectedItem.id}`, {
+        data: { userId },
+      });
       fetchData();
       closeModal();
     } catch (err) {
@@ -109,14 +106,11 @@ const AnnouncementsCHRO = () => {
   const handleEditAnnouncement = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(
-        `http://localhost:5000/api/announcements/${selectedItem.id}`,
-        {
-          title: formTitle,
-          content: formContent,
-          userId: userId,
-        }
-      );
+      await api.put(`/announcements/${selectedItem.id}`, {
+        title: formTitle,
+        content: formContent,
+        userId: userId,
+      });
       fetchData();
       closeModal();
     } catch (err) {
@@ -126,9 +120,9 @@ const AnnouncementsCHRO = () => {
 
   const markAsRead = async (id) => {
     try {
-      await axios.put(`http://localhost:5000/api/notifications/${id}/read`);
+      await api.put(`/notifications/${id}/read`);
       setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, is_read: 1 } : n))
+        prev.map((n) => (n.id === id ? { ...n, is_read: 1 } : n)),
       );
     } catch (err) {
       console.error("Error marking read:", err);

@@ -17,7 +17,7 @@ import {
 } from "recharts";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-import axios from "axios"; // Assuming axios is configured globally or I'll use direct path
+import api from "../../../services/api"; // Assuming api is configured globally or I'll use direct path
 import HRLayout from "../../../Component/HR/HRLayout";
 import "./Show_static_switch.css";
 
@@ -67,9 +67,7 @@ const Show_static_switch = () => {
 
   const fetchStats = async () => {
     try {
-      const res = await axios.get(
-        "http://localhost:5000/api/reports/swaps/stats"
-      );
+      const res = await api.get("/reports/swaps/stats");
       setStatsData(res.data);
     } catch (err) {
       console.error("Error fetching stats:", err);
@@ -80,9 +78,7 @@ const Show_static_switch = () => {
     setLoading(true);
     try {
       const query = new URLSearchParams(filters).toString();
-      const res = await axios.get(
-        `http://localhost:5000/api/reports/swaps?${query}`
-      );
+      const res = await api.get(`/reports/swaps?${query}`);
       setSwapsList(res.data);
     } catch (err) {
       console.error("Error fetching swaps:", err);
@@ -93,14 +89,14 @@ const Show_static_switch = () => {
 
   const handleVerify = async (id) => {
     try {
-      await axios.post(`http://localhost:5000/api/reports/swaps/${id}/verify`);
+      await api.post(`/reports/swaps/${id}/verify`);
       // Update local state to show verified
       setSwapsList((prev) =>
         prev.map((item) =>
           item.id === id
             ? { ...item, hr_acknowledged: 1, status: "Verified" }
-            : item
-        )
+            : item,
+        ),
       );
       alert("Swap acknowledged successfully.");
     } catch (err) {
@@ -118,7 +114,7 @@ const Show_static_switch = () => {
     });
     saveAs(
       data,
-      `Shift_Swap_Report_${new Date().toISOString().slice(0, 10)}.xlsx`
+      `Shift_Swap_Report_${new Date().toISOString().slice(0, 10)}.xlsx`,
     );
   };
 

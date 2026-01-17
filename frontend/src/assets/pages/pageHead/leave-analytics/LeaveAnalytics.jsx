@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../../services/api";
 import HeadSidebar from "../../../Component/Head/HeadSidebar";
 import {
   PieChart,
@@ -49,8 +49,8 @@ const LeaveAnalytics = () => {
         }
 
         // Fetch Analytics Data
-        const response = await axios.get(
-          `http://localhost:5000/api/leave-requests/stats/analytics/${userId}`
+        const response = await api.get(
+          `/leave-requests/stats/analytics/${userId}`,
         );
         setData(response.data);
       } catch (error) {
@@ -332,7 +332,7 @@ const LeaveAnalytics = () => {
                   {employeeStats.map((emp) => {
                     const percentage = Math.min(
                       100,
-                      (emp.usedDays / emp.quota) * 100
+                      (emp.usedDays / emp.quota) * 100,
                     );
                     return (
                       <tr key={emp.id}>
@@ -346,8 +346,8 @@ const LeaveAnalytics = () => {
                                 parseFloat(emp.attendance) > 95
                                   ? "#10b981"
                                   : parseFloat(emp.attendance) > 85
-                                  ? "#f59e0b"
-                                  : "#ef4444",
+                                    ? "#f59e0b"
+                                    : "#ef4444",
                               fontWeight: "bold",
                             }}
                           >

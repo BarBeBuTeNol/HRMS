@@ -1,6 +1,4 @@
-import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
-import axios from "axios";
+import api from "../services/api";
 
 const useHeartbeat = () => {
   const location = useLocation();
@@ -15,7 +13,7 @@ const useHeartbeat = () => {
         const user = JSON.parse(storedUser);
         if (user?.id) {
           // console.log("💓 Sending heartbeat for user:", user.id);
-          await axios.post("http://localhost:5000/api/users/heartbeat", {
+          await api.post("/users/heartbeat", {
             userId: user.id,
           });
           // console.log("✅ Heartbeat success");

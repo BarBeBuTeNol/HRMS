@@ -9,7 +9,7 @@ import {
   X,
 } from "lucide-react";
 import dayjs from "dayjs";
-import axios from "axios";
+import api from "../../../services/api";
 
 // Layout Imports
 import HRLayout from "../HR/HRLayout";
@@ -43,7 +43,7 @@ const ExclusiveCalendarContent = () => {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/calendar");
+        const response = await api.get("/calendar");
         setEvents(response.data);
       } catch (error) {
         console.error("Failed to fetch events", error);
@@ -66,7 +66,7 @@ const ExclusiveCalendarContent = () => {
     for (let i = 1; i <= daysInMonth; i++) {
       const dateStr = currentDate.date(i).format("YYYY-MM-DD");
       const dayEvents = events.filter(
-        (e) => dayjs(e.date).format("YYYY-MM-DD") === dateStr
+        (e) => dayjs(e.date).format("YYYY-MM-DD") === dateStr,
       );
 
       const dayOfWeek = currentDate.date(i).day();
@@ -101,10 +101,7 @@ const ExclusiveCalendarContent = () => {
   const handleAddEventSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/calendar",
-        newEvent
-      );
+      const response = await api.post("/calendar", newEvent);
       setEvents([...events, { ...newEvent, id: response.data.id }]);
       setIsAddModalOpen(false);
       setNewEvent({ title: "", date: "", type: "holiday", description: "" });
@@ -360,7 +357,7 @@ const ExclusiveCalendarContent = () => {
                 ))}
               </div>
             </div>
-          )
+          ),
         )}
       </motion.div>
 

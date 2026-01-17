@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import axios from "axios";
+import api from "../../../services/api";
 import { FaGlobeAsia, FaBuilding, FaPaperPlane } from "react-icons/fa";
 import { MdCheckCircle, MdNotificationsActive } from "react-icons/md";
 import HRLayout from "../../../Component/HR/HRLayout";
@@ -25,7 +25,7 @@ const Send_notifi = () => {
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/departments");
+        const res = await api.get("/departments");
         setDepartments(res.data);
       } catch (err) {
         console.error("Failed to load departments", err);
@@ -74,7 +74,7 @@ const Send_notifi = () => {
         postedBy: JSON.parse(localStorage.getItem("currentUser") || "{}").id,
       };
 
-      await axios.post("http://localhost:5000/api/notifications/send", payload);
+      await api.post("/notifications/send", payload);
 
       setSuccess(true);
       setMessage("");

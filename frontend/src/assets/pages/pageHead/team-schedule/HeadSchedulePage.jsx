@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./HeadSchedulePage.css";
 import HeadSidebar from "../../../Component/Head/HeadSidebar";
-import axios from "axios";
+import api from "../../../services/api";
 import {
   FaChevronLeft,
   FaChevronRight,
@@ -49,9 +49,7 @@ const HeadSchedulePage = () => {
     setLoading(true);
     try {
       // 1. Employees
-      const empRes = await axios.get(
-        `http://localhost:5000/api/head/employees/${headId}`
-      );
+      const empRes = await api.get(`/head/employees/${headId}`);
       setEmployees(empRes.data);
       const myTeam = empRes.data;
       const teamMmbersIds = myTeam.map((m) => m.id);
@@ -63,26 +61,22 @@ const HeadSchedulePage = () => {
       setPositions(uniquePositions);
 
       // 2. Schedules
-      const schedRes = await axios.get(
-        "http://localhost:5000/api/work-schedules"
-      );
+      const schedRes = await api.get("/work-schedules");
       // Filter for team and ensure unique per day/user if needed (DB handles duplicates usually)
       const teamSchedules = schedRes.data.filter((s) =>
-        teamMmbersIds.includes(s.user_id)
+        teamMmbersIds.includes(s.user_id),
       );
       setSchedules(teamSchedules);
 
       // 3. Leaves
-      const leaveRes = await axios.get(
-        "http://localhost:5000/api/leave-requests/all"
-      );
+      const leaveRes = await api.get("/leave-requests/all");
       const approvedLeaves = leaveRes.data.filter(
-        (l) => teamMmbersIds.includes(l.user_id) && l.status === "Approved"
+        (l) => teamMmbersIds.includes(l.user_id) && l.status === "Approved",
       );
       setLeaves(approvedLeaves);
 
       // 4. Holidays
-      const holidayRes = await axios.get("http://localhost:5000/api/calendar");
+      const holidayRes = await api.get("/calendar");
       setHolidays(holidayRes.data);
     } catch (err) {
       console.error("Error fetching data:", err);
@@ -118,10 +112,7 @@ const HeadSchedulePage = () => {
         },
       ];
 
-      await axios.post(
-        "http://localhost:5000/api/work-schedules/bulk-upsert",
-        payload
-      );
+      await api.post("/work-schedules/bulk-upsert", payload);
 
       // Refresh local state without full refetch for speed (optimistic) OR just refetch
       fetchData();
@@ -183,7 +174,7 @@ const HeadSchedulePage = () => {
 
     const shift = schedules.find(
       (s) =>
-        s.user_id === empId && dayjs(s.date).format("YYYY-MM-DD") === dateStr
+        s.user_id === empId && dayjs(s.date).format("YYYY-MM-DD") === dateStr,
     );
     if (shift) {
       let time = "";
@@ -198,7 +189,7 @@ const HeadSchedulePage = () => {
     }
 
     const isHoliday = holidays.find(
-      (h) => dayjs(h.date).format("YYYY-MM-DD") === dateStr
+      (h) => dayjs(h.date).format("YYYY-MM-DD") === dateStr,
     );
     if (isHoliday)
       return {
@@ -216,12 +207,12 @@ const HeadSchedulePage = () => {
     setCurrentDate((prev) =>
       viewMode === "month"
         ? prev.subtract(1, "month")
-        : prev.subtract(1, "week")
+        : prev.subtract(1, "week"),
     );
   };
   const handleNext = () => {
     setCurrentDate((prev) =>
-      viewMode === "month" ? prev.add(1, "month") : prev.add(1, "week")
+      viewMode === "month" ? prev.add(1, "month") : prev.add(1, "week"),
     );
   };
 
@@ -338,7 +329,7 @@ const HeadSchedulePage = () => {
                   <th className="hs-sticky-col-header">Employee</th>
                   {dates.map((date) => {
                     const isHoliday = holidays.find((h) =>
-                      dayjs(h.date).isSame(date, "day")
+                      dayjs(h.date).isSame(date, "day"),
                     );
                     const isToday = date.isSame(dayjs(), "day");
                     return (
@@ -441,7 +432,7 @@ const HeadSchedulePage = () => {
               const todayShifts = schedules.filter(
                 (s) =>
                   s.shift === shift &&
-                  dayjs(s.date).format("YYYY-MM-DD") === todayStr
+                  dayjs(s.date).format("YYYY-MM-DD") === todayStr,
               ).length;
               return (
                 <div key={shift} className="hs-summary-item">

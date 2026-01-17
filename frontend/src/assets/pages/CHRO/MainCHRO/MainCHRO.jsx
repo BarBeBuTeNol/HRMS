@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../../services/api";
 import CHROLayout from "../../../Component/CHRO/CHROLayout";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -108,7 +108,7 @@ const MainCHRO = () => {
 
   const fetchDashboardStats = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/chro/stats");
+      const res = await api.get("/chro/stats");
       const data = res.data;
       setAnalytics({
         ...data,
@@ -132,7 +132,7 @@ const MainCHRO = () => {
 
   const fetchEmployees = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/users");
+      const res = await api.get("/users");
       setEmployees(res.data.data || []);
     } catch (err) {
       console.error("Failed to fetch employees", err);
@@ -212,7 +212,7 @@ const MainCHRO = () => {
       const updated = employees.filter(
         (e) =>
           e.id !== employeeToDelete.id &&
-          e.username !== employeeToDelete.username
+          e.username !== employeeToDelete.username,
       );
       setEmployees(updated);
       // localStorage code removed as backend integration is primary now,
@@ -418,7 +418,7 @@ const MainCHRO = () => {
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart
                             data={Object.entries(
-                              analytics.ageDistribution || {}
+                              analytics.ageDistribution || {},
                             ).map(([k, v]) => ({ name: k, value: v }))}
                           >
                             <CartesianGrid
@@ -438,7 +438,7 @@ const MainCHRO = () => {
                                     key={`age-${index}`}
                                     fill={COLORS[index % COLORS.length]}
                                   />
-                                )
+                                ),
                               )}
                             </Bar>
                           </BarChart>
@@ -457,7 +457,7 @@ const MainCHRO = () => {
                           <PieChart>
                             <Pie
                               data={Object.entries(
-                                analytics.genderDistribution || {}
+                                analytics.genderDistribution || {},
                               ).map(([k, v]) => ({ name: k, value: v }))}
                               cx="50%"
                               cy="50%"
@@ -467,7 +467,7 @@ const MainCHRO = () => {
                               dataKey="value"
                             >
                               {Object.keys(
-                                analytics.genderDistribution || {}
+                                analytics.genderDistribution || {},
                               ).map((key, index) => (
                                 <Cell
                                   key={`gender-${index}`}
@@ -475,8 +475,8 @@ const MainCHRO = () => {
                                     key.toLowerCase() === "female"
                                       ? "#f43f5e"
                                       : key.toLowerCase() === "male"
-                                      ? "#3b82f6"
-                                      : "#10b981"
+                                        ? "#3b82f6"
+                                        : "#10b981"
                                   }
                                 />
                               ))}

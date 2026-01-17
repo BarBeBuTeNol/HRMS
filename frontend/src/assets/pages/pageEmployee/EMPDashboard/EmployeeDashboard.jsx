@@ -3,7 +3,7 @@ import EmployeeSidebar from "../../../Component/Employee/EmployeeSidebar";
 import "../../../../App.css";
 import "./EmployeeDashboard.css";
 import dayjs from "dayjs";
-import axios from "axios";
+import api from "../../../services/api";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion"; // Import Framer Motion
 import {
@@ -41,9 +41,7 @@ const EmployeeDashboard = () => {
           return;
         }
 
-        const res = await axios.get(
-          `http://localhost:5000/api/employees/dashboard/${storedUser.id}`
-        );
+        const res = await api.get(`/employees/dashboard/${storedUser.id}`);
         setDashboardData(res.data);
       } catch (err) {
         console.error("Error fetching dashboard data:", err);

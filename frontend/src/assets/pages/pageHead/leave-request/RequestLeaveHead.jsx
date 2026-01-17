@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../../services/api";
 import Swal from "sweetalert2";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
@@ -46,16 +46,10 @@ const RequestLeaveHead = () => {
         // Parallel Fetching
         const [historyRes, summaryRes, holidaysRes, shiftsRes] =
           await Promise.all([
-            axios.get(
-              `http://localhost:5000/api/leave-requests/${currentUserId}`
-            ),
-            axios.get(
-              `http://localhost:5000/api/leave-requests/summary/${currentUserId}`
-            ),
-            axios.get("http://localhost:5000/api/calendar"),
-            axios.get(
-              `http://localhost:5000/api/work-schedules/user/${currentUserId}`
-            ),
+            api.get(`/leave-requests/${currentUserId}`),
+            api.get(`/leave-requests/summary/${currentUserId}`),
+            api.get("/calendar"),
+            api.get(`/work-schedules/user/${currentUserId}`),
           ]);
 
         setLeaveHistory(historyRes.data);
@@ -109,10 +103,7 @@ const RequestLeaveHead = () => {
         reason: finalReason,
       };
 
-      const res = await axios.post(
-        "http://localhost:5000/api/leave-requests",
-        payload
-      );
+      const res = await api.post("/leave-requests", payload);
 
       if (res.data.success) {
         Swal.fire({
@@ -125,9 +116,7 @@ const RequestLeaveHead = () => {
         });
 
         // Refresh History
-        const historyRes = await axios.get(
-          `http://localhost:5000/api/leave-requests/${userData.id}`
-        );
+        const historyRes = await api.get(`/leave-requests/${userData.id}`);
         setLeaveHistory(historyRes.data);
 
         // Reset Form
@@ -154,7 +143,7 @@ const RequestLeaveHead = () => {
 
     // Check Holiday
     const isHoliday = holidays.find(
-      (h) => h.date && h.date.toString().startsWith(dateStr)
+      (h) => h.date && h.date.toString().startsWith(dateStr),
     );
     if (isHoliday)
       dots.push(
@@ -162,7 +151,7 @@ const RequestLeaveHead = () => {
           key="holiday"
           className="calendar-dot dot-holiday"
           title={isHoliday.event_name}
-        ></div>
+        ></div>,
       );
 
     // Check Shift
@@ -173,7 +162,7 @@ const RequestLeaveHead = () => {
           key="shift"
           className="calendar-dot dot-shift"
           title={`Shift: ${shift.shift}`}
-        ></div>
+        ></div>,
       );
 
     // Check Leave
@@ -188,7 +177,7 @@ const RequestLeaveHead = () => {
           key="leave"
           className="calendar-dot dot-leave"
           title={leave.leave_type}
-        ></div>
+        ></div>,
       );
 
     return (
@@ -311,7 +300,7 @@ const RequestLeaveHead = () => {
                     style={{
                       width: `${Math.min(
                         (item.used / item.limit) * 100,
-                        100
+                        100,
                       )}%`,
                       backgroundColor:
                         item.used >= item.limit ? "#ef4444" : "#c5a059",
