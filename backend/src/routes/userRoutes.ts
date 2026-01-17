@@ -17,20 +17,17 @@ const USER_SELECT = `
     u.last_name,
     u.role_id,
     u.department_id,
-    p.prefix_name,
-    CONCAT(COALESCE(p.prefix_name, ''), u.first_name, ' ', u.last_name) AS full_name,
+    u.prefix as prefix_name,
+    CONCAT(COALESCE(u.prefix, ''), u.first_name, ' ', u.last_name) AS full_name,
     r.role_name,
     d.department_name
   FROM users u
-  LEFT JOIN prefixes p     ON p.id = u.prefix_id
   LEFT JOIN roles r        ON r.id = u.role_id
   LEFT JOIN departments d  ON d.id = u.department_id
 `;
 
 // ✅ Define static routes BEFORE dynamic routes like /:id
-/** ───────── GET /api/users/active-status ───────── 
- * เช็คสถานะ Active Users from user_sessions (last_activity < 5 mins ago)
- */
+/** ───────── GET /api/users/active-status ───────── */
 router.get("/active-status", async (_req, res) => {
   try {
     // 1. Get Total Users Count
@@ -122,11 +119,10 @@ router.get("/head/employees", async (req, res) => {
       `
       SELECT 
         u.id,
-        CONCAT(COALESCE(p.prefix_name,''), u.first_name, ' ', u.last_name) AS name,
+        CONCAT(COALESCE(u.prefix,''), u.first_name, ' ', u.last_name) AS name,
         r.role_name,
         d.department_name
       FROM users u
-      LEFT JOIN prefixes p  ON u.prefix_id = p.id
       LEFT JOIN roles r     ON u.role_id = r.id
       LEFT JOIN departments d ON u.department_id = d.id
       WHERE u.department_id = ?
@@ -155,7 +151,7 @@ router.get("/employee/:id/detail", async (req, res) => {
       `
       SELECT 
         u.id,
-        CONCAT(COALESCE(p.prefix_name,''), u.first_name, ' ', u.last_name) AS full_name,
+        CONCAT(COALESCE(u.prefix,''), u.first_name, ' ', u.last_name) AS full_name,
         u.email,
         u.phone,
         r.role_name,
@@ -170,7 +166,6 @@ router.get("/employee/:id/detail", async (req, res) => {
         ud.marital_status,
         ud.start_date
       FROM users u
-      LEFT JOIN prefixes p   ON u.prefix_id = p.id
       LEFT JOIN roles r      ON u.role_id = r.id
       LEFT JOIN departments d ON u.department_id = d.id
       LEFT JOIN user_detail ud ON u.id = ud.user_id

@@ -21,10 +21,10 @@ export const createLeaveRequest = async (req: Request, res: Response) => {
 
     if (head) {
       // 4) สร้างแจ้งเตือนให้หัวหน้า
-      const title = `คำขอลา – ${emp.first_name} ${emp.last_name}`;
-      const details = `${emp.first_name} ${emp.last_name} ขอ "${leave_type}" ${start_date} ถึง ${end_date}`;
-
-      await leaveRepository.createNotification(head.id, 'leave-request', title, details);
+      const message = `คำขอลาใหม่: ${emp.first_name} ${emp.last_name} (${leave_type}) ${start_date} ถึง ${end_date}`;
+      // ใช้ type='system' ตาม schema enum ที่มี (leave_status, announcement, task_assignment, system)
+      // reference_id = requestId
+      await leaveRepository.createNotification(head.id, 'system', message, requestId);
     }
 
     res.json({

@@ -95,6 +95,51 @@ router.get("/:userId", async (req, res) => {
   }
 });
 
+// GET: Summary of leave usage for a user (Personal Quota)
+router.get("/summary/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    // Calculate sum of days used per leave type for current year
+    // Note: DATEDIFF + 1 is a simple approx. For exact business days, we need holiday logic similar to analytics.
+    // However, to keep it efficient in SQL, we'll use this for now or implement a robust one if needed.
+    // Ideally, we store "days_count" in DB upon approval. 
+    // For now, we'll use DATEDIFF.
+    const [rows] = await pool.query(
+      `SELECT leave_type, 
+              SUM(DATEDIFF(end_date, start_date) + 1) as used_days
+       FROM leave_requests
+       WHERE user_id = ? 
+         AND status = 'approved'
+         AND YEAR(start_date) = YEAR(CURDATE())
+       GROUP BY leave_type`,
+      [userId]
+    );
+    
+    // Define quotas (could be from DB in future)
+    const quotas: any = {
+      'Sick Leave': 30,
+      'Annual Leave': 15,
+      'Personal Leave': 10, // Business leave
+      'Other': 5
+    };
+
+    // Format result
+    const summary = Object.keys(quotas).map(type => {
+      const found: any = (rows as any[]).find((r: any) => r.leave_type === type);
+      return {
+        type,
+        used: found ? parseInt(found.used_days) : 0,
+        limit: quotas[type]
+      };
+    });
+
+    res.json(summary);
+  } catch (error: any) {
+    console.error("❌ Error in GET /leave-requests/summary/:userId:", error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+});
+
 router.get("/for-head/:headId", async (req, res) => {
   try {
     const { headId } = req.params;
@@ -108,13 +153,30 @@ router.get("/for-head/:headId", async (req, res) => {
     if (!head) return res.status(404).json({ message: "ไม่พบหัวหน้า" });
 
     // ดึงคำขอลา (pending) ของพนักงานในแผนกเดียวกัน
+    // พร้อมข้อมูลพนักงาน + Conflict Check
     const [rows]: any = await pool.query(
       `SELECT lr.id, lr.leave_type AS leaveType, lr.start_date AS startDate, lr.end_date AS endDate,
-              lr.reason, lr.status,
-              u.first_name AS employeeName, d.department_name AS department
+              lr.reason, lr.status, lr.created_at,
+              u.first_name AS employeeName, u.last_name, 
+              ei.emp_code, jp.position_name,
+              
+              (SELECT COUNT(*) 
+               FROM leave_requests lr2
+               JOIN users u2 ON lr2.user_id = u2.id
+               WHERE u2.department_id = u.department_id
+                 AND lr2.status = 'approved'
+                 AND lr2.start_date <= lr.end_date
+                 AND lr2.end_date >= lr.start_date
+                 AND lr2.user_id != lr.user_id
+              ) as conflictCount
+
        FROM leave_requests lr
        JOIN users u ON lr.user_id = u.id
        JOIN departments d ON u.department_id = d.id
+       LEFT JOIN emp_info ei ON u.id = ei.user_id 
+            AND ei.id = (SELECT MAX(id) FROM emp_info WHERE user_id = u.id)
+       LEFT JOIN job_positions jp ON ei.position_id = jp.id
+       
        WHERE u.department_id = ? AND lr.status = 'pending'
        ORDER BY lr.created_at DESC`,
       [head.department_id]
@@ -131,12 +193,27 @@ router.get("/for-head/:headId", async (req, res) => {
 router.put("/:id/status", async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body; // "approved" หรือ "rejected"
+    const { status, rejection_reason } = req.body; // "approved" หรือ "rejected"
 
-    await pool.query(
-      `UPDATE leave_requests SET status = ? WHERE id = ?`,
-      [status, id]
-    );
+    let query = `UPDATE leave_requests SET status = ?`;
+    let params = [status] as any[];
+
+    if (rejection_reason !== undefined) {
+        query += `, rejection_reason = ?`;
+        params.push(rejection_reason);
+    }
+
+    query += ` WHERE id = ?`;
+    params.push(id);
+
+    await pool.query(query, params);
+
+    // Notify Employee
+    const [[leaveReq]]: any = await pool.query('SELECT user_id, leave_type FROM leave_requests WHERE id = ?', [id]);
+    if (leaveReq) {
+        const message = `คำขอลา "${leaveReq.leave_type}" ของคุณถูก ${status === 'approved' ? 'อนุมัติ ✅' : 'ปฏิเสธ ❌'}`;
+        await pool.query('INSERT INTO notifications (user_id, message, type, is_read, created_at) VALUES (?, ?, "system", 0, NOW())', [leaveReq.user_id, message]);
+    }
 
     res.json({ success: true, message: `อัปเดตคำขอลาเป็น ${status}` });
   } catch (error: any) {
@@ -145,46 +222,156 @@ router.put("/:id/status", async (req, res) => {
   }
 });
 // GET: สถิติการลาในแผนก แยกตามเดือน
-router.get("/stats/department/:headId", async (req, res) => {
+// GET: สถิติการลาสำหรับ Dashboard (Leave Analytics)
+router.get("/stats/analytics/:headId", async (req, res) => {
   try {
     const { headId } = req.params;
 
-    // 1) หา department ของหัวหน้า
+    // 1. Get Head's Department
     const [[head]]: any = await pool.query(
       `SELECT department_id FROM users WHERE id = ? AND role_id = 4`,
       [headId]
     );
-    if (!head) return res.status(404).json({ message: "ไม่พบหัวหน้า" });
 
-    // 2) ดึงสถิติแยกตามประเภทการลา (pie chart)
-    const [pieData]: any = await pool.query(
-      `SELECT DATE_FORMAT(start_date, '%Y-%m') as month,
-              leave_type, COUNT(*) as value
-       FROM leave_requests lr
-       JOIN users u ON lr.user_id = u.id
-       WHERE u.department_id = ?
-       GROUP BY month, leave_type
-       ORDER BY month DESC`,
+    if (!head) return res.status(404).json({ message: "Head not found" });
+
+    // 2. Get All Employees in Department
+    const [employees]: any = await pool.query(
+      `SELECT id, first_name, last_name, email
+       FROM users 
+       WHERE department_id = ?`,
       [head.department_id]
     );
 
-    // 3) ดึงสถิติแยกตามพนักงาน (bar chart)
-    const [barData]: any = await pool.query(
-      `SELECT DATE_FORMAT(lr.start_date, '%Y-%m') as month,
-              CONCAT(u.first_name, ' ', u.last_name) as name,
-              COUNT(*) as leaveCount
+    // 3. Get Approved Leaves for Department
+    const [leaves]: any = await pool.query(
+      `SELECT lr.user_id, lr.leave_type, lr.start_date, lr.end_date
        FROM leave_requests lr
        JOIN users u ON lr.user_id = u.id
-       WHERE u.department_id = ?
-       GROUP BY month, u.id
-       ORDER BY month DESC`,
+       WHERE u.department_id = ? AND lr.status = 'approved'`,
       [head.department_id]
     );
 
-    res.json({ pieData, barData });
+    // 4. Get Holidays
+    let holidays: any[] = [];
+    try {
+        const [holidayRows]: any = await pool.query(`SELECT start_date, end_date FROM holiday_calendar`);
+        holidays = holidayRows;
+    } catch (err) {
+        console.warn("Could not fetch holiday_calendar", err);
+    }
+
+    // --- Helper to calculate business days (excluding holidays) ---
+    const calculateLeaveDays = (start: string | Date, end: string | Date) => {
+        let startDate = new Date(start);
+        let endDate = new Date(end);
+        let count = 0;
+        let curDate = new Date(startDate);
+
+        while (curDate <= endDate) {
+            // Check if holiday
+            const isHoliday = holidays.some((h: any) => {
+                const hStart = new Date(h.start_date);
+                const hEnd = new Date(h.end_date);
+                return curDate >= hStart && curDate <= hEnd;
+            });
+
+            if (!isHoliday) {
+                count++;
+            }
+            curDate.setDate(curDate.getDate() + 1);
+        }
+        return count;
+    };
+
+    // --- Process Data ---
+    
+    let totalLeaveDays = 0;
+    const leaveTypeCount: Record<string, number> = {};
+    const monthlyTrend: Record<string, number> = {};
+    const userLeaveSummary: Record<number, number> = {};
+
+    employees.forEach((emp: any) => {
+        userLeaveSummary[emp.id] = 0;
+    });
+
+    leaves.forEach((leave: any) => {
+        const days = calculateLeaveDays(leave.start_date, leave.end_date);
+        
+        totalLeaveDays += days;
+
+        // Leave Type Distribution (Count of Requests)
+        leaveTypeCount[leave.leave_type] = (leaveTypeCount[leave.leave_type] || 0) + 1;
+
+        // Monthly Trend (Sum of Days)
+        const monthKey = new Date(leave.start_date).toLocaleString('default', { month: 'short' });
+        monthlyTrend[monthKey] = (monthlyTrend[monthKey] || 0) + days;
+
+        if (userLeaveSummary[leave.user_id] !== undefined) {
+            userLeaveSummary[leave.user_id] += days;
+        }
+    });
+
+    // 1. Attendance Rate (This Month)
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    const totalEmployees = employees.length;
+    const workingDaysInMonth = 22; 
+    const totalPossibleDays = totalEmployees * workingDaysInMonth;
+    
+    let thisMonthLeaveDays = 0;
+    leaves.forEach((leave: any) => {
+        const s = new Date(leave.start_date);
+        if (s.getMonth() === currentMonth && s.getFullYear() === currentYear) {
+             thisMonthLeaveDays += calculateLeaveDays(leave.start_date, leave.end_date);
+        }
+    });
+    
+    const attendanceRate = totalPossibleDays > 0 
+        ? ((totalPossibleDays - thisMonthLeaveDays) / totalPossibleDays) * 100 
+        : 100;
+
+    // 2. Pie Chart Data
+    const pieData = Object.keys(leaveTypeCount).map(key => ({
+        name: key,
+        value: leaveTypeCount[key]
+    }));
+
+    // 3. Line Chart Data
+    const monthsOrder = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const lineData = monthsOrder.map(m => ({
+        name: m,
+        days: monthlyTrend[m] || 0
+    }));
+
+    // 4. Employee Stats
+    const employeeStats = employees.map((emp: any) => {
+        const used = userLeaveSummary[emp.id] || 0;
+        return {
+            id: emp.id,
+            name: `${emp.first_name} ${emp.last_name}`,
+            department: head.department_id,
+            usedDays: used,
+            quota: 30, 
+            attendance: Math.max(0, 100 - ((used / 260) * 100)).toFixed(1)
+        };
+    });
+
+    const topAbsentees = [...employeeStats]
+        .sort((a, b) => b.usedDays - a.usedDays)
+        .slice(0, 5);
+
+    res.json({
+        attendanceRate: parseFloat(attendanceRate.toFixed(1)),
+        pieData,
+        lineData,
+        topAbsentees,
+        employeeStats
+    });
+
   } catch (error: any) {
-    console.error("❌ Error in GET /leave-requests/stats/department:", error);
-    res.status(500).json({ message: "เกิดข้อผิดพลาด", error: error.message });
+    console.error("❌ Error in GET /stats/analytics:", error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
   }
 });
 

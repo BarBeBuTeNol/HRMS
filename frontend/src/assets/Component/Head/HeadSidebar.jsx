@@ -1,79 +1,291 @@
-import React from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  FaThLarge,
+  FaUserTie,
+  FaUsers,
+  FaClipboardList,
+  FaCalendarCheck,
+  FaExchangeAlt,
+  FaChartPie,
+  FaFileInvoice,
+  FaBell,
+  FaSignOutAlt,
+  FaChevronLeft,
+  FaChevronRight,
+  FaCalendarAlt,
+  FaTasks,
+  FaPenSquare,
+  FaChartLine,
+  FaBullhorn,
+} from "react-icons/fa";
 import "./HeadSidebar.css";
-import { FaChartPie } from "react-icons/fa";
 
-const HeadSidebar = ({ unreadCount = 0 }) => {
+const HeadSidebar = ({ unreadCount = 0, onToggle }) => {
+  const [open, setOpen] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleToggle = () => {
+    setOpen(!open);
+    if (onToggle) onToggle(!open);
+  };
+
+  // --- Fetch User Data ---
+  const currentUserStr = localStorage.getItem("currentUser");
+  const currentUser = currentUserStr ? JSON.parse(currentUserStr) : {};
+  const displayName =
+    currentUser.username || currentUser.name || "Head Manager";
+  const displayRole = "Head of Department";
+  const displayAvatar =
+    currentUser.avatar ||
+    `https://ui-avatars.com/api/?name=${displayName}&background=c5a059&color=fff&size=128`;
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate("/login");
+  };
+
+  const menuGroups = [
+    {
+      title: "Overview",
+      items: [
+        // ภาพรวมสรุปสถิติแผนก
+        { path: "/head/dashboard", icon: <FaThLarge />, label: "Dashboard" },
+        // ข้อมูลส่วนตัวของ Head
+        { path: "/head/profile", icon: <FaUserTie />, label: "My Profile" },
+      ],
+    },
+    {
+      title: "Team Management",
+      items: [
+        // รายชื่อและรายละเอียดพนักงาน
+        {
+          path: "/head/employee-list",
+          icon: <FaUsers />,
+          label: "Employee List",
+        },
+        // ตารางเวร/ตารางทำงาน
+        {
+          path: "/head/team-schedule",
+          icon: <FaCalendarCheck />,
+          label: "Team Schedule",
+        },
+        // มอบหมายและติดตามงาน (New)
+        {
+          path: "/head/task-assignment",
+          icon: <FaTasks />,
+          label: "Task Assignment",
+        },
+        // จัดการการสลับเวร (Delegate Shift)
+        {
+          path: "/head/delegate-shift",
+          icon: <FaExchangeAlt />,
+          label: "Delegate Shift",
+        },
+      ],
+    },
+    {
+      title: "Approvals",
+      items: [
+        // อนุมัติการลา
+        {
+          path: "/head/leave-approvals",
+          icon: <FaClipboardList />,
+          label: "Leave Approvals",
+        },
+        // อนุมัติการขอแก้ไขข้อมูล (Change Requests) (New)
+        {
+          path: "/head/data-approvals",
+          icon: <FaPenSquare />,
+          label: "Data Approvals",
+        },
+        // อนุมัติการสลับงาน (task_replacements) (New)
+        {
+          path: "/head/shift-replacements",
+          icon: <FaExchangeAlt />,
+          label: "Shift Requests",
+        },
+      ],
+    },
+    {
+      title: "Analytics",
+      items: [
+        // สถิติการลาของคนในทีม
+        {
+          path: "/head/leave-stats",
+          icon: <FaChartPie />,
+          label: "Leave Stats",
+        },
+        // สรุปผลงานของพนักงาน (New)
+        {
+          path: "/head/team-performance",
+          icon: <FaChartLine />,
+          label: "Team Performance",
+        },
+      ],
+    },
+    {
+      title: "Organization",
+      items: [
+        // ปฏิทินบริษัท/วันหยุด
+        {
+          path: "/calendar",
+          icon: <FaCalendarAlt />,
+          label: "Company Calendar",
+        },
+        // ประกาศภายในแผนก (New)
+        {
+          path: "/head/department-news",
+          icon: <FaBullhorn />,
+          label: "Department News",
+        },
+      ],
+    },
+  ];
+
+  const sidebarVariants = {
+    expanded: { width: "260px" },
+    collapsed: { width: "80px" },
+  };
 
   return (
-    <aside className="sidebar">
-      <h2>หัวหน้าแผนก</h2>
+    <motion.aside
+      className="head-sidebar"
+      initial="expanded"
+      animate={open ? "expanded" : "collapsed"}
+      variants={sidebarVariants}
+      transition={{ duration: 0.4, type: "spring", damping: 12 }}
+    >
+      {/* Toggle Button */}
+      <motion.button
+        className="head-toggle-btn"
+        onClick={handleToggle}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+      >
+        {open ? <FaChevronLeft /> : <FaChevronRight />}
+      </motion.button>
 
-      <nav className="sidebar-menu">
-        <ul>
-          <li>
-            <NavLink to="/head/dashboard" className={({ isActive }) => (isActive ? "active" : "")}>
-              🏠 Dashboard
-            </NavLink>
-          </li>
-          <li>
-            <NavLink to="/head/profile" className={({ isActive }) => (isActive ? "active" : "")}>
-              👤 ข้อมูลส่วนตัว
-            </NavLink>
-          </li>
-          <li>
-            <NavLink to="/head/employee-list" className={({ isActive }) => (isActive ? "active" : "")}>
-              👥 รายชื่อพนักงาน
-            </NavLink>
-          </li>
-          <li>
-            <NavLink to="/head/request-leave" className={({ isActive }) => (isActive ? "active" : "")}>
-              📝 ยื่นขอลา
-            </NavLink>
-          </li>
-          <li>
-            <NavLink to="/head/leave-approvals" className={({ isActive }) => (isActive ? "active" : "")}>
-              ✅ อนุมัติการลา
-            </NavLink>
-          </li>
-          <li>
-            <NavLink to="/head/delegate-shift" className={({ isActive }) => (isActive ? "active" : "")}>
-              🔄 มอบหมายงานแทน
-            </NavLink>
-          </li>
-          <li>
-            <NavLink to="/head/schedule" className={({ isActive }) => (isActive ? "active" : "")}>
-              📅 จัดตารางการทำงาน
-            </NavLink>
-          </li>
+      {/* Profile Section */}
+      <div className="head-profile-section">
+        <motion.div
+          className="head-avatar-wrapper"
+          animate={{
+            width: open ? 70 : 40,
+            height: open ? 70 : 40,
+            marginBottom: open ? "1rem" : "0.5rem",
+          }}
+        >
+          <img
+            src={displayAvatar}
+            alt="Profile"
+            className="head-avatar"
+            style={{ width: "100%", height: "100%" }}
+          />
+        </motion.div>
 
-          <li>
-            <NavLink to="/head/leave-stats" className={({ isActive }) => (isActive ? "active" : "")}>
-              <FaChartPie /> <span>สถิติการลา</span>
-            </NavLink>
-          </li>
+        <AnimatePresence>
+          {open && (
+            <motion.div
+              className="head-user-info"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.5, height: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <h3 className="head-user-name">{displayName}</h3>
+              <p className="head-user-role">{displayRole}</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
-          {/* ✅ เมนูใหม่ */}
-          <li>
-            <NavLink to="/head/team-leave-history" className={({ isActive }) => (isActive ? "active" : "")}>
-              📄 ประวัติการลาของทีม
-            </NavLink>
-          </li>
+      <div className="head-divider" />
 
-          <li>
-            <NavLink to="/head/notifications" className={({ isActive }) => (isActive ? "active" : "")}>
-              🔔 แจ้งเตือน
-              {unreadCount > 0 && <span className="notif-badge">{unreadCount}</span>}
-            </NavLink>
-          </li>
+      {/* Menu Items */}
+      <nav className="head-menu-container">
+        {menuGroups.map((group, idx) => (
+          <div key={idx} className="head-menu-group">
+            {open && group.title && (
+              <motion.h4
+                className="head-group-title"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ delay: 0.1 * idx }}
+              >
+                {group.title}
+              </motion.h4>
+            )}
 
-          <li className="logout" onClick={() => navigate("/login")}>
-            🔴 ออกจากระบบ
-          </li>
-        </ul>
+            <ul>
+              {group.items.map((item) => (
+                <li key={item.path}>
+                  <NavLink
+                    to={item.path}
+                    className={({ isActive }) =>
+                      `head-menu-item ${isActive ? "active" : ""}`
+                    }
+                  >
+                    <span className="head-icon">{item.icon}</span>
+                    <AnimatePresence>
+                      {open && (
+                        <motion.span
+                          className="head-label"
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          {item.label}
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+
+                    {/* Badge Handling */}
+                    {open && item.badge > 0 && (
+                      <motion.span
+                        className="head-badge"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                      >
+                        {item.badge}
+                      </motion.span>
+                    )}
+                    {!open && item.badge > 0 && (
+                      <span className="head-dot-badge" />
+                    )}
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </nav>
-    </aside>
+
+      {/* Logout */}
+      <div className="head-footer">
+        <div className="head-menu-item logout" onClick={handleLogout}>
+          <span className="head-icon">
+            <FaSignOutAlt />
+          </span>
+          <AnimatePresence>
+            {open && (
+              <motion.span
+                className="head-label"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                Sign Out
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </motion.aside>
   );
 };
 

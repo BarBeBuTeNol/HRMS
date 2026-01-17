@@ -6,7 +6,12 @@ import { logUserAction } from '../utils/activityLogger';
 export const getAnnouncements = async (req: Request, res: Response) => {
     const userId = req.query.userId as string;
     try {
-        const rows = await announcementRepository.findAll(userId);
+        let departmentId = null;
+        if (userId) {
+            departmentId = await announcementRepository.getUserDepartmentId(userId);
+        }
+
+        const rows = await announcementRepository.findAll(userId, departmentId);
 
         // OPTIONAL: If no announcements, seed one for demo purposes
         if (rows.length === 0) {
@@ -21,7 +26,7 @@ export const getAnnouncements = async (req: Request, res: Response) => {
                );
                
                // Re-fetch (simple)
-               const newRows = await announcementRepository.findAll(userId);
+               const newRows = await announcementRepository.findAll(userId, departmentId);
                return res.json(newRows);
            }
         }
@@ -37,7 +42,16 @@ export const getAnnouncements = async (req: Request, res: Response) => {
 export const createAnnouncement = async (req: Request, res: Response) => {
     const { title, content, userId, type, targetDepartmentId, priority } = req.body;
     try {
-        const deptId = type === 'department' ? targetDepartmentId : null;
+        let deptId = type === 'department' ? targetDepartmentId : null;
+        
+        // Fallback: If type is department but targetDepartmentId is missing, try to find it from the user
+        if (type === 'department' && !deptId && userId) {
+             const userDeptId = await announcementRepository.getUserDepartmentId(userId);
+             if (userDeptId) {
+                 deptId = userDeptId;
+             }
+        }
+        
         await announcementRepository.create(title, content, userId, deptId, priority);
         
         await logUserAction(userId, "Create Announcement", `Created announcement: ${title} (${type}, ${priority})`);

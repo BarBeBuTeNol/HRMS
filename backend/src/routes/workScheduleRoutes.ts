@@ -1,8 +1,12 @@
 import express from "express";
 import db from "../../src/config/db";
 import { ResultSetHeader } from "mysql2";
+import { getMySchedules } from "../controllers/workScheduleController";
 
 const router = express.Router();
+
+// ✅ Get schedules for conflict checking (Use Controller)
+router.get("/my-schedules", getMySchedules);
 
 // ✅ ดึงข้อมูลทั้งหมด (JOIN users + department)
 // ✅ GET: ดึงข้อมูลทั้งหมดพร้อมชื่อพนักงานและแผนก
@@ -14,12 +18,12 @@ router.get("/", async (req, res) => {
         ws.user_id,
         CONCAT(u.first_name, ' ', u.last_name) AS employee_name,
         COALESCE(d.department_name, 'ไม่ระบุแผนก') AS department_name,
-        ws.date,
+        ws.work_date AS date,
         ws.shift
       FROM work_schedules ws
       JOIN users u ON ws.user_id = u.id
       LEFT JOIN departments d ON u.department_id = d.id
-      ORDER BY ws.date ASC
+      ORDER BY ws.work_date ASC
     `;
     const [rows] = await db.query(sql);
     res.json(rows);
@@ -28,6 +32,28 @@ router.get("/", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch schedules" });
   }
 });
+
+// ✅ GET: ดึงตารางงานของพนักงานคนเดียว
+router.get("/user/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const sql = `
+        SELECT 
+          ws.id,
+          ws.user_id,
+          ws.work_date AS date,
+          ws.shift
+        FROM work_schedules ws
+        WHERE ws.user_id = ?
+        ORDER BY ws.work_date ASC
+      `;
+      const [rows] = await db.query(sql, [userId]);
+      res.json(rows);
+    } catch (err) {
+      console.error("❌ Get user schedules error:", err);
+      res.status(500).json({ error: "Failed to fetch user schedules" });
+    }
+  });
 
 
 // ✅ เพิ่มหรืออัปเดตหลายรายการ (bulk-upsert)
@@ -42,7 +68,7 @@ router.post("/bulk-upsert", async (req, res) => {
     console.log("📦 Received schedules:", schedules);
 
     const sql = `
-      INSERT INTO work_schedules (user_id, date, shift, created_at, updated_at)
+      INSERT INTO work_schedules (user_id, work_date, shift, created_at, updated_at)
       VALUES ?
       ON DUPLICATE KEY UPDATE
         shift = VALUES(shift),
@@ -70,7 +96,7 @@ router.delete("/date/:date", async (req, res) => {
   try {
     const { date } = req.params;
     const [result] = await db.query<ResultSetHeader>(
-      "DELETE FROM work_schedules WHERE date = ?",
+      "DELETE FROM work_schedules WHERE work_date = ?",
       [date]
     );
 

@@ -1,0 +1,37 @@
+/* Head Exclusive Theme Variables */
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap");
+
+:root {
+  /* Core Colors - Deep Navy & Royal Blue Gradient */
+  --head-bg: #0f172a;
+  --head-bg-gradient: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+  --head-sidebar-bg: rgba(15, 23, 42, 0.95);
+
+  /* Text */
+  --head-text-primary: #ffffff;
+  --head-text-secondary: #94a3b8;
+  --head-text-muted: #64748b;
+
+  /* Accent - Gold/Bronze for Exclusive Feel */
+  --head-accent-color: #c5a059;
+  --head-accent-hover: #e0b769;
+  --head-accent-glow: 0 0 15px rgba(197, 160, 89, 0.4);
+
+  /* Semantic */
+  --head-danger: #ef4444;
+  --head-success: #10b981;
+  --head-warning: #f59e0b;
+
+  /* Interactions */
+  --head-hover-bg: rgba(255, 255, 255, 0.08);
+  --head-active-bg: rgba(197, 160, 89, 0.15);
+  --head-glass-border: rgba(255, 255, 255, 0.1);
+
+  /* Components */
+  --head-card-bg: rgba(30, 41, 59, 0.7);
+  --head-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --head-backdrop-blur: blur(20px);
+
+  /* Font */
+  --head-font-family: "Outfit", sans-serif;
+}

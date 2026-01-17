@@ -91,9 +91,15 @@ const DecideCHRO = () => {
   useEffect(() => {
     const load = async () => {
       try {
+        const token = localStorage.getItem("token"); // Retrieve token
+        const headers = {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        };
+
         const [approvalsRes, changesRes] = await Promise.all([
           fetch("http://localhost:5000/api/chro/approvals"),
-          fetch("/api/change-requests/pending"),
+          fetch("/api/change-requests/pending", { headers }), // Add headers
         ]);
 
         let combinedData = [];
@@ -406,9 +412,13 @@ const DecideCHRO = () => {
       const id = notification.requestId;
       const url = `/api/change-requests/${id}/${action}`; // action = approve or reject
 
+      const token = localStorage.getItem("token");
       const response = await fetch(url, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ comment }),
       });
 

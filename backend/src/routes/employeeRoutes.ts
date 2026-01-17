@@ -1,5 +1,6 @@
 import { Router } from "express";
 import pool from "../config/db";
+import { getEmployeeDashboardData } from '../controllers/employeeDashboardController';
 
 const router = Router();
 
@@ -27,5 +28,7 @@ router.get("/", async (req, res) => {
     res.status(500).json({ error: "Database error", details: err.message });
   }
 });
+router.get('/dashboard/:userId', getEmployeeDashboardData);
 
+// Export
 export default router;

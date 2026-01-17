@@ -66,6 +66,23 @@ class ChangeRequestRepository {
         return rows;
     }
 
+    async findHistory(approverId: number) {
+        const [rows] = await pool.query<RowDataPacket[]>(
+            `SELECT cr.*, 
+                    CONCAT(r.first_name, ' ', r.last_name) as requester_name,
+                    CONCAT(t.first_name, ' ', t.last_name) as target_user_name
+             FROM change_requests cr
+             LEFT JOIN users r ON cr.requester_id = r.id
+             LEFT JOIN users t ON cr.target_user_id = t.id
+             WHERE cr.status != 'Pending' 
+            --  AND (cr.approver_id = ? OR cr.requester_id IN (SELECT id FROM users WHERE department_id = (SELECT department_id FROM users WHERE id = ?)))
+            -- Simplified visibility for Head: See all history for now
+             ORDER BY cr.updated_at DESC`,
+             [approverId, approverId]
+        );
+        return rows;
+    }
+
     async updateStatus(id: number, status: 'Approved' | 'Rejected', approverId: number, comment: string) {
         await pool.query(
             `UPDATE change_requests 

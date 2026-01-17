@@ -1,69 +1,268 @@
-.sidebar {
-  width: 250px;
-  background: #1b1b36;
-  color: white;
+/* Employee Sidebar - Premium Styling */
+.emp-sidebar {
+  background: var(--emp-sidebar-bg-gradient);
+  color: var(--emp-text-primary);
   display: flex;
   flex-direction: column;
   height: 100vh;
+  box-shadow: var(--emp-shadow);
+  position: relative;
+  z-index: 1000;
+  border-right: 1px solid var(--emp-divider);
+  flex-shrink: 0;
+  overflow: visible; /* Allow button to overhang */
 }
 
-.sidebar h2 {
-  padding: 1rem;
+/* Toggle Button - Enhanced */
+.emp-toggle-btn {
+  position: absolute;
+  top: 24px;
+  right: -16px; /* Stick out more */
+  background: var(--emp-accent-color);
+  color: white;
+  border: 4px solid var(--emp-bg); /* Add border matching page bg to create cut-out look */
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 100; /* Higher Z-index to ensure visibility */
+  font-size: 12px;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy transition */
 }
 
-.sidebar-menu {
+.emp-toggle-btn:hover {
+  background: var(--emp-accent-hover);
+  transform: scale(1.15) rotate(180deg); /* Rotate effect on hover */
+  box-shadow: 0 0 20px var(--emp-accent-color); /* Glowing effect */
+}
+
+.emp-toggle-btn:active {
+  transform: scale(0.9);
+}
+
+/* Profile Section */
+.emp-profile-section {
+  padding: 24px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 80px;
+}
+
+.emp-avatar-wrapper {
+  position: relative;
+  /* Always ensure circle shape even if user collapsed */
+  min-width: 48px;
+}
+
+.emp-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px; /* Squircle style */
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.emp-status-indicator {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 14px;
+  height: 14px;
+  background: var(--emp-success);
+  border: 2px solid var(--emp-sidebar-bg);
+  border-radius: 50%;
+}
+
+.emp-user-info {
+  display: flex;
+  flex-direction: column;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.emp-user-name {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  color: white;
+  letter-spacing: 0.3px;
+}
+
+.emp-user-role {
+  font-size: 0.75rem;
+  color: var(--emp-text-secondary);
+  margin: 2px 0 0 0;
+}
+
+.emp-divider {
+  height: 1px;
+  background: var(--emp-divider);
+  margin: 0 20px 10px;
+}
+
+/* Menu Container */
+.emp-menu-container {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
   flex: 1;
   overflow-y: auto;
-  padding: 0 1rem;
+  overflow-x: hidden;
+  padding-bottom: 20px;
 }
 
-/* ซ่อน scrollbar แบบไม่กระทบ usability */
-.sidebar-menu::-webkit-scrollbar {
-  width: 0;
+/* Custom Scrollbar - Hidden but functional */
+.emp-menu-container::-webkit-scrollbar {
+  width: 0px; /* Hidden width */
+  background: transparent;
+}
+.emp-menu-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
 }
 
-.sidebar-menu ul {
+/* Menu Groups */
+.emp-menu-group {
+  margin-bottom: 24px;
+}
+
+.emp-group-title {
+  padding: 0 24px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--emp-text-muted);
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.emp-menu-group ul {
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
-.sidebar-menu li {
-  padding: 0.75rem 0;
+/* Menu Items */
+.emp-menu-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 24px;
+  margin: 4px 12px;
+  border-radius: 12px;
+  color: var(--emp-text-secondary);
   cursor: pointer;
-}
-
-/* ตัวอย่าง hover */
-.sidebar-menu li:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-.sidebar nav ul li.logout {
-  margin-top: auto;
-  background-color: #e03e3e;
-  color: white;
-  font-weight: 700;
-}
-.sidebar ul li .menu-link:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.menu-link {
-  color: #ffffff;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
   text-decoration: none;
 }
 
-.menu-link.active {
-  color: #007bff;
-  font-weight: bold;
+.emp-icon {
+  font-size: 1.2rem;
+  min-width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  transition: color 0.2s ease;
+  /* Ensure icon stays centered when collapsed */
+  width: 24px;
 }
 
-.notif-badge {
-  background-color: red;
+.emp-label {
+  font-size: 0.95rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Hover States */
+.emp-menu-item:hover {
+  background: var(--emp-hover-bg);
   color: white;
-  font-size: 12px;
-  padding: 2px 6px;
+}
+
+.emp-menu-item:hover .emp-icon {
+  color: var(--emp-accent-color);
+  transform: scale(1.1);
+}
+
+/* Active State */
+.emp-menu-item.active {
+  background: var(--emp-active-bg);
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.emp-menu-item.active .emp-icon {
+  color: var(--emp-accent-color);
+  animation: bounce 0.5s ease;
+}
+
+.emp-menu-item.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 20px;
+  width: 3px;
+  background: var(--emp-accent-color);
+  border-radius: 0 4px 4px 0;
+  box-shadow: var(--emp-accent-glow);
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+}
+
+/* Badges */
+.emp-badge {
+  background: var(--emp-danger); /* Use danger color for notifications */
+  color: #7f1d1d; /* Dark text on light red */
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-left: auto;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.emp-dot-badge {
+  width: 8px;
+  height: 8px;
+  background: var(--emp-danger);
   border-radius: 50%;
-  margin-left: 8px;
-  font-weight: bold;
-  display: inline-block;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  border: 2px solid var(--emp-sidebar-bg);
+}
+
+/* Logout Item */
+.emp-footer {
+  margin-top: auto;
+  padding: 16px 12px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.emp-menu-item.logout {
+  color: var(--emp-danger);
+  margin: 0;
+}
+
+.emp-menu-item.logout:hover {
+  background: rgba(248, 113, 113, 0.1);
+  color: var(--emp-danger-hover);
 }

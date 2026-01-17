@@ -1,0 +1,290 @@
+/* Scoped to Leave Analytics Page to prevent conflicts */
+.leave-analytics-container {
+  display: flex;
+  min-height: 100vh;
+  background: var(--head-bg-gradient);
+  font-family: var(--head-font-family);
+  color: var(--head-text-primary);
+  overflow: hidden;
+}
+
+.leave-analytics-content {
+  flex: 1;
+  margin-left: 260px; /* Matched to fixed sidebar */
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  overflow-y: auto;
+  height: 100vh;
+  box-sizing: border-box;
+}
+
+/* Header */
+.analytics-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--head-glass-border);
+}
+
+.analytics-title {
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.analytics-subtitle {
+  color: var(--head-text-secondary);
+  font-size: 0.95rem;
+}
+
+/* Top Cards Grid */
+.analytics-grid-top {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.stat-card {
+  background: var(--head-card-bg);
+  backdrop-filter: var(--head-backdrop-blur);
+  border: 1px solid var(--head-glass-border);
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: var(--head-shadow);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: row; /* Classic Row Layout */
+  align-items: center; /* Vertically Center Icon & Text */
+  justify-content: flex-start;
+  position: relative;
+  overflow: hidden;
+  text-align: left;
+  gap: 1.5rem; /* Space between Icon and Text */
+  min-height: 120px;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--head-accent-color);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+.stat-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px; /* Side accent */
+  height: 100%;
+  background: var(--head-accent-color);
+  opacity: 0.8;
+}
+
+.stat-card:hover::before {
+  width: 6px;
+  transition: width 0.3s ease;
+}
+
+.stat-icon-container {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px; /* Squircle */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.8rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0; /* Prevent icon shrinking */
+}
+
+/* New wrapper for text stack */
+.stat-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.stat-label {
+  color: var(--head-text-muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--head-text-primary);
+  margin: 0;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.stat-subtext {
+  font-size: 0.8rem;
+  margin-top: 2px;
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+/* Charts Section */
+.charts-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+@media (max-width: 1100px) {
+  .charts-section {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chart-container {
+  background: var(--head-card-bg);
+  backdrop-filter: var(--head-backdrop-blur);
+  border: 1px solid var(--head-glass-border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: var(--head-shadow);
+  min-height: 400px;
+}
+
+.chart-title {
+  font-size: 1.25rem;
+  color: var(--head-text-primary);
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Top Absentees List */
+.absentees-section {
+  background: var(--head-card-bg);
+  backdrop-filter: var(--head-backdrop-blur);
+  border: 1px solid var(--head-glass-border);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: var(--head-shadow);
+}
+
+.absentees-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.absentee-card {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border: 1px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.absentee-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--head-accent-color);
+}
+
+.absentee-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--head-accent-color);
+}
+
+.absentee-info h4 {
+  margin: 0;
+  color: var(--head-text-primary);
+  font-size: 1rem;
+}
+
+.absentee-days {
+  color: var(--head-danger);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* Leave Status Summary Table */
+.summary-table-container {
+  background: var(--head-card-bg);
+  backdrop-filter: var(--head-backdrop-blur);
+  border: 1px solid var(--head-glass-border);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: var(--head-shadow);
+  overflow-x: auto;
+}
+
+.styled-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--head-text-secondary);
+}
+
+.styled-table th {
+  text-align: left;
+  padding: 1rem;
+  border-bottom: 2px solid var(--head-glass-border);
+  color: var(--head-accent-color);
+  font-weight: 600;
+}
+
+.styled-table td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--head-glass-border);
+}
+
+.styled-table tr:hover {
+  background: var(--head-hover-bg);
+}
+
+.progress-bar-bg {
+  width: 100px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--head-accent-color);
+  border-radius: 3px;
+}
+
+/* Loading state */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  color: var(--head-accent-color);
+  font-size: 1.5rem;
+}
+
+/* Scrollbar override */
+.leave-analytics-content::-webkit-scrollbar {
+  width: 8px;
+}
+.leave-analytics-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+.leave-analytics-content::-webkit-scrollbar-thumb {
+  background: var(--head-text-muted);
+  border-radius: 4px;
+}

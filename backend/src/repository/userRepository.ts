@@ -45,18 +45,16 @@ class UserRepository {
             `
             SELECT 
                 u.id, u.username, u.first_name, u.last_name, u.email, u.phone,
-                u.status,
+                u.status, u.prefix as prefix_name,
                 (SELECT MAX(last_activity) FROM user_sessions WHERE user_id = u.id) as last_active,
-                r.role_name, d.department_name, p.prefix_name,
+                r.role_name, d.department_name,
                 ei.position_id, jp.position_name AS job_position, ei.emp_code, ei.employment_status
             FROM users u
             LEFT JOIN roles r        ON u.role_id = r.id
             LEFT JOIN departments d  ON u.department_id = d.id
-            LEFT JOIN prefixes p     ON u.prefix_id = p.id
             LEFT JOIN emp_info ei    ON u.id = ei.user_id
                 AND ei.id = (SELECT MAX(id) FROM emp_info WHERE user_id = u.id)
             LEFT JOIN job_positions jp ON ei.position_id = jp.id
-            LEFT JOIN user_detail ud ON u.id = ud.user_id
             ${where}
             ORDER BY u.id DESC
             LIMIT ${limit} OFFSET ${offset}
@@ -84,7 +82,7 @@ class UserRepository {
         const [rows] = await pool.query<RowDataPacket[]>(
             `
             SELECT 
-                u.*, r.role_name, d.department_name, p.prefix_name,
+                u.*, r.role_name, d.department_name, u.prefix as prefix_name,
                 ud.address, ud.birthdate as birth_date, ud.gender, ud.marital_status,
                 ud.personal_id, ud.nationality, ud.religion, ud.blood_type,
                 ud.emergency_contact_name, ud.emergency_contact_phone, 
@@ -96,7 +94,6 @@ class UserRepository {
             FROM users u
             LEFT JOIN roles r        ON u.role_id = r.id
             LEFT JOIN departments d  ON u.department_id = d.id
-            LEFT JOIN prefixes p     ON u.prefix_id = p.id
             LEFT JOIN user_detail ud ON ud.user_id = u.id
             LEFT JOIN emp_info ei    ON ei.user_id = u.id AND ei.id = (SELECT MAX(id) FROM emp_info WHERE user_id = u.id)
             LEFT JOIN job_positions jp ON ei.position_id = jp.id
@@ -107,6 +104,7 @@ class UserRepository {
         );
         return rows[0];
     }
+
 
     async findByUsernameOrEmail(username: string, email: string) {
         const [rows] = await pool.query<RowDataPacket[]>(
@@ -124,9 +122,9 @@ class UserRepository {
     async create(user: any, hashedPassword: string, roleId: number | null) {
         const [result] = await pool.query<ResultSetHeader>(
             `INSERT INTO users 
-             (username, password, first_name, last_name, email, phone, role_id, department_id, prefix_id, created_at, updated_at)
+             (username, password, first_name, last_name, email, phone, role_id, department_id, prefix, created_at, updated_at)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-            [user.username, hashedPassword, user.firstName, user.lastName, user.email, user.phone, roleId, user.departmentId, user.prefixId]
+            [user.username, hashedPassword, user.firstName, user.lastName, user.email, user.phone, roleId, user.departmentId, user.prefix]
         );
         return result.insertId;
     }

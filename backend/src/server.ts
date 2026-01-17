@@ -65,6 +65,9 @@ app.use("/api/announcements", announcementRoutes);
 import chroRoutes from "./routes/chroRoutes";
 app.use("/api/chro", chroRoutes);
 
+import headRoutes from "./routes/headRoutes";
+app.use("/api/head", headRoutes);
+
 // ✅ Log Routes
 import logRoutes from "./routes/logRoutes";
 app.use("/api/logs", logRoutes);
@@ -73,6 +76,14 @@ app.use("/api/logs", logRoutes);
 import changeRequestRoutes from "./routes/changeRequestRoutes";
 app.use("/uploads", express.static("uploads")); // Serve uploaded files
 app.use("/api/change-requests", changeRequestRoutes);
+
+// ✅ Calendar Routes
+import calendarRoutes from "./routes/calendarRoutes";
+app.use("/api/calendar", calendarRoutes);
+
+// ✅ Task/Shift Replacement Routes
+import taskReplacementRoutes from "./routes/taskReplacementRoutes";
+app.use("/api/replacements", taskReplacementRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () =>

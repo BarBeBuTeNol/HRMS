@@ -65,6 +65,17 @@ export const getPendingRequests = async (req: Request, res: Response) => {
     }
 };
 
+// GET Request History
+export const getRequestHistory = async (req: Request, res: Response) => {
+    try {
+        const approverId = (req as any).user.id;
+        const requests = await changeRequestRepository.findHistory(approverId);
+        res.json(requests);
+    } catch (err: any) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
 // APPROVE Request
 export const approveChangeRequest = async (req: Request, res: Response) => {
     try {

@@ -4,11 +4,11 @@ import swapReportRepository from "../repository/swapReportRepository";
 // Helper to get date range filters
 const getDateFilter = (range: string) => {
   if (range === "today") {
-    return `AND sa.shift_date = CURDATE()`;
+    return `AND ws.work_date = CURDATE()`;
   } else if (range === "week") {
-    return `AND YEARWEEK(sa.shift_date, 1) = YEARWEEK(CURDATE(), 1)`;
+    return `AND YEARWEEK(ws.work_date, 1) = YEARWEEK(CURDATE(), 1)`;
   } else if (range === "month") {
-    return `AND MONTH(sa.shift_date) = MONTH(CURDATE()) AND YEAR(sa.shift_date) = YEAR(CURDATE())`;
+    return `AND MONTH(ws.work_date) = MONTH(CURDATE()) AND YEAR(ws.work_date) = YEAR(CURDATE())`;
   }
   return "";
 };

@@ -50,6 +50,11 @@ const SidebarCHRO = ({ isOpen, toggleSidebar }) => {
       label: "Settings / Roles",
       icon: <FaCogs />,
     },
+    {
+      path: "/calendar",
+      label: "Company Calendar",
+      icon: <FaChartPie />, // Reusing icon or importing new one if needed, but keeping simple
+    },
   ];
 
   const handleLogout = () => {

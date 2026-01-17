@@ -1,0 +1,32 @@
+/* Enhanced Employee Theme Variables */
+:root {
+  /* Core Colors - A deep, professional Slate/Indigo mix */
+  --emp-bg: #f8fafc;
+  --emp-sidebar-bg: #1e293b;
+  --emp-sidebar-bg-gradient: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+
+  /* Text */
+  --emp-text-primary: #f8fafc;
+  --emp-text-secondary: #94a3b8;
+  --emp-text-muted: #64748b;
+
+  /* Accent - Using a vibrant Indigo/Violet for differentiation */
+  --emp-accent-color: #818cf8; /* Indigo 400 */
+  --emp-accent-hover: #6366f1; /* Indigo 500 */
+  --emp-accent-glow: 0 0 20px rgba(99, 102, 241, 0.3);
+
+  /* Semantic */
+  --emp-danger: #fca5a5;
+  --emp-danger-hover: #f87171;
+  --emp-success: #34d399;
+
+  /* Interactions */
+  --emp-hover-bg: rgba(255, 255, 255, 0.05); /* Glassy hover */
+  --emp-active-bg: rgba(99, 102, 241, 0.15); /* Glassy active */
+  --emp-active-border: #818cf8;
+
+  /* Components */
+  --emp-divider: rgba(148, 163, 184, 0.1);
+  --emp-card-bg: rgba(30, 41, 59, 0.7);
+  --emp-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+}

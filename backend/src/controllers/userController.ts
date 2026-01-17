@@ -71,12 +71,16 @@ export const createUser = async (req: Request, res: Response) => {
       telephone, phone,
       role = "Employee",
       department_id = null,
-      prefix_id = null
+      prefix_id = null, // Frontend sends prefix_id as the value selection
+      prefix = null     // Or maybe prefix direct
     } = req.body;
 
     const fName = first_name || firstName;
     const lName = last_name || lastName;
     const tel = phone || telephone;
+    
+    // Map prefix_id (which holds the enum string "Mr.", "Mrs." etc from frontend) to prefix
+    const userPrefix = prefix || prefix_id;
 
     if (!username || !password || !fName || !lName) {
       return res.status(400).json({ message: "Missing required fields" });
@@ -103,7 +107,7 @@ export const createUser = async (req: Request, res: Response) => {
         email,
         phone: tel,
         departmentId: department_id,
-        prefixId: prefix_id
+        prefix: userPrefix
     }, hashedPassword, roleId);
 
     await userRepository.logAction(newUserId, "Create User", `Created user ${username} (EmpID: ${empId})`);

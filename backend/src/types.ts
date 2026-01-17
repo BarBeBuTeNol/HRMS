@@ -9,4 +9,5 @@ export type DbUser = {
   phone: string | null;
   role_id: number;
   department_id: number | null;
+  department?: string;
 };

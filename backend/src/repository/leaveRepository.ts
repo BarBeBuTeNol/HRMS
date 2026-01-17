@@ -45,10 +45,10 @@ class LeaveRepository {
         return rows[0];
     }
 
-    async createNotification(userId: number, type: string, title: string, details: string) {
+    async createNotification(userId: number, type: string, message: string, referenceId: number = 0) {
         await pool.query(
-            'INSERT INTO notifications (user_id, type, title, details) VALUES (?, ?, ?, ?)',
-            [userId, type, title, details]
+            'INSERT INTO notifications (user_id, type, message, reference_id, is_read) VALUES (?, ?, ?, ?, 0)',
+            [userId, type, message, referenceId]
         );
     }
 }

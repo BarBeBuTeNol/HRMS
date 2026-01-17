@@ -8,8 +8,14 @@ class MasterDataRepository {
     }
 
     async getAllPrefixes() {
-        const [rows] = await pool.query<RowDataPacket[]>("SELECT id, prefix_name FROM prefixes ORDER BY id ASC");
-        return rows;
+        // Return static list matching enum('Mr.','Mrs.','Ms.','Dr.','Other')
+        return [
+            { id: 'Mr.', prefix_name: 'Mr.' },
+            { id: 'Mrs.', prefix_name: 'Mrs.' },
+            { id: 'Ms.', prefix_name: 'Ms.' },
+            { id: 'Dr.', prefix_name: 'Dr.' },
+            { id: 'Other', prefix_name: 'Other' }
+        ];
     }
 
     async getAllRoles() {

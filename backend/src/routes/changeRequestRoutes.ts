@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { createChangeRequest, getPendingRequests, approveChangeRequest, rejectChangeRequest } from '../controllers/changeRequestController';
+import { createChangeRequest, getPendingRequests, getRequestHistory, approveChangeRequest, rejectChangeRequest } from '../controllers/changeRequestController';
 import { requireAuth } from '../middlewares/authMiddleware';
 
 const router = Router();
@@ -20,6 +20,7 @@ const upload = multer({ storage: storage });
 
 router.post('/', requireAuth, upload.single('evidence'), createChangeRequest);
 router.get('/pending', requireAuth, getPendingRequests);
+router.get('/history', requireAuth, getRequestHistory);
 router.put('/:id/approve', requireAuth, approveChangeRequest);
 router.put('/:id/reject', requireAuth, rejectChangeRequest);
 
