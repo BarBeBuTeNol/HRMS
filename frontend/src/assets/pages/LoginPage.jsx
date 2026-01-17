@@ -1,7 +1,7 @@
 // src/assets/pages/LoginPage.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../services/api";
 import "./LoginPage.css";
 
 const LoginPage = () => {
@@ -17,7 +17,8 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", {
+      // ✅ เปลี่ยนจาก axios เป็น api และตัด /api ตัวหน้าออก
+      const res = await api.post("/auth/login", {
         username,
         password,
       });
