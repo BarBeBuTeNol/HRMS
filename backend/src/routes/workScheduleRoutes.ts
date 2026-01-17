@@ -1,5 +1,5 @@
 import express from "express";
-import db from "../../src/config/db";
+import db from "../config/db"; // ✅ แก้ไข Path ให้ถูกต้อง (ตัด ../ และ src/ ออก)
 import { ResultSetHeader } from "mysql2";
 import { getMySchedules } from "../controllers/workScheduleController";
 
@@ -9,7 +9,6 @@ const router = express.Router();
 router.get("/my-schedules", getMySchedules);
 
 // ✅ ดึงข้อมูลทั้งหมด (JOIN users + department)
-// ✅ GET: ดึงข้อมูลทั้งหมดพร้อมชื่อพนักงานและแผนก
 router.get("/", async (req, res) => {
   try {
     const sql = `
@@ -75,7 +74,7 @@ router.post("/bulk-upsert", async (req, res) => {
         updated_at = NOW()
     `;
 
-    const values = schedules.map((s) => [
+    const values = schedules.map((s: any) => [
       s.user_id,
       s.date,
       s.shift,
