@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./HeadSchedulePage.css";
 import HeadSidebar from "../../../Component/Head/HeadSidebar";
-import api from "../../../services/api";
+import api from "../../../../services/api";
 import {
   FaChevronLeft,
   FaChevronRight,

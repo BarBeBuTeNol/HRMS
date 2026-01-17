@@ -29,7 +29,7 @@ import CHROLayout from "../../../Component/CHRO/CHROLayout";
 import PopupNotification from "../../../Component/popup_notifications/PopupNotification";
 import ChangeRequestModal from "../../../Component/popup_notifications/ChangeRequestModal";
 import "./EmployeeDirectoryCHRO.css";
-import api from "../../../services/api"; // Import centralized api
+import api from "../../../../services/api"; // Import centralized api
 
 const EmployeeDirectoryCHRO = () => {
   const navigate = useNavigate();
