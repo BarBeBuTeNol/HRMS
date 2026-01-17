@@ -1,7 +1,7 @@
 // src/assets/pages/pageEmployee/LeaveHistory/LeaveHistoryPage.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../../../services/api";
+import api from "../../../../services/api";
 import EmployeeSidebar from "../../../Component/Employee/EmployeeSidebar";
 import "./LeaveHistoryPage.css";
 

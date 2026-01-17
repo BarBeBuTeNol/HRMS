@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../../../services/api";
+import api from "../../../../services/api";
 import CHROLayout from "../../../Component/CHRO/CHROLayout";
 import { motion, AnimatePresence } from "framer-motion";
 import {

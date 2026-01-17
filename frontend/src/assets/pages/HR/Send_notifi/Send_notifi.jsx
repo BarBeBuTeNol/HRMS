@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import api from "../../../services/api";
+import api from "../../../../services/api";
 import { FaGlobeAsia, FaBuilding, FaPaperPlane } from "react-icons/fa";
 import { MdCheckCircle, MdNotificationsActive } from "react-icons/md";
 import HRLayout from "../../../Component/HR/HRLayout";

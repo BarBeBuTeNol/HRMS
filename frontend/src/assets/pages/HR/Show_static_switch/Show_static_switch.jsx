@@ -17,7 +17,7 @@ import {
 } from "recharts";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-import api from "../../../services/api"; // Assuming api is configured globally or I'll use direct path
+import api from "../../../../services/api"; // Assuming api is configured globally or I'll use direct path
 import HRLayout from "../../../Component/HR/HRLayout";
 import "./Show_static_switch.css";
 

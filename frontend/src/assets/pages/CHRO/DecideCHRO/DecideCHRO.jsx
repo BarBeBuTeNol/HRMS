@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import api from "../../../services/api";
+import api from "../../../../services/api";
 import CHROLayout from "../../../Component/CHRO/CHROLayout";
 import CHROPopup from "../../../Component/popup_notifications/CHROPopup";
 import LogService from "../../../../services/LogService";

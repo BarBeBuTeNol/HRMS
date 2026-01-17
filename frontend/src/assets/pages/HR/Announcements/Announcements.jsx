@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import HRLayout from "../../../Component/HR/HRLayout";
 import "./Announcements.css";
-import api from "../../../services/api";
+import api from "../../../../services/api";
 
 // Helper for relative time (e.g., "2 hours ago")
 const timeAgo = (dateMsg) => {

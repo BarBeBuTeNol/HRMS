@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import CHROLayout from "../../../Component/CHRO/CHROLayout";
 import "./AnnouncementsCHRO.css";
-import api from "../../../services/api";
+import api from "../../../../services/api";
 import {
   Bell,
   Megaphone,

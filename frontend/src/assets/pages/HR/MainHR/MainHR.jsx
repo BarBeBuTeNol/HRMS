@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../../../services/api";
+import api from "../../../../services/api";
 import HRLayout from "../../../Component/HR/HRLayout";
 import ProfileModal from "../../../Component/common/ProfileModal/ProfileModal";
 import dayjs from "dayjs";
