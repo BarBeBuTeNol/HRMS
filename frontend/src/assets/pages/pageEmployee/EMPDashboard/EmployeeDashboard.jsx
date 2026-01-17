@@ -3,7 +3,7 @@ import EmployeeSidebar from "../../../Component/Employee/EmployeeSidebar";
 import "../../../../App.css";
 import "./EmployeeDashboard.css";
 import dayjs from "dayjs";
-import api from "../../../../services/api";
+import api from "../../../../services/api"; // Fixed import path
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion"; // Import Framer Motion
 import {
