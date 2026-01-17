@@ -1,7 +1,10 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import { RowDataPacket } from "mysql2";
+import pool from "./config/db"; // ตรวจสอบว่าไฟล์ config/db.ts ตั้งค่าเชื่อมต่อ Aiven ถูกต้อง
 
+// Import Routes ทั้งหมด
 import authRoutes from "./routes/authRoutes";
 import userRoutes from "./routes/userRoutes";
 import profileRoutes from "./routes/profileRoutes";
@@ -17,75 +20,85 @@ import departmentRoutes from "./routes/departmentRoutes";
 import employeeDataRoutes from "./routes/employeeDataRoutes";
 import prefixRoutes from "./routes/prefixRoutes";
 import jobPositionRoutes from "./routes/jobPositionRoutes";
-console.log("DEBUG shiftAssignmentRoutes >>>", shiftAssignmentRoutes);
+import swapReportRoutes from "./routes/swapReportRoutes";
+import announcementRoutes from "./routes/announcementRoutes";
+import chroRoutes from "./routes/chroRoutes";
+import headRoutes from "./routes/headRoutes";
+import logRoutes from "./routes/logRoutes";
+import changeRequestRoutes from "./routes/changeRequestRoutes";
+import calendarRoutes from "./routes/calendarRoutes";
+import taskReplacementRoutes from "./routes/taskReplacementRoutes";
 
 dotenv.config();
 
 const app = express();
+
+// ✅ 1. ตั้งค่า CORS ให้รองรับทั้งการเทสในเครื่องและหน้าเว็บจริง
 app.use(
   cors({
     origin: [
+      "https://hrms-frontend.ghostkk10.workers.dev", // URL ของ Cloudflare
       "http://localhost:5173", 
       "http://localhost:3000",
-      "http://127.0.0.1:5173",
-      "http://127.0.0.1:3000"
+      "http://127.0.0.1:5173"
     ],
     credentials: true,
   })
 );
+
 app.use(express.json());
+app.use("/uploads", express.static("uploads")); // สำหรับดึงรูปภาพหรือไฟล์ที่อัปโหลด
 
-// ✅ test endpoint
-app.get("/", (_req, res) => res.json({ message: "Backend is running 🚀" }));
+// ✅ 2. Health Check Endpoint (สำหรับตรวจสอบสถานะฐานข้อมูล Aiven)
+app.get("/api/health", async (_req, res) => {
+  try {
+    // ทดสอบดึงข้อมูลจาก pool ที่เชื่อมต่อกับฐานข้อมูล hrms บน Aiven
+    const [rows] = await pool.query<RowDataPacket[]>("SELECT 1 AS result");
+    res.json({ 
+      status: "online",
+      db: "connected", 
+      result: rows[0].result 
+    });
+  } catch (err: any) {
+    res.status(500).json({ 
+      status: "down",
+      db: "error", 
+      message: err.message 
+    });
+  }
+});
 
-// ✅ mount routes
+// ✅ 3. Base Route
+app.get("/", (_req, res) => res.json({ message: "HRMS Backend is running 🚀" }));
+
+// ✅ 4. Mount API Routes
 app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);      // จัดการ users
-app.use("/api/users", profileRoutes);   // จัดการ profile ของ user
-app.use("/api/leave-requests", leaveRoutes); // ✅ ปรับให้เฉพาะ leave
-app.use("/api/notifications", notificationRoutes); // ✅ สำหรับแจ้งเตือน
-app.use("/api/leave-history", leaveHistoryRoutes); // ✅ สำหรับประวัติการลา
-app.use("/api/employees", employeeRoutes); // ✅ สำหรับดึงพนักงานในแผนก
-app.use("/api/work-schedules", workScheduleRoutes); // ✅ สำหรับจัดการตารางเวร
-app.use("/api", taskAssignmentRoutes); // ✅ สำหรับจัดการมอบหมายงาน
+app.use("/api/users", userRoutes);
+app.use("/api/users", profileRoutes);
+app.use("/api/leave-requests", leaveRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/leave-history", leaveHistoryRoutes);
+app.use("/api/employees", employeeRoutes);
+app.use("/api/work-schedules", workScheduleRoutes);
+app.use("/api", taskAssignmentRoutes);
 app.use("/api", shiftAssignmentRoutes);
 app.use("/api/roles", roleRoutes);
 app.use("/api/departments", departmentRoutes);
 app.use("/api/job-positions", jobPositionRoutes);
 app.use("/api/employee-data", employeeDataRoutes);
 app.use("/api/prefixes", prefixRoutes);
-
-// ✅ Reports Routes
-import swapReportRoutes from "./routes/swapReportRoutes";
 app.use("/api/reports", swapReportRoutes);
-
-import announcementRoutes from "./routes/announcementRoutes";
 app.use("/api/announcements", announcementRoutes);
-
-import chroRoutes from "./routes/chroRoutes";
 app.use("/api/chro", chroRoutes);
-
-import headRoutes from "./routes/headRoutes";
 app.use("/api/head", headRoutes);
-
-// ✅ Log Routes
-import logRoutes from "./routes/logRoutes";
 app.use("/api/logs", logRoutes);
-
-// ✅ Change Request Routes
-import changeRequestRoutes from "./routes/changeRequestRoutes";
-app.use("/uploads", express.static("uploads")); // Serve uploaded files
 app.use("/api/change-requests", changeRequestRoutes);
-
-// ✅ Calendar Routes
-import calendarRoutes from "./routes/calendarRoutes";
 app.use("/api/calendar", calendarRoutes);
-
-// ✅ Task/Shift Replacement Routes
-import taskReplacementRoutes from "./routes/taskReplacementRoutes";
 app.use("/api/replacements", taskReplacementRoutes);
 
+// ✅ 5. Server Listening
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () =>
-  console.log(`🚀 Server running on http://localhost:${PORT}`)
-);
+app.listen(PORT, () => {
+  console.log(`✅ Backend running on port ${PORT}`);
+  console.log(`🚀 Health Check: http://localhost:${PORT}/api/health`);
+});

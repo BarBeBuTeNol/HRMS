@@ -1,16 +1,24 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import pool from "./config/db"; 
-import { RowDataPacket } from "mysql2"; 
-import userRoutes from "./routes/userRoutes"; 
-import roleRoutes from "./routes/roleRoutes"; 
+import pool from "./config/db";
+import { RowDataPacket } from "mysql2";
+import userRoutes from "./routes/userRoutes";
+import roleRoutes from "./routes/roleRoutes";
 import chroRoutes from "./routes/chroRoutes";
 
 dotenv.config();
 
 const app = express();
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "https://hrms-frontend.ghostkk10.workers.dev",
+      "http://localhost:5173",
+    ], // ใส่ทั้ง URL จริง และ URL ตอนเทสในเครื่อง
+    credentials: true,
+  }),
+);
 app.use(express.json());
 
 // test db
@@ -32,8 +40,9 @@ app.use("/api/roles", roleRoutes);
 app.use("/api/chro", chroRoutes);
 
 // ✅ Log Routes
-import logRoutes from './routes/logRoutes';
+import logRoutes from "./routes/logRoutes";
 app.use("/api/logs", logRoutes);
 app.get("/api/debug", (req, res) => res.json({ message: "Server is running" }));
 
-app.listen(5000, () => console.log("✅ Backend running at http://localhost:5000"));
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`✅ Backend running on port ${PORT}`));
