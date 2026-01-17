@@ -3,7 +3,8 @@ import api from "./api";
 const DepartmentService = {
   getAllDepartments: async () => {
     try {
-      const response = await api.get("/api/departments");
+      // api instance already has baseURL ending with /api
+      const response = await api.get("/departments");
       return response.data;
     } catch (error) {
       throw error;
@@ -12,7 +13,7 @@ const DepartmentService = {
 
   createDepartment: async (departmentName) => {
     try {
-      const response = await api.post("/api/departments", {
+      const response = await api.post("/departments", {
         department_name: departmentName,
       });
       return response.data;

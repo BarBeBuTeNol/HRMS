@@ -9,7 +9,7 @@ import authRoutes from "./routes/authRoutes";
 import userRoutes from "./routes/userRoutes";
 import profileRoutes from "./routes/profileRoutes";
 import leaveRoutes from "./routes/leaveRoutes";
-import notificationRoutes from "./routes/notificationRoutes"; 
+import notificationRoutes from "./routes/notificationRoutes";
 import leaveHistoryRoutes from "./routes/leaveHistoryRoutes";
 import employeeRoutes from "./routes/employeeRoutes";
 import workScheduleRoutes from "./routes/workScheduleRoutes";
@@ -37,13 +37,13 @@ const app = express();
 app.use(
   cors({
     origin: [
-      "https://hrms-frontend.ghostkk10.workers.dev", // URL ของ Cloudflare
-      "http://localhost:5173", 
+      "https://hrms-frontend.ghostkk10.workers.dev", // URL ของ Cloudflare (ต้องตรงเป๊ะ 100% ไม่งั้นจะขึ้น CORS Error)
+      "http://localhost:5173",
       "http://localhost:3000",
-      "http://127.0.0.1:5173"
+      "http://127.0.0.1:5173",
     ],
     credentials: true,
-  })
+  }),
 );
 
 app.use(express.json());
@@ -54,22 +54,24 @@ app.get("/api/health", async (_req, res) => {
   try {
     // ทดสอบดึงข้อมูลจาก pool ที่เชื่อมต่อกับฐานข้อมูล hrms บน Aiven
     const [rows] = await pool.query<RowDataPacket[]>("SELECT 1 AS result");
-    res.json({ 
+    res.json({
       status: "online",
-      db: "connected", 
-      result: rows[0].result 
+      db: "connected",
+      result: rows[0].result,
     });
   } catch (err: any) {
-    res.status(500).json({ 
+    res.status(500).json({
       status: "down",
-      db: "error", 
-      message: err.message 
+      db: "error",
+      message: err.message,
     });
   }
 });
 
 // ✅ 3. Base Route
-app.get("/", (_req, res) => res.json({ message: "HRMS Backend is running 🚀" }));
+app.get("/", (_req, res) =>
+  res.json({ message: "HRMS Backend is running 🚀" }),
+);
 
 // ✅ 4. Mount API Routes
 app.use("/api/auth", authRoutes);
