@@ -47,9 +47,9 @@ export default function DirectPosition() {
     try {
       // Use dynamic page and pageSize
       const [usersRes, rolesRes, deptsRes] = await Promise.all([
-        api.get(`/api/users?page=${currentPage}&pageSize=${pageSize}`),
-        api.get("/api/roles"),
-        api.get("/api/departments"),
+        api.get(`/users?page=${currentPage}&pageSize=${pageSize}`),
+        api.get("/roles"),
+        api.get("/departments"),
       ]);
 
       // Process Users
@@ -102,7 +102,7 @@ export default function DirectPosition() {
   // Handlers
   const handleToggleSelect = (id) => {
     setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
   };
 
@@ -129,7 +129,7 @@ export default function DirectPosition() {
 
     try {
       // Fetch fresh details to ensure we have latest Position etc.
-      const res = await api.get(`/api/users/${emp.id}`);
+      const res = await api.get(`/users/${emp.id}`);
       const user = res.data;
       if (user) {
         setEditForm((prev) => ({
@@ -167,7 +167,7 @@ export default function DirectPosition() {
     if (!selectedEmployee) return;
     setLoading(true);
     try {
-      await api.put(`/api/users/${selectedEmployee.id}`, {
+      await api.put(`/users/${selectedEmployee.id}`, {
         role_id: editForm.role_id,
         department_id: editForm.department_id,
         status: editForm.status,
@@ -219,13 +219,13 @@ export default function DirectPosition() {
     if (!confirm(confirmMsg)) return;
 
     try {
-      await api.post(`/api/users/${selectedEmployee.id}/reset-password`, {
+      await api.post(`/users/${selectedEmployee.id}/reset-password`, {
         newPassword: pwdToSend,
       });
       alert(
         pwdToSend
           ? "Password updated successfully!"
-          : "Password reset to 'ChangeMe123!'"
+          : "Password reset to 'ChangeMe123!'",
       );
       setShowPwdInput(false);
       setNewPassword("");
@@ -250,7 +250,7 @@ export default function DirectPosition() {
       else if (bulkActionType === "role") payload.role_id = bulkValue;
       else if (bulkActionType === "status") payload.status = bulkValue;
 
-      await api.patch("/api/users/bulk", payload);
+      await api.patch("/users/bulk", payload);
 
       // LOGGING
       try {
