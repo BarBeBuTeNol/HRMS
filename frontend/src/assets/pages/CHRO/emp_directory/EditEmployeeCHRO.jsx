@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import api from "../../../../services/api";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -20,8 +21,9 @@ import {
   FaIdCard,
 } from "react-icons/fa";
 import CHROLayout from "../../../Component/CHRO/CHROLayout";
-import CHROPopup from "../../../Component/popup_notifications/CHROPopup";
-import ChangeRequestModal from "../../../Component/popup_notifications/ChangeRequestModal";
+import CHROPopup from "../../../Component/popup_notifications/popup_notifications-chro/PopupCHRO";
+import ChangeRequestModal from "../../../Component/popup_notifications/popup_notifications-chro/ChangeRequestModal";
+import LoadingCHRO from "../../../Component/loading/loading-chro/LoadingCHRO";
 import "./EditEmployeeCHRO.css";
 
 const EditEmployeeCHRO = () => {
@@ -185,7 +187,6 @@ const EditEmployeeCHRO = () => {
   const handleSubmit = async () => {
     setSaving(true);
     try {
-      // We need to call multiple endpoints because the backend is split
       // 1. Personal Info
       const personalPayload = {
         userId: formData.userId,
@@ -230,41 +231,25 @@ const EditEmployeeCHRO = () => {
         email: formData.email,
       };
 
-      const [res1, res2, res3, res4] = await Promise.all([
-        fetch("/api/employee-data/personal", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(personalPayload),
-        }),
-        fetch("/api/employee-data/job", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(jobPayload),
-        }),
-        fetch("/api/employee-data/education", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(eduPayload),
-        }),
-        fetch(`/api/users/${formData.userId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(userAccountPayload),
-        }),
+      await Promise.all([
+        api.post("/employee-data/personal", personalPayload),
+        api.post("/employee-data/job", jobPayload),
+        api.post("/employee-data/education", eduPayload),
+        api.put(`/users/${formData.userId}`, userAccountPayload),
       ]);
 
-      if (res1.ok && res2.ok && res3.ok && res4.ok) {
-        setPopup({
-          isOpen: true,
-          title: "Update Successful",
-          message: "Employee records have been updated.",
-          type: "success",
-        });
-        setTimeout(() => setPopup({ ...popup, isOpen: false }), 2000);
-      } else {
-        throw new Error("One or more updates failed.");
-      }
+      setPopup({
+        isOpen: true,
+        title: "Update Successful",
+        message: "Employee records have been updated.",
+        type: "success",
+      });
+      setTimeout(() => {
+        setPopup({ ...popup, isOpen: false });
+        navigate(-1);
+      }, 1500);
     } catch (err) {
+      console.error("Update failed", err);
       setPopup({
         isOpen: true,
         title: "Update Failed",
@@ -390,17 +375,19 @@ const EditEmployeeCHRO = () => {
             disabled={saving || loading}
           >
             {saving ? (
-              "Processing..."
+              "Saving..."
             ) : (
               <>
-                <FaSave /> Submit Request
+                <FaSave /> Send Request
               </>
             )}
           </button>
         </div>
 
         {loading ? (
-          <div className="chro-loading">Accessing Secure Records...</div>
+          <div style={{ position: "relative", height: "60vh" }}>
+            <LoadingCHRO />
+          </div>
         ) : (
           <div className="chro-edit-layout">
             {/* Sidebar / Tabs */}

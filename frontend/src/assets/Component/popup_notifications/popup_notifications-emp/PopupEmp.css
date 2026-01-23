@@ -1,0 +1,166 @@
+/* PopupEmp.css - Employee Theme */
+
+:root {
+  --emp-indigo: #818cf8;
+  --emp-slate: #64748b;
+  --emp-bg: #f8fafc;
+}
+
+@keyframes popupSlideInEmp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes popupBackdropFadeEmp {
+  0% {
+    backdrop-filter: blur(0px);
+    background-color: rgba(0, 0, 0, 0);
+  }
+  100% {
+    backdrop-filter: blur(4px);
+    background-color: rgba(0, 0, 0, 0.3);
+  }
+}
+
+.popup-overlay-emp {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.3s ease,
+    visibility 0.3s ease;
+}
+
+.popup-overlay-emp.open {
+  opacity: 1;
+  visibility: visible;
+  animation: popupBackdropFadeEmp 0.5s forwards;
+}
+
+.popup-card-emp {
+  position: relative;
+  width: 90%;
+  max-width: 420px;
+  padding: 2.5rem;
+  border-radius: 16px;
+  text-align: center;
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 1);
+  box-shadow:
+    0 10px 30px -5px rgba(0, 0, 0, 0.1),
+    0 5px 10px -5px rgba(0, 0, 0, 0.05);
+  transform-origin: center;
+  font-family: "Inter", sans-serif;
+}
+
+/* Dark mode support if applicable, or just keep light/clean for employee as default */
+@media (prefers-color-scheme: dark) {
+  .popup-card-emp {
+    background: #1e293b;
+    border-color: #334155;
+  }
+  .popup-title-emp {
+    color: #f1f5f9 !important;
+  }
+  .popup-message-emp {
+    color: #94a3b8 !important;
+  }
+}
+
+.popup-overlay-emp.open .popup-card-emp {
+  animation: popupSlideInEmp 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.popup-icon-wrapper-emp {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 1.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(129, 140, 248, 0.1);
+  border-radius: 50%;
+}
+
+.popup-icon-emp {
+  width: 30px;
+  height: 30px;
+}
+.popup-icon-emp path {
+  fill: var(--emp-indigo);
+}
+
+.popup-title-emp {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+  color: #1e293b;
+}
+
+.popup-message-emp {
+  color: #64748b;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.popup-action-btn-emp {
+  background: var(--emp-indigo);
+  border: none;
+  color: white;
+  padding: 0.8rem 2.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px -1px rgba(129, 140, 248, 0.4);
+}
+
+.popup-action-btn-emp:hover {
+  background: #6366f1;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 10px -1px rgba(99, 102, 241, 0.4);
+}
+
+.popup-timer-container-emp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 1.5rem;
+}
+
+.timer-svg-emp {
+  transform: rotate(-90deg);
+}
+.timer-circle-bg-emp {
+  fill: none;
+  stroke: rgba(148, 163, 184, 0.2);
+  stroke-width: 3;
+}
+.timer-circle-progress-emp {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke: var(--emp-indigo);
+  transition: stroke-dashoffset 0.1s linear;
+}
+
+.redirect-text-emp {
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  color: #94a3b8;
+}

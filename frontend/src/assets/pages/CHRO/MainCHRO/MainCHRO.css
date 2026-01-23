@@ -18,8 +18,8 @@
   --chro-glass: rgba(17, 24, 39, 0.75);
   --chro-glass-border: rgba(255, 255, 255, 0.08);
   --chro-radius: 20px;
-  --chro-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2),
-    0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --chro-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
 
   /* Sidebar Widths matching global if possible, or defined here */
   --chro-sidebar-w-open: 260px;
@@ -40,7 +40,8 @@
   box-sizing: border-box;
 
   /* Background Gimmick: Subtle animated gradient mesh */
-  background-image: radial-gradient(
+  background-image:
+    radial-gradient(
       circle at 15% 15%,
       rgba(59, 130, 246, 0.08) 0%,
       transparent 40%
@@ -482,6 +483,8 @@
   border: 1px solid var(--chro-border-color);
   align-items: center;
   backdrop-filter: blur(8px);
+  position: relative;
+  z-index: 100;
 }
 
 .chro-search-box {
@@ -515,20 +518,13 @@
   font-size: 1.1rem;
 }
 
-.chro-select {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid var(--chro-border-color);
-  color: white;
-  padding: 14px 20px;
-  border-radius: 12px;
-  cursor: pointer;
-  font-size: 0.95rem;
-  min-width: 180px;
+.chro-filter-select {
+  width: 260px; /* Slightly wider for department names */
+  z-index: 50; /* Ensure dropdown appears above other elements */
+  flex-shrink: 0;
 }
-.chro-select:focus {
-  outline: none;
-  border-color: var(--chro-primary);
-}
+
+/* Old select style removed */
 
 .chro-btn-secondary {
   background: rgba(255, 255, 255, 0.05);

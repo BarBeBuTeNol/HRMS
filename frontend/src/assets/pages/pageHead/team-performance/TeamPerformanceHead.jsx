@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../../../services/api";
 import {
   PieChart,
   Pie,
@@ -34,7 +34,6 @@ const TeamPerformanceHead = () => {
 
   const fetchData = async () => {
     try {
-      const token = localStorage.getItem("token");
       const userStr =
         localStorage.getItem("user") || localStorage.getItem("currentUser");
       const user = userStr ? JSON.parse(userStr) : null;
@@ -47,16 +46,14 @@ const TeamPerformanceHead = () => {
       }
 
       // Fetch Overview
-      const overviewRes = await axios.get(
-        `http://localhost:3000/api/head/team-performance-overview/${headId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+      const overviewRes = await api.get(
+        `/head/team-performance-overview/${headId}`,
       );
       setOverview(overviewRes.data.stats);
 
       // Fetch Members
-      const membersRes = await axios.get(
-        `http://localhost:3000/api/head/team-performance-members/${headId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+      const membersRes = await api.get(
+        `/head/team-performance-members/${headId}`,
       );
       setMembers(membersRes.data);
 
@@ -290,7 +287,7 @@ const TeamPerformanceHead = () => {
                 {members.map((member) => {
                   const onTimeRate = calculateOnTimeRate(
                     member.total_completed,
-                    member.on_time_completed
+                    member.on_time_completed,
                   );
                   const avgProgress = member.avg_progress
                     ? Math.round(member.avg_progress)
@@ -357,8 +354,8 @@ const TeamPerformanceHead = () => {
                             onTimeRate >= 80
                               ? "text-green-400"
                               : onTimeRate >= 50
-                              ? "text-yellow-400"
-                              : "text-red-400"
+                                ? "text-yellow-400"
+                                : "text-red-400"
                           }`}
                         >
                           {onTimeRate}%

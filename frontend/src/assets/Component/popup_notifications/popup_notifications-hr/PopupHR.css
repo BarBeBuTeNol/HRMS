@@ -1,0 +1,156 @@
+/* PopupHR.css - HR Department Theme */
+
+:root {
+  --hr-emerald: #10b981;
+  --hr-teal: #14b8a6;
+  --hr-dark-teal: #042f2e;
+}
+
+@keyframes popupSlideInHR {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes popupBackdropFadeHR {
+  0% {
+    backdrop-filter: blur(0px);
+    background-color: rgba(0, 0, 0, 0);
+  }
+  100% {
+    backdrop-filter: blur(5px);
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+}
+
+.popup-overlay-hr {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.3s ease,
+    visibility 0.3s ease;
+}
+
+.popup-overlay-hr.open {
+  opacity: 1;
+  visibility: visible;
+  animation: popupBackdropFadeHR 0.5s forwards;
+}
+
+.popup-card-hr {
+  position: relative;
+  width: 90%;
+  max-width: 440px;
+  padding: 2.5rem;
+  border-radius: 16px;
+  text-align: center;
+  background: linear-gradient(
+    135deg,
+    rgba(4, 47, 46, 0.98),
+    rgba(6, 78, 59, 0.95)
+  );
+  border: 1px solid rgba(20, 184, 166, 0.3); /* Teal Border */
+  box-shadow:
+    0 10px 40px -10px rgba(0, 0, 0, 0.5),
+    0 0 10px rgba(20, 184, 166, 0.1);
+  overflow: hidden;
+  font-family: "Inter", sans-serif;
+}
+
+.popup-overlay-hr.open .popup-card-hr {
+  animation: popupSlideInHR 0.4s ease-out forwards;
+}
+
+.popup-icon-wrapper-hr {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 1.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(20, 184, 166, 0.1);
+  border-radius: 50%;
+  border: 1px solid rgba(20, 184, 166, 0.2);
+}
+
+.popup-icon-hr {
+  width: 32px;
+  height: 32px;
+}
+.popup-icon-hr path {
+  fill: var(--hr-emerald);
+}
+
+.popup-title-hr {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+  color: var(--hr-emerald);
+}
+
+.popup-message-hr {
+  color: #d1fae5;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.popup-action-btn-hr {
+  background: var(--hr-emerald);
+  border: none;
+  color: #064e3b;
+  padding: 0.8rem 2.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.popup-action-btn-hr:hover {
+  background: #34d399;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+}
+
+.popup-timer-container-hr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 1.5rem;
+}
+
+.timer-svg-hr {
+  transform: rotate(-90deg);
+}
+.timer-circle-bg-hr {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 3;
+}
+.timer-circle-progress-hr {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke: var(--hr-emerald);
+  transition: stroke-dashoffset 0.1s linear;
+}
+
+.redirect-text-hr {
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  color: #6ee7b7;
+}

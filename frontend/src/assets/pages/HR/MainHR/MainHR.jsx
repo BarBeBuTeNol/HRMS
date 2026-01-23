@@ -17,6 +17,7 @@ import {
   FaTimes, // Add this
 } from "react-icons/fa";
 import "./MainHR.css";
+import LoadingHR from "../../../Component/loading/loading-hr/LoadingHR";
 
 dayjs.extend(relativeTime);
 
@@ -24,6 +25,7 @@ const MainHR = () => {
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // Announcements State
   const [announcements, setAnnouncements] = useState([]);
@@ -73,6 +75,8 @@ const MainHR = () => {
       }
     } catch (err) {
       console.error("Error fetching dashboard data:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -116,6 +120,8 @@ const MainHR = () => {
   };
 
   const closeAnnouncement = () => setSelectedAnnouncement(null);
+
+  if (loading) return <LoadingHR />;
 
   if (!currentUser) return null;
 

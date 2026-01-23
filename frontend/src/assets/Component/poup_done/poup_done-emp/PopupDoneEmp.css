@@ -1,0 +1,111 @@
+.popup-done-emp-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: empFadeIn 0.2s ease-out;
+}
+
+.popup-done-emp-container {
+  background: var(--emp-card-bg, rgba(30, 41, 59, 1));
+  border: 1px solid var(--emp-accent-color, #818cf8);
+  box-shadow: 0 0 20px rgba(129, 140, 248, 0.15);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+  overflow: hidden;
+  animation: empZoomIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.popup-done-emp-content {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: linear-gradient(
+    180deg,
+    rgba(129, 140, 248, 0.05) 0%,
+    transparent 100%
+  );
+}
+
+.popup-done-emp-icon-bg {
+  width: 60px;
+  height: 60px;
+  background: rgba(52, 211, 153, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 0 0 8px rgba(52, 211, 153, 0.05);
+}
+
+.popup-done-emp-icon {
+  width: 32px;
+  height: 32px;
+  color: var(--emp-success, #34d399);
+  stroke-width: 3px;
+}
+
+.popup-done-emp-title {
+  color: var(--emp-text-primary, #f8fafc);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.5px;
+}
+
+.popup-done-emp-message {
+  color: var(--emp-text-secondary, #94a3b8);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.popup-done-emp-actions {
+  padding: 1rem 2rem 2rem;
+  display: flex;
+  justify-content: center;
+}
+
+.popup-done-emp-button {
+  background: var(--emp-accent-color, #818cf8);
+  color: white;
+  border: none;
+  padding: 0.75rem 2.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(129, 140, 248, 0.3);
+}
+
+.popup-done-emp-button:hover {
+  background: var(--emp-accent-hover, #6366f1);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(129, 140, 248, 0.4);
+}
+
+.popup-done-emp-button:active {
+  transform: translateY(0);
+}
+
+@keyframes empZoomIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

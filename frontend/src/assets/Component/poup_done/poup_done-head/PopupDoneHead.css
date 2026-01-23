@@ -1,0 +1,138 @@
+.popup-done-head-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: var(--head-backdrop-blur, blur(20px));
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: headFadeIn 0.3s ease-out;
+}
+
+.popup-done-head-container {
+  position: relative;
+  background: var(--head-card-bg, rgba(30, 41, 59, 0.95));
+  border: 1px solid var(--head-accent-color, #c5a059);
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.5); /* Deep shadow */
+  width: 90%;
+  max-width: 480px;
+  text-align: center;
+  animation: headScale 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.popup-done-head-gold-line {
+  height: 3px;
+  width: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--head-accent-color, #c5a059),
+    transparent
+  );
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.popup-done-head-content {
+  padding: 3rem 2rem 2.5rem;
+}
+
+.popup-done-head-icon-box {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 1.5rem;
+  background: radial-gradient(
+    circle,
+    rgba(197, 160, 89, 0.2) 0%,
+    transparent 70%
+  );
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  border: 1px solid rgba(197, 160, 89, 0.3);
+}
+
+.popup-done-head-icon {
+  width: 40px;
+  height: 40px;
+  color: var(--head-accent-color, #c5a059);
+  filter: drop-shadow(0 0 8px rgba(197, 160, 89, 0.6));
+}
+
+.popup-done-head-title {
+  color: var(--head-text-primary, white);
+  font-family: var(--head-font-family, "Outfit", sans-serif);
+  font-size: 1.75rem;
+  font-weight: 300;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin: 0 0 1rem;
+}
+
+.popup-done-head-divider {
+  height: 1px;
+  width: 60px;
+  background: var(--head-accent-color, #c5a059);
+  margin: 0 auto 1.5rem;
+  opacity: 0.5;
+}
+
+.popup-done-head-message {
+  color: var(--head-text-secondary, #94a3b8);
+  font-family: var(--head-font-family, "Outfit", sans-serif);
+  font-size: 1rem;
+  line-height: 1.7;
+  margin: 0 0 2.5rem;
+}
+
+.popup-done-head-button {
+  background: var(--head-accent-color, #c5a059);
+  color: #0f172a; /* Dark text for contrast against gold */
+  border: none;
+  padding: 0.85rem 3rem;
+  font-family: var(--head-font-family, "Outfit", sans-serif);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  clip-path: polygon(
+    10% 0,
+    100% 0,
+    100% 100%,
+    0% 100%,
+    0% 28%
+  ); /* Angled cut */
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.popup-done-head-button:hover {
+  background: var(--head-accent-hover, #e0b769);
+  transform: translateX(5px);
+  box-shadow: 0 0 20px rgba(197, 160, 89, 0.4);
+}
+
+@keyframes headFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes headScale {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

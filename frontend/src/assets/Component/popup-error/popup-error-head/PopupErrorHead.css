@@ -1,0 +1,121 @@
+.popup-error-head-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: var(--head-backdrop-blur, blur(20px));
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: headFadeIn 0.3s ease-out;
+}
+
+.popup-error-head-container {
+  position: relative;
+  background: var(--head-card-bg, rgba(30, 41, 59, 0.9));
+  border: 1px solid var(--head-glass-border, rgba(255, 255, 255, 0.1));
+  box-shadow: var(--head-shadow);
+  border-radius: 4px; /* Sharper corners for executive feel */
+  width: 90%;
+  max-width: 450px;
+  overflow: hidden;
+  animation: headSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.popup-error-head-decoration {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--head-danger, #ef4444);
+}
+
+.popup-error-head-content {
+  padding: 2rem;
+}
+
+.popup-error-head-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 1rem;
+}
+
+.popup-error-head-icon {
+  width: 32px;
+  height: 32px;
+  color: var(--head-danger, #ef4444);
+}
+
+.popup-error-head-title {
+  color: var(--head-text-primary, #ffffff);
+  font-family: var(--head-font-family, "Outfit", sans-serif);
+  font-size: 1.5rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.popup-error-head-body {
+  margin-bottom: 2rem;
+}
+
+.popup-error-head-message {
+  color: var(--head-text-secondary, #94a3b8);
+  font-family: var(--head-font-family, "Outfit", sans-serif);
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.popup-error-head-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.popup-error-head-button {
+  background: transparent;
+  border: 1px solid var(--head-danger, #ef4444);
+  color: var(--head-danger, #ef4444);
+  padding: 0.75rem 2.5rem;
+  border-radius: 2px;
+  font-family: var(--head-font-family, "Outfit", sans-serif);
+  font-weight: 500;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.popup-error-head-button:hover {
+  background: rgba(239, 68, 68, 0.1);
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.2);
+}
+
+@keyframes headFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes headSlideIn {
+  from {
+    transform: translateY(-30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

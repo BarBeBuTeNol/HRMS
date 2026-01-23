@@ -9,6 +9,7 @@ import {
   FaExclamationCircle,
 } from "react-icons/fa";
 import "./HeadDashboardPage.css";
+import LoadingHead from "../../../Component/loading/loading-head/LoadingHead";
 
 const HeadDashboard = () => {
   const [data, setData] = useState(null);
@@ -33,19 +34,7 @@ const HeadDashboard = () => {
   }, []);
 
   if (loading) {
-    return (
-      <div
-        className="loading-screen"
-        style={{
-          color: "#fff",
-          display: "flex",
-          justifyContent: "center",
-          marginTop: "20%",
-        }}
-      >
-        Loading Dashboard...
-      </div>
-    );
+    return <LoadingHead />;
   }
 
   if (!data)

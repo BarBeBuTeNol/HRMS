@@ -1,0 +1,41 @@
+/* HR Exclusive Theme Variables */
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap");
+
+:root {
+  /* Core Colors - Teal & Emerald Gradient */
+  --hr-bg: #042f2e; /* Teal 950 */
+  --hr-bg-gradient: linear-gradient(
+    135deg,
+    #042f2e 0%,
+    #064e3b 100%
+  ); /* Teal 950 to Emerald 900 */
+  --hr-sidebar-bg: rgba(4, 47, 46, 0.95);
+
+  /* Text */
+  --hr-text-primary: #ecfdf5; /* Emerald 50 */
+  --hr-text-secondary: #a7f3d0; /* Emerald 200 */
+  --hr-text-muted: #6ee7b7; /* Emerald 300 */
+
+  /* Accent - Vibrant Teal */
+  --hr-accent-color: #2dd4bf; /* Teal 400 */
+  --hr-accent-hover: #14b8a6; /* Teal 500 */
+  --hr-accent-glow: 0 0 15px rgba(45, 212, 191, 0.4);
+
+  /* Semantic */
+  --hr-danger: #f87171;
+  --hr-success: #34d399;
+  --hr-warning: #fbbf24;
+
+  /* Interactions */
+  --hr-hover-bg: rgba(255, 255, 255, 0.08);
+  --hr-active-bg: rgba(45, 212, 191, 0.15);
+  --hr-glass-border: rgba(45, 212, 191, 0.2);
+
+  /* Components */
+  --hr-card-bg: rgba(6, 78, 59, 0.7); /* Emerald 900 with opacity */
+  --hr-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --hr-backdrop-blur: blur(20px);
+
+  /* Font */
+  --hr-font-family: "Outfit", sans-serif;
+}

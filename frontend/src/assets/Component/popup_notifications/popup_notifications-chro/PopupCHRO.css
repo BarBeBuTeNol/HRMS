@@ -1,0 +1,198 @@
+/* PopupCHRO.css - CHRO Executive Theme */
+
+:root {
+  --chro-gold: #d4af37;
+  --chro-gold-light: #fbf5b7;
+  --chro-gold-dark: #b38728;
+  --chro-bg: #1a1a1a;
+  --anim-duration: 0.4s;
+}
+
+@keyframes popupSlideInCHRO {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+    filter: blur(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes popupBackdropFadeCHRO {
+  0% {
+    backdrop-filter: blur(0px);
+    background-color: rgba(0, 0, 0, 0);
+  }
+  100% {
+    backdrop-filter: blur(8px);
+    background-color: rgba(0, 0, 0, 0.6);
+  }
+}
+
+@keyframes shimmerCHRO {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.popup-overlay-chro {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.3s ease,
+    visibility 0.3s ease;
+}
+
+.popup-overlay-chro.open {
+  opacity: 1;
+  visibility: visible;
+  animation: popupBackdropFadeCHRO 0.5s forwards;
+}
+
+.popup-card-chro {
+  position: relative;
+  width: 90%;
+  max-width: 500px;
+  padding: 3rem;
+  border-radius: 1px; /* Sharper edges for executive feel */
+  text-align: center;
+  /* Executive Dark Background */
+  background: linear-gradient(
+    145deg,
+    rgba(20, 20, 20, 0.98),
+    rgba(40, 40, 40, 0.95)
+  );
+  border: 2px solid rgba(212, 175, 55, 0.4); /* Gold Border */
+  box-shadow:
+    0 25px 60px -12px rgba(0, 0, 0, 0.8),
+    0 0 20px rgba(212, 175, 55, 0.15);
+  overflow: hidden;
+  transform: scale(0.95);
+  font-family:
+    "Cinzel", "Outfit", sans-serif; /* Optional serif for grandeur if available, falling back to Outfit */
+}
+
+.popup-overlay-chro.open .popup-card-chro {
+  animation: popupSlideInCHRO var(--anim-duration) ease-out forwards;
+}
+
+.popup-icon-wrapper-chro {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 1.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(
+    135deg,
+    rgba(212, 175, 55, 0.1),
+    rgba(0, 0, 0, 0.3)
+  );
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 50%;
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+}
+
+.popup-icon-chro {
+  width: 40px;
+  height: 40px;
+}
+.popup-icon-chro path {
+  fill: var(--chro-gold);
+  filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.5));
+}
+
+.popup-title-chro {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  background-image: linear-gradient(
+    to right,
+    #fbf5b7,
+    #bf953f,
+    #b38728,
+    #fbf5b7
+  );
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmerCHRO 4s linear infinite;
+}
+
+.popup-message-chro {
+  color: #e5e5e5;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  font-weight: 300;
+}
+
+.popup-action-btn-chro {
+  border: none;
+  padding: 1rem 3rem;
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  background: linear-gradient(90deg, #bf953f, #fcf6ba, #b38728);
+  color: #000;
+  clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+  transition:
+    transform 0.2s,
+    filter 0.2s;
+}
+
+.popup-action-btn-chro:hover {
+  filter: brightness(1.2);
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+}
+
+.popup-timer-container-chro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 1.5rem;
+}
+
+.timer-svg-chro {
+  transform: rotate(-90deg);
+}
+.timer-circle-bg-chro {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 2;
+}
+.timer-circle-progress-chro {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke: var(--chro-gold);
+  filter: drop-shadow(0 0 3px rgba(212, 175, 55, 0.6));
+  transition: stroke-dashoffset 0.1s linear;
+}
+
+.redirect-text-chro {
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  color: var(--chro-gold);
+  letter-spacing: 1px;
+}

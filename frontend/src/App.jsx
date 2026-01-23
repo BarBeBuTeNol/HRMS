@@ -58,6 +58,7 @@ import ShowLog from "./assets/pages/CHRO/Show-Log/Show-Log";
 import AnnouncementsCHRO from "./assets/pages/CHRO/announcements/AnnouncementsCHRO";
 import EmployeeDirectoryCHRO from "./assets/pages/CHRO/emp_directory/EmployeeDirectoryCHRO";
 import EditEmployeeCHRO from "./assets/pages/CHRO/emp_directory/EditEmployeeCHRO";
+import LeaveRequestCHRO from "./assets/pages/CHRO/leave_request/LeaveRequestCHRO";
 
 // =========================================
 //               COMMON COMPONENTS
@@ -72,7 +73,6 @@ function App() {
       {/* ========================================= */}
       <Route path="/" element={<LoginPage />} />
       <Route path="/login" element={<LoginPage />} />
-
       {/* ========================================= */}
       {/*            EMPLOYEE ROUTES             */}
       {/* ========================================= */}
@@ -83,7 +83,6 @@ function App() {
       <Route path="/employee/schedule" element={<MySchedulePage />} />
       <Route path="/employee/notifications" element={<NotificationPage />} />
       <Route path="/employee/mywork" element={<MyWork />} />
-
       {/* ========================================= */}
       {/*              HEAD ROUTES               */}
       {/* ========================================= */}
@@ -97,12 +96,14 @@ function App() {
       <Route path="/head/delegate-shift" element={<DelegateShiftPage />} />
       <Route path="/head/delegate-shift/:id" element={<DelegateShiftPage />} />
       <Route path="/head/leave-stats" element={<LeaveAnalytics />} />
-      <Route path="/head/team-leave-history" element={<HeadTeamLeaveHistory />} />
+      <Route
+        path="/head/team-leave-history"
+        element={<HeadTeamLeaveHistory />}
+      />
       <Route path="/head/task-assignment" element={<TaskAssignmentHead />} />
       <Route path="/head/data-approvals" element={<DataApproval />} />
       <Route path="/head/shift-replacements" element={<ShiftRequestHead />} />
       <Route path="/head/team-performance" element={<TeamPerformanceHead />} />
-
       {/* ========================================= */}
       {/*               HR ROUTES                */}
       {/* ========================================= */}
@@ -118,7 +119,6 @@ function App() {
       <Route path="/hr/announcements" element={<Announcements />} />
       <Route path="/hr/leave-info" element={<Leave_info />} />
       <Route path="/hr/add-department" element={<AddDepartment />} />
-
       {/* ========================================= */}
       {/*              CHRO ROUTES               */}
       {/* ========================================= */}
@@ -132,7 +132,7 @@ function App() {
         element={<EmployeeDirectoryCHRO />}
       />
       <Route path="/chro/edit-employee" element={<EditEmployeeCHRO />} />
-
+      <Route path="/chro/leave-request" element={<LeaveRequestCHRO />} />
       {/* ========================================= */}
       {/*             COMMON ROUTES              */}
       {/* ========================================= */}

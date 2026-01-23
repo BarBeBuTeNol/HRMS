@@ -11,7 +11,7 @@ import {
   FaFileAlt,
 } from "react-icons/fa";
 import HRLayout from "../../../Component/HR/HRLayout";
-import PopupNotification from "../../../Component/popup_notifications/PopupNotification";
+import PopupNotification from "../../../Component/popup_notifications/popup_notifications-hr/PopupHR";
 import EditEmpNav from "../../../Component/HR/EditEmpNav";
 import "./Add_emp_info.css";
 
@@ -122,7 +122,7 @@ const AddEmpInfo = () => {
             if (data.salary) {
               const formatted = String(data.salary).replace(
                 /\B(?=(\d{3})+(?!\d))/g,
-                ","
+                ",",
               );
               setSalaryDisplay(formatted);
             }
@@ -163,7 +163,7 @@ const AddEmpInfo = () => {
       if (departmentId) {
         // Use loose equality to handle string/number mismatches
         const filtered = jobPositions.filter(
-          (pos) => pos.department_id == departmentId
+          (pos) => pos.department_id == departmentId,
         );
         // If no positions found for this department, maybe show all or keep empty?
         // Let's show all if filtered is empty to avoid "nothing to choose" if data is inconsistent
@@ -274,7 +274,7 @@ const AddEmpInfo = () => {
         setOriginalForm(JSON.stringify(form));
 
         const empInfoList = JSON.parse(
-          localStorage.getItem("emp_info_list") || "[]"
+          localStorage.getItem("emp_info_list") || "[]",
         );
         const newEmpInfo = {
           ...form,

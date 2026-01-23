@@ -26,10 +26,82 @@ import {
   FaTimes, // Added for Modal Close
 } from "react-icons/fa";
 import CHROLayout from "../../../Component/CHRO/CHROLayout";
-import PopupNotification from "../../../Component/popup_notifications/PopupNotification";
-import ChangeRequestModal from "../../../Component/popup_notifications/ChangeRequestModal";
+import PopupNotification from "../../../Component/popup_notifications/popup_notifications-chro/PopupCHRO";
+import ChangeRequestModal from "../../../Component/popup_notifications/popup_notifications-chro/ChangeRequestModal";
 import "./EmployeeDirectoryCHRO.css";
+import LoadingCHRO from "../../../Component/loading/loading-chro/LoadingCHRO";
 import api from "../../../../services/api"; // Import centralized api
+
+// --- Custom Filter Component ---
+const DepartmentFilter = ({ departments, selected, onSelect }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Close dropdown when clicking outside (optional simple implementation)
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isOpen && !event.target.closest(".chro-emp-filter-wrapper")) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen]);
+
+  const selectedName = selected || "All Departments";
+
+  return (
+    <>
+      <div
+        className={`chro-custom-filter-trigger ${isOpen ? "active" : ""}`}
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <FaFilter className="chro-filter-icon-left" />
+          <span>{selectedName}</span>
+        </div>
+        <FaChevronDown className="chro-filter-chevron" />
+      </div>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="chro-custom-filter-menu"
+          >
+            <div
+              className={`chro-custom-filter-item ${
+                selected === "" ? "selected" : ""
+              }`}
+              onClick={() => {
+                onSelect("");
+                setIsOpen(false);
+              }}
+            >
+              All Departments
+            </div>
+            {departments.map((dept) => (
+              <div
+                key={dept.id}
+                className={`chro-custom-filter-item ${
+                  selected === dept.department_name ? "selected" : ""
+                }`}
+                onClick={() => {
+                  onSelect(dept.department_name);
+                  setIsOpen(false);
+                }}
+              >
+                {dept.department_name}
+              </div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+};
 
 const EmployeeDirectoryCHRO = () => {
   const navigate = useNavigate();
@@ -79,7 +151,7 @@ const EmployeeDirectoryCHRO = () => {
   };
 
   const fetchEmployees = async () => {
-    setLoading(true);
+    // setLoading(true); // REMOVED: Only show loading on initial mount (handled by initial state)
     setError(null);
     try {
       const res = await api.get("/users", {
@@ -385,7 +457,7 @@ const EmployeeDirectoryCHRO = () => {
   const filteredEmployees = employeeList;
 
   return (
-    <CHROLayout>
+    <CHROLayout disableInitialLoading={true}>
       <PopupNotification
         isOpen={popup.isOpen}
         onClose={() => setPopup({ ...popup, isOpen: false })}
@@ -420,59 +492,73 @@ const EmployeeDirectoryCHRO = () => {
           </div>
 
           <div className="chro-emp-controls">
-            {/* Search Box */}
-            <div className="chro-emp-search-wrapper">
-              <FaSearch className="chro-emp-search-icon" />
-              <input
-                type="text"
-                placeholder="Search executive, manager, employee..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="chro-emp-search-input"
-              />
-            </div>
+            {!loading && (
+              <>
+                {/* Search Box */}
+                <div className="chro-emp-search-wrapper">
+                  <FaSearch className="chro-emp-search-icon" />
+                  <input
+                    type="text"
+                    placeholder="Search executive, manager, employee..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="chro-emp-search-input"
+                  />
+                </div>
 
-            {/* Department Filter */}
-            <div className="chro-emp-filter-wrapper">
-              <FaFilter className="chro-emp-filter-icon" />
-              <select
-                className="chro-dept-filter-select"
-                value={selectedDept}
-                onChange={(e) => setSelectedDept(e.target.value)}
-              >
-                <option value="">All Departments</option>
-                {departments.map((dept) => (
-                  <option key={dept.id} value={dept.department_name}>
-                    {dept.department_name}
-                  </option>
-                ))}
-              </select>
-              <FaChevronDown className="chro-emp-filter-chevron" />
-            </div>
+                {/* Premium Department Filter Dropdown */}
+                <div className="chro-emp-filter-wrapper">
+                  <DepartmentFilter
+                    departments={departments}
+                    selected={selectedDept}
+                    onSelect={setSelectedDept}
+                  />
+                </div>
 
-            {/* View Toggles - FIXED: Clearly separated buttons */}
-            <div className="chro-view-toggles">
-              <button
-                className={`chro-toggle-btn ${
-                  viewMode === "grid" ? "active" : ""
-                }`}
-                onClick={() => setViewMode("grid")}
-                aria-label="Grid View"
-              >
-                <FaIdCard /> <span>Cards</span>
-              </button>
-              <button
-                className={`chro-toggle-btn ${
-                  viewMode === "list" ? "active" : ""
-                }`}
-                onClick={() => setViewMode("list")}
-                aria-label="List View"
-              >
-                <FaBriefcase /> <span>List</span>
-              </button>
-            </div>
+                {/* View Toggles - FIXED: Clearly separated buttons */}
+                <div className="chro-view-toggles">
+                  <button
+                    className={`chro-toggle-btn ${
+                      viewMode === "grid" ? "active" : ""
+                    }`}
+                    onClick={() => setViewMode("grid")}
+                    aria-label="Grid View"
+                  >
+                    <FaIdCard /> <span>Cards</span>
+                  </button>
+                  <button
+                    className={`chro-toggle-btn ${
+                      viewMode === "list" ? "active" : ""
+                    }`}
+                    onClick={() => setViewMode("list")}
+                    aria-label="List View"
+                  >
+                    <FaBriefcase /> <span>List</span>
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
+
+        {loading && (
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              zIndex: 9999,
+              background: "#0f172a",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <LoadingCHRO />
+          </div>
+        )}
 
         {error ? (
           <div className="chro-error-state">
@@ -481,9 +567,7 @@ const EmployeeDirectoryCHRO = () => {
               Retry
             </button>
           </div>
-        ) : loading ? (
-          <div className="chro-loading-state">Loading employees...</div>
-        ) : filteredEmployees.length === 0 ? (
+        ) : !loading && filteredEmployees.length === 0 ? (
           <div className="chro-no-emp-state">
             <div className="chro-no-emp-icon">
               <FaUserTie />
@@ -611,6 +695,7 @@ const EmployeeDirectoryCHRO = () => {
                           <div className="chro-list-actions">
                             <button
                               className="chro-action-btn-small edit"
+                              data-tooltip="View/Edit Profile"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 navigate("/chro/edit-employee", {
@@ -622,6 +707,7 @@ const EmployeeDirectoryCHRO = () => {
                             </button>
                             <button
                               className="chro-action-btn-small delete"
+                              data-tooltip="Terminate Employment"
                               onClick={(e) => handleDeleteClick(e, emp)}
                             >
                               <FaTrashAlt />

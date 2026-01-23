@@ -712,3 +712,170 @@
   background: #dc2626;
   box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
 }
+
+/* ================= RESPONSIVE DESIGN ================= */
+
+/* Tablet & Smaller Laptops (Max 1024px) */
+@media (max-width: 1024px) {
+  .chro-exclusive-wrapper {
+    padding: 2.5rem 2rem;
+  }
+
+  .chro-exclusive-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2rem;
+  }
+
+  .executive-stats-row {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 1rem; /* Space for scrollbar if needed */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .stat-card {
+    min-width: 200px;
+    flex: 0 0 auto;
+  }
+}
+
+/* Mobile (Max 768px) */
+@media (max-width: 768px) {
+  .chro-exclusive-wrapper {
+    padding: 1.5rem 1rem;
+    min-height: auto;
+  }
+
+  /* Header */
+  .chro-exclusive-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    gap: 1.5rem;
+    align-items: center; /* Center align items */
+    text-align: center; /* Center text */
+  }
+
+  .executive-title {
+    font-size: 2.2rem;
+  }
+
+  .executive-subtitle {
+    font-size: 1rem;
+  }
+
+  /* Stats Row - Grid Layout */
+  .executive-stats-row {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 2 columns */
+    gap: 1rem;
+    overflow-x: visible; /* No scroll */
+    padding-bottom: 0;
+  }
+
+  .stat-card {
+    min-width: 0; /* Allow shrinking */
+    flex-direction: column; /* Stack vertically inside card */
+    padding: 1rem;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .stat-icon {
+    margin-right: 0;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Tabs */
+  .chro-tabs-container {
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    -webkit-overflow-scrolling: touch;
+    justify-content: flex-start; /* Ensure start alignment for scroll */
+  }
+
+  .chro-nav-tab {
+    white-space: nowrap;
+    font-size: 1rem;
+  }
+
+  .chro-tabs-container .btn-primary {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+    white-space: nowrap;
+  }
+
+  /* Cards */
+  .exclusive-card:hover {
+    transform: none; /* Disable hover lift on touch */
+  }
+
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    position: relative; /* For absolute positioning of actions if needed */
+  }
+
+  .card-actions {
+    opacity: 1; /* Always visible on mobile */
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin-top: 0;
+  }
+
+  .card-meta {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-right: 3rem; /* Make space for action buttons */
+  }
+
+  .card-main {
+    padding: 1.5rem;
+    padding-left: 1.5rem; /* Reduce left padding as gold bar is small */
+  }
+
+  .card-title {
+    font-size: 1.3rem;
+    line-height: 1.3;
+  }
+
+  /* Modals */
+  .modal-glass-container {
+    padding: 1.5rem;
+    width: 95%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .modal-header h3 {
+    font-size: 1.5rem;
+  }
+
+  .form-grid-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .radio-group-exclusive {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .modal-actions {
+    flex-direction: column-reverse; /* Stack buttons, primary on top/bottom? Standard is Stack */
+    gap: 0.8rem;
+  }
+
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+}

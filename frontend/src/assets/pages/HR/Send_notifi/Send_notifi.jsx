@@ -5,7 +5,7 @@ import api from "../../../../services/api";
 import { FaGlobeAsia, FaBuilding, FaPaperPlane } from "react-icons/fa";
 import { MdCheckCircle, MdNotificationsActive } from "react-icons/md";
 import HRLayout from "../../../Component/HR/HRLayout";
-import PopupDone from "../../../Component/poup_done/Popup_done";
+import { PopupDoneHR } from "../../../Component/poup_done/Popup_done";
 import "./Send_notifi.css";
 
 const Send_notifi = () => {
@@ -264,7 +264,7 @@ const Send_notifi = () => {
             </div>
 
             {/* Success Popup */}
-            <PopupDone
+            <PopupDoneHR
               isVisible={success}
               onClose={() => setSuccess(false)}
               text="Sent Successfully!"

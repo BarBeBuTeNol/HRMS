@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../../../services/api";
 import Swal from "sweetalert2";
 import HeadSidebar from "../../../Component/Head/HeadSidebar"; // Adjust path if needed
 import "./ShiftRequestHead.css";
@@ -21,12 +21,7 @@ const ShiftRequestHead = () => {
   const fetchRequests = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(
-        "http://localhost:3000/api/task-replacement/pending",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await api.get("/task-replacement/pending");
       setRequests(response.data);
       setLoading(false);
     } catch (error) {
@@ -51,13 +46,7 @@ const ShiftRequestHead = () => {
     if (result.isConfirmed) {
       try {
         const token = localStorage.getItem("token");
-        await axios.post(
-          `http://localhost:3000/api/task-replacement/${id}/approve`,
-          {},
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        await api.post(`/task-replacement/${id}/approve`, {});
 
         Swal.fire({
           title: "Approved!",
@@ -92,15 +81,9 @@ const ShiftRequestHead = () => {
 
     try {
       const token = localStorage.getItem("token");
-      await axios.post(
-        `http://localhost:3000/api/task-replacement/${rejectTargetId}/reject`,
-        {
-          reason: rejectReason,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await api.post(`/task-replacement/${rejectTargetId}/reject`, {
+        reason: rejectReason,
+      });
 
       setShowRejectModal(false);
       setRejectReason("");
@@ -127,19 +110,15 @@ const ShiftRequestHead = () => {
       const dateToCheck = request.work_date
         ? request.work_date.split("T")[0]
         : request.deadline
-        ? request.deadline.split("T")[0]
-        : new Date().toISOString().split("T")[0];
+          ? request.deadline.split("T")[0]
+          : new Date().toISOString().split("T")[0];
 
-      const response = await axios.get(
-        `http://localhost:3000/api/task-replacement/workload`,
-        {
-          params: {
-            replacementId: request.replacement_user_id,
-            date: dateToCheck,
-          },
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await api.get(`/task-replacement/workload`, {
+        params: {
+          replacementId: request.replacement_user_id,
+          date: dateToCheck,
+        },
+      });
       setWorkloadData(response.data);
       setShowWorkloadModal(true);
     } catch (error) {

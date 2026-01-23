@@ -21,6 +21,7 @@ import {
   Trophy,
   Target,
 } from "lucide-react";
+import LoadingEmp from "../../../Component/loading/loading-emp/LoadingEmp";
 
 const EmployeeDashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
@@ -55,17 +56,7 @@ const EmployeeDashboard = () => {
     return () => clearInterval(timer);
   }, []);
 
-  if (loading)
-    return (
-      <div className="loading-screen">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, duration: 1 }}
-          className="loader-spinner"
-        />
-        <p>Loading Your Dashboard...</p>
-      </div>
-    );
+  if (loading) return <LoadingEmp />;
 
   if (error) return <div className="error-screen">{error}</div>;
 

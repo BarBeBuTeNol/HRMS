@@ -98,7 +98,9 @@
   flex-direction: column;
   gap: 12px;
   backdrop-filter: blur(10px);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .metric-card:hover {
@@ -198,7 +200,8 @@
   display: flex;
   align-items: center;
   gap: 24px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6),
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.6),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   z-index: 100;
   border: 1px solid rgba(197, 161, 69, 0.3);
@@ -255,7 +258,8 @@
   border-radius: var(--dp-radius);
   border: 1px solid var(--dp-border);
   background: rgba(30, 41, 59, 0.2);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
     0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
@@ -720,27 +724,120 @@
 @media (max-width: 768px) {
   .dp-main {
     margin-left: 0;
-    padding: 20px;
-    width: 100vw;
+    padding: 10px;
+    width: 100%;
   }
+
+  .direct-position-container {
+    gap: 20px;
+  }
+
   .direct-position-title {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
   }
+
+  .direct-position-subtitle {
+    font-size: 0.8rem;
+  }
+
+  /* Filters */
+  .filters-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .search-input-premium,
+  .filter-select {
+    width: 100%;
+    min-width: 0; /* Override min-width */
+    flex: none;
+  }
+
+  /* Metrics - Grid handles stacking, just adjust gap */
+  .metrics-cards {
+    gap: 16px;
+    grid-template-columns: 1fr; /* Force single column on mobile */
+  }
+
+  /* Table */
+  .table-container {
+    overflow-x: auto; /* Enable scroll */
+    margin: 0 -10px; /* Slight bleed to edge */
+    border-radius: 0; /* Sharp edges for full width feel */
+    border-left: none;
+    border-right: none;
+  }
+
+  .premium-table th,
+  .premium-table td {
+    padding: 16px;
+  }
+
+  /* Forms */
   .dp-form-grid {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
+
+  /* Modal */
   .modal-user-header {
     flex-direction: column;
     text-align: center;
+    padding: 20px;
   }
+
+  .modal-body {
+    padding: 20px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .btn-confirm,
+  .btn-cancel {
+    width: 100%;
+    justify-content: center;
+    display: flex;
+  }
+
+  /* Pagination */
+  .pagination-controls {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .pagination-info {
+    width: 100%;
+    text-align: center;
+    order: -1; /* Move info to top */
+  }
+
+  /* Bulk Toolbar */
   .bulk-toolbar {
     width: 90%;
     flex-direction: column;
-    padding: 20px;
+    padding: 16px;
     border-radius: 20px;
+    bottom: 20px;
   }
   .bulk-actions-group {
     flex-wrap: wrap;
     justify-content: center;
+    width: 100%;
+  }
+  .bulk-actions-group button {
+    flex: 1;
+    text-align: center;
+    justify-content: center;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 480px) {
+  .metrics-cards {
+    grid-template-columns: 1fr;
   }
 }

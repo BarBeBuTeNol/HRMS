@@ -1,0 +1,130 @@
+/* CustomSelect.css */
+:root {
+  --select-bg: rgba(30, 27, 75, 0.6); /* Deep indigo/purple glass */
+  --select-border: rgba(139, 92, 246, 0.3); /* Soft purple border */
+  --select-hover: rgba(46, 16, 101, 0.8);
+  --select-text: #e2e8f0;
+  --dropdown-bg: #1e1b4b; /* Solid dark purple for readability */
+  --option-hover: #4c1d95;
+  --option-selected: #5b21b6;
+  --glow-color: rgba(139, 92, 246, 0.5);
+}
+
+.custom-select-container {
+  position: relative;
+  width: 200px; /* Default width, can be overridden */
+  font-family: "Outfit", sans-serif;
+  user-select: none;
+}
+
+.custom-select-trigger {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6em 1em;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--select-text);
+  background: var(--select-bg);
+  border: 1px solid var(--select-border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.custom-select-trigger:hover {
+  background: rgba(46, 16, 101, 0.7);
+  border-color: rgba(139, 92, 246, 0.6);
+  box-shadow: 0 0 10px var(--glow-color);
+}
+
+.custom-select-trigger.open {
+  border-color: #8b5cf6;
+  background: rgba(30, 27, 75, 0.8);
+  box-shadow: 0 0 15px var(--glow-color);
+}
+
+.custom-select-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.custom-select-icon {
+  color: #a78bfa;
+}
+
+.custom-select-arrow {
+  color: #a78bfa;
+  transition: transform 0.3s ease;
+}
+
+.custom-select-arrow.rotated {
+  transform: rotate(180deg);
+}
+
+/* Dropdown Menu */
+.custom-select-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 100%;
+  background: var(--dropdown-bg);
+  border: 1px solid var(--select-border);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  overflow: hidden;
+  animation: fadeInSlideDown 0.2s ease-out forwards;
+  padding: 0.25rem;
+}
+
+.custom-select-option {
+  padding: 0.7em 1em;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #cbd5e1;
+  font-size: 0.9rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 8px;
+  margin-bottom: 2px;
+}
+
+.custom-select-option:last-child {
+  margin-bottom: 0;
+}
+
+.custom-select-option:hover {
+  background-color: var(--option-hover);
+  color: #fff;
+  padding-left: 1.25em; /* Subtle slide effect */
+}
+
+.custom-select-option.selected {
+  background-color: var(--option-selected);
+  color: #fff;
+  font-weight: 600;
+}
+
+.check-icon {
+  color: #a78bfa;
+}
+
+@keyframes fadeInSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

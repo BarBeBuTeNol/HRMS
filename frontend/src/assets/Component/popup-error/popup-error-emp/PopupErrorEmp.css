@@ -1,0 +1,100 @@
+.popup-error-emp-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: empFadeIn 0.2s ease-out;
+}
+
+.popup-error-emp-container {
+  background: var(--emp-card-bg, rgba(30, 41, 59, 0.95));
+  border: 1px solid var(--emp-divider, rgba(148, 163, 184, 0.1));
+  box-shadow: var(--emp-shadow);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 420px;
+  overflow: hidden;
+  animation: empSlideUp 0.3s ease-out;
+}
+
+.popup-error-emp-header {
+  padding: 1.5rem 1.5rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.popup-error-emp-icon {
+  width: 48px;
+  height: 48px;
+  color: var(--emp-danger, #fca5a5);
+}
+
+.popup-error-emp-title {
+  color: var(--emp-text-primary, #f8fafc);
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.popup-error-emp-body {
+  padding: 0.5rem 1.5rem 1.5rem;
+  text-align: center;
+}
+
+.popup-error-emp-message {
+  color: var(--emp-text-secondary, #94a3b8);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.popup-error-emp-footer {
+  padding: 1rem 1.5rem;
+  background: rgba(15, 23, 42, 0.3);
+  display: flex;
+  justify-content: center;
+}
+
+.popup-error-emp-button {
+  background: transparent;
+  border: 1px solid var(--emp-danger, #fca5a5);
+  color: var(--emp-danger, #fca5a5);
+  padding: 0.6rem 2rem;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.popup-error-emp-button:hover {
+  background: var(--emp-danger, #fca5a5);
+  color: #fff;
+}
+
+@keyframes empFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes empSlideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

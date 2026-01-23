@@ -16,10 +16,15 @@ const router = Router();
 
 router.post("/login", async (req, res) => {
   console.log("🔥 LOGIN HIT");
-  const { username, password } = req.body as { username?: string; password?: string };
+  const { username, password } = req.body as {
+    username?: string;
+    password?: string;
+  };
 
   if (!username || !password) {
-    return res.status(400).json({ ok: false, message: "❌ ต้องกรอก username และ password" });
+    return res
+      .status(400)
+      .json({ ok: false, message: "❌ ต้องกรอก username และ password" });
   }
 
   try {
@@ -30,7 +35,7 @@ router.post("/login", async (req, res) => {
        JOIN roles r ON u.role_id = r.id
        WHERE u.username = ?
        LIMIT 1`,
-      [username]
+      [username],
     );
 
     if (!rows.length) {
@@ -45,34 +50,55 @@ router.post("/login", async (req, res) => {
 
     if (!isMatch) {
       if (user.password !== password) {
-         return res.status(401).json({ ok: false, message: "❌ รหัสผ่านไม่ถูกต้อง" });
+        return res
+          .status(401)
+          .json({ ok: false, message: "❌ รหัสผ่านไม่ถูกต้อง" });
       }
     }
 
     // 3. ✅ Update User Session for Real-time Status (Only)
-    const ip = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '';
+    const ip =
+      (req.headers["x-forwarded-for"] as string) ||
+      req.socket.remoteAddress ||
+      "";
     await pool.query(
       `INSERT INTO user_sessions (user_id, ip_address, last_activity)
        VALUES (?, ?, NOW())
        ON DUPLICATE KEY UPDATE 
        ip_address = VALUES(ip_address),
        last_activity = NOW()`,
-      [user.id, ip]
+      [user.id, ip],
     );
 
     // ✅ บันทึกการกระทำ (User Log)
-    await logUserAction(user.id, "LOGIN", "User logged in via Web");
+    // ใช้ userRepository โดยตรงเพื่อให้ระบุ IP และรายละเอียดได้ครบถ้วนตามต้องการ
+    try {
+      await import("../repository/userRepository").then((repo) =>
+        repo.default.logAction(
+          user.id,
+          "LOGIN",
+          "User logged in via Web Interface",
+          ip as string, // มั่นใจว่าเป็น string จาก logic ข้างบน
+          "Info",
+          "System Authentication",
+          undefined, // changeRequestId is null
+        ),
+      );
+      console.log(`[AUTH] Login log recorded for user ${user.id}`);
+    } catch (logErr) {
+      console.error("[AUTH] Failed to log login action:", logErr);
+    }
 
     // 4. Generate JWT Token
     const jwt = require("jsonwebtoken");
     const token = jwt.sign(
-      { 
-        id: user.id, 
+      {
+        id: user.id,
         role: user.role_name, // Ensure this matches middleware expectation
-        username: user.username 
+        username: user.username,
       },
-      process.env.JWT_SECRET || 'fallback-secret-key-change-me',
-      { expiresIn: '1d' }
+      process.env.JWT_SECRET || "fallback-secret-key-change-me",
+      { expiresIn: "1d" },
     );
 
     // 5. ส่งข้อมูลกลับ (ไม่ส่ง password)

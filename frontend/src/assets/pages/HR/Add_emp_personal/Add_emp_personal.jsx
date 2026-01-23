@@ -18,7 +18,7 @@ import EditEmpNav from "../../../Component/HR/EditEmpNav";
 import HRLayout from "../../../Component/HR/HRLayout";
 import LogService from "../../../../services/LogService";
 import "./Add_emp_personal.css";
-import PopupNotification from "../../../Component/popup_notifications/PopupNotification";
+import PopupNotification from "../../../Component/popup_notifications/popup_notifications-hr/PopupHR";
 
 const AddEmpPersonal = () => {
   const navigate = useNavigate();
@@ -231,7 +231,7 @@ const AddEmpPersonal = () => {
         // LOGGING
         try {
           const currentUser = JSON.parse(
-            localStorage.getItem("currentUser") || "{}"
+            localStorage.getItem("currentUser") || "{}",
           );
           await LogService.createLog({
             userId: currentUser.id || currentUser.user_id,
@@ -249,7 +249,7 @@ const AddEmpPersonal = () => {
         setOriginalForm(JSON.stringify(currentRest));
 
         const empList = JSON.parse(
-          localStorage.getItem("emp_personal_list") || "[]"
+          localStorage.getItem("emp_personal_list") || "[]",
         );
         empList.push(form);
         localStorage.setItem("emp_personal_list", JSON.stringify(empList));

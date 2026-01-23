@@ -21,9 +21,17 @@ import {
   FaBullhorn,
 } from "react-icons/fa";
 import "./HeadSidebar.css";
+import LoadingHead from "../loading/loading-head/LoadingHead";
 
 const HeadSidebar = ({ unreadCount = 0, onToggle }) => {
   const [open, setOpen] = useState(true);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Page transition loader since Sidebar remounts on nav
+    const timer = setTimeout(() => setLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -151,141 +159,155 @@ const HeadSidebar = ({ unreadCount = 0, onToggle }) => {
   };
 
   return (
-    <motion.aside
-      className="head-sidebar"
-      initial="expanded"
-      animate={open ? "expanded" : "collapsed"}
-      variants={sidebarVariants}
-      transition={{ duration: 0.4, type: "spring", damping: 12 }}
-    >
-      {/* Toggle Button */}
-      <motion.button
-        className="head-toggle-btn"
-        onClick={handleToggle}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
+    <>
+      <AnimatePresence>
+        {loading && (
+          <motion.div
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            style={{ position: "fixed", zIndex: 9999, inset: 0 }}
+          >
+            <LoadingHead />
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <motion.aside
+        className="head-sidebar"
+        initial="expanded"
+        animate={open ? "expanded" : "collapsed"}
+        variants={sidebarVariants}
+        transition={{ duration: 0.4, type: "spring", damping: 12 }}
       >
-        {open ? <FaChevronLeft /> : <FaChevronRight />}
-      </motion.button>
-
-      {/* Profile Section */}
-      <div className="head-profile-section">
-        <motion.div
-          className="head-avatar-wrapper"
-          animate={{
-            width: open ? 70 : 40,
-            height: open ? 70 : 40,
-            marginBottom: open ? "1rem" : "0.5rem",
-          }}
+        {/* Toggle Button */}
+        <motion.button
+          className="head-toggle-btn"
+          onClick={handleToggle}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
         >
-          <img
-            src={displayAvatar}
-            alt="Profile"
-            className="head-avatar"
-            style={{ width: "100%", height: "100%" }}
-          />
-        </motion.div>
+          {open ? <FaChevronLeft /> : <FaChevronRight />}
+        </motion.button>
 
-        <AnimatePresence>
-          {open && (
-            <motion.div
-              className="head-user-info"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.5, height: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <h3 className="head-user-name">{displayName}</h3>
-              <p className="head-user-role">{displayRole}</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+        {/* Profile Section */}
+        <div className="head-profile-section">
+          <motion.div
+            className="head-avatar-wrapper"
+            animate={{
+              width: open ? 70 : 40,
+              height: open ? 70 : 40,
+              marginBottom: open ? "1rem" : "0.5rem",
+            }}
+          >
+            <img
+              src={displayAvatar}
+              alt="Profile"
+              className="head-avatar"
+              style={{ width: "100%", height: "100%" }}
+            />
+          </motion.div>
 
-      <div className="head-divider" />
-
-      {/* Menu Items */}
-      <nav className="head-menu-container">
-        {menuGroups.map((group, idx) => (
-          <div key={idx} className="head-menu-group">
-            {open && group.title && (
-              <motion.h4
-                className="head-group-title"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ delay: 0.1 * idx }}
-              >
-                {group.title}
-              </motion.h4>
-            )}
-
-            <ul>
-              {group.items.map((item) => (
-                <li key={item.path}>
-                  <NavLink
-                    to={item.path}
-                    className={({ isActive }) =>
-                      `head-menu-item ${isActive ? "active" : ""}`
-                    }
-                  >
-                    <span className="head-icon">{item.icon}</span>
-                    <AnimatePresence>
-                      {open && (
-                        <motion.span
-                          className="head-label"
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          {item.label}
-                        </motion.span>
-                      )}
-                    </AnimatePresence>
-
-                    {/* Badge Handling */}
-                    {open && item.badge > 0 && (
-                      <motion.span
-                        className="head-badge"
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                      >
-                        {item.badge}
-                      </motion.span>
-                    )}
-                    {!open && item.badge > 0 && (
-                      <span className="head-dot-badge" />
-                    )}
-                  </NavLink>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </nav>
-
-      {/* Logout */}
-      <div className="head-footer">
-        <div className="head-menu-item logout" onClick={handleLogout}>
-          <span className="head-icon">
-            <FaSignOutAlt />
-          </span>
           <AnimatePresence>
             {open && (
-              <motion.span
-                className="head-label"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+              <motion.div
+                className="head-user-info"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.5, height: 0 }}
+                transition={{ duration: 0.2 }}
               >
-                Sign Out
-              </motion.span>
+                <h3 className="head-user-name">{displayName}</h3>
+                <p className="head-user-role">{displayRole}</p>
+              </motion.div>
             )}
           </AnimatePresence>
         </div>
-      </div>
-    </motion.aside>
+
+        <div className="head-divider" />
+
+        {/* Menu Items */}
+        <nav className="head-menu-container">
+          {menuGroups.map((group, idx) => (
+            <div key={idx} className="head-menu-group">
+              {open && group.title && (
+                <motion.h4
+                  className="head-group-title"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ delay: 0.1 * idx }}
+                >
+                  {group.title}
+                </motion.h4>
+              )}
+
+              <ul>
+                {group.items.map((item) => (
+                  <li key={item.path}>
+                    <NavLink
+                      to={item.path}
+                      className={({ isActive }) =>
+                        `head-menu-item ${isActive ? "active" : ""}`
+                      }
+                    >
+                      <span className="head-icon">{item.icon}</span>
+                      <AnimatePresence>
+                        {open && (
+                          <motion.span
+                            className="head-label"
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            {item.label}
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+
+                      {/* Badge Handling */}
+                      {open && item.badge > 0 && (
+                        <motion.span
+                          className="head-badge"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                        >
+                          {item.badge}
+                        </motion.span>
+                      )}
+                      {!open && item.badge > 0 && (
+                        <span className="head-dot-badge" />
+                      )}
+                    </NavLink>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </nav>
+
+        {/* Logout */}
+        <div className="head-footer">
+          <div className="head-menu-item logout" onClick={handleLogout}>
+            <span className="head-icon">
+              <FaSignOutAlt />
+            </span>
+            <AnimatePresence>
+              {open && (
+                <motion.span
+                  className="head-label"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  Sign Out
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </motion.aside>
+    </>
   );
 };
 

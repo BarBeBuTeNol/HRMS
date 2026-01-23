@@ -1,21 +1,34 @@
 import React, { useEffect, useMemo, useState } from "react";
 import api from "../../../../services/api";
 import CHROLayout from "../../../Component/CHRO/CHROLayout";
-import CHROPopup from "../../../Component/popup_notifications/CHROPopup";
+import PopupErrorCHRO from "../../../Component/popup-error/popup-error-chro/PopupErrorCHRO";
+import PopupDoneCHRO from "../../../Component/poup_done/poup_done-chro/PopupDoneCHRO";
 import LogService from "../../../../services/LogService";
+import LoadingCHRO from "../../../Component/loading/loading-chro/LoadingCHRO";
 import "./DecideCHRO.css";
+import ConfirmationModal from "../../../Component/popup_notifications/popup_notifications-chro/ConfirmationModal";
+import CustomSelect from "../../../Component/CustomSelect/CustomSelect";
 
 const DecideCHRO = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedNotification, setSelectedNotification] = useState(null);
 
+  // Confirmation Modal State
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info",
+    onConfirm: () => {},
+  });
+
   // Rejection Modal State
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [pendingRejectItem, setPendingRejectItem] = useState(null);
 
-  // Delete Modal State
+  // Delete Modal State (Legacy? Maybe replace with ConfirmModal or keep for specific use)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
 
@@ -89,6 +102,7 @@ const DecideCHRO = () => {
   };
 
   // ---------- Load ----------
+  // Ensure loading is only true initially
   useEffect(() => {
     const load = async () => {
       try {
@@ -141,7 +155,10 @@ const DecideCHRO = () => {
     };
 
     load();
-    const interval = setInterval(load, 15000); // refresh 15s
+    const interval = setInterval(() => {
+      // Silent refresh - do not set loading to true
+      load();
+    }, 15000); // refresh 15s
     return () => clearInterval(interval);
   }, []);
 
@@ -190,7 +207,18 @@ const DecideCHRO = () => {
     setItemToDelete(null);
   };
 
-  const handleApproveLeave = async (notification) => {
+  // Helper to open confirmation
+  const requestConfirm = (title, message, type, onConfirm) => {
+    setConfirmModal({
+      isOpen: true,
+      title,
+      message,
+      type, // 'info', 'warning', 'danger'
+      onConfirm,
+    });
+  };
+
+  const executeApproveLeave = async (notification) => {
     try {
       const numericId = notification.requestId;
       const response = await api.post("/chro/leave/action", {
@@ -228,11 +256,31 @@ const DecideCHRO = () => {
         console.warn("Logging failed", logErr);
       }
 
-      alert("อนุมัติคำขอเรียบร้อยแล้ว");
+      setPopupData({
+        title: "อนุมัติสำเร็จ",
+        message: "อนุมัติคำขอเรียบร้อยแล้ว",
+        type: "success",
+      });
+      setPopupOpen(true);
     } catch (error) {
       console.error("Error approving:", error);
-      alert("เกิดข้อผิดพลาดในการอนุมัติ");
+      setPopupData({
+        title: "เกิดข้อผิดพลาด",
+        message:
+          "เกิดข้อผิดพลาดในการอนุมัติ: " + (error.message || "Unknown error"),
+        type: "error",
+      });
+      setPopupOpen(true);
     }
+  };
+
+  const handleApproveLeave = (notification) => {
+    requestConfirm(
+      "ยืนยันการอนุมัติ",
+      `คุณต้องการอนุมัติคำขอของ ${notification.leaveData?.employeeName || "พนักงาน"} ใช่หรือไม่?`,
+      "info",
+      () => executeApproveLeave(notification),
+    );
   };
 
   // Open Rejection Modal
@@ -250,13 +298,20 @@ const DecideCHRO = () => {
   const submitReject = async () => {
     if (!pendingRejectItem) return;
     if (!rejectReason.trim()) {
-      alert("กรุณาระบุเหตุผลการปฏิเสธ");
-      return;
+      if (!rejectReason.trim()) {
+        setPopupData({
+          title: "แจ้งเตือน",
+          message: "กรุณาระบุเหตุผลการปฏิเสธ",
+          type: "error",
+        });
+        setPopupOpen(true);
+        return;
+      }
     }
 
     try {
       if (pendingRejectItem.type === "change_request") {
-        await handleChangeRequestAction(
+        await executeChangeRequestAction(
           pendingRejectItem,
           "reject",
           rejectReason,
@@ -313,10 +368,6 @@ const DecideCHRO = () => {
       }
 
       // Trigger Success Popup (conditional msg)
-      const targetEmpId =
-        pendingRejectItem.leaveData?.employeeId ||
-        pendingRejectItem.changeData?.target_user_name ||
-        "Unknown";
       setPopupData({
         title: "ดำเนินการสำเร็จ",
         message: `ได้ทำการปฏิเสธคำขอและส่งแจ้งเตือนเรียบร้อยแล้ว`,
@@ -325,7 +376,12 @@ const DecideCHRO = () => {
       setPopupOpen(true);
     } catch (error) {
       console.error("Error rejecting:", error);
-      alert("เกิดข้อผิดพลาดในการปฏิเสธ");
+      setPopupData({
+        title: "เกิดข้อผิดพลาด",
+        message: "เกิดข้อผิดพลาดในการปฏิเสธ",
+        type: "error",
+      });
+      setPopupOpen(true);
     }
   };
 
@@ -366,14 +422,24 @@ const DecideCHRO = () => {
         console.warn("Logging failed", logErr);
       }
 
-      alert("รับทราบรายการฝากงานและบันทึก log เรียบร้อยแล้ว");
+      setPopupData({
+        title: "สำเร็จ",
+        message: "รับทราบรายการฝากงานเรียบร้อยแล้ว",
+        type: "success",
+      });
+      setPopupOpen(true);
     } catch (error) {
       console.error("Error acknowledging:", error);
-      alert("เกิดข้อผิดพลาด");
+      setPopupData({
+        title: "เกิดข้อผิดพลาด",
+        message: "เกิดข้อผิดพลาดในการทำรายการ",
+        type: "error",
+      });
+      setPopupOpen(true);
     }
   };
 
-  const handleChangeRequestAction = async (
+  const executeChangeRequestAction = async (
     notification,
     action,
     comment = "",
@@ -414,33 +480,84 @@ const DecideCHRO = () => {
         }
       }
 
-      alert(`ดำเนินการสำเร็จ (${action})`);
+      // No alert here, usage handles popups (submitReject or caller of this)
+      if (action === "approve") {
+        setPopupData({
+          title: "ดำเนินการสำเร็จ",
+          message: `อนุมัติคำขอเปลี่ยนแปลงเรียบร้อยแล้ว`,
+          type: "success",
+        });
+        setPopupOpen(true);
+      }
 
       if (action === "reject") closeRejectModal();
     } catch (err) {
       console.error("Error updating change request:", err);
-      alert("Error updating request");
+      console.error("Error updating change request:", err);
+      setPopupData({
+        title: "Error",
+        message: "Error updating request",
+        type: "error",
+      });
+      setPopupOpen(true);
+    }
+  };
+
+  const handleChangeRequestAction = (notification, action) => {
+    if (action === "approve") {
+      requestConfirm(
+        "ยืนยันการอนุมัติ",
+        `คุณต้องการอนุมัติการเปลี่ยนแปลงข้อมูลของ ${notification.changeData?.target_user_name} ใช่หรือไม่?`,
+        "info",
+        () => executeChangeRequestAction(notification, "approve"),
+      );
+    } else {
+      // Reject handled by openRejectModal
     }
   };
 
   const handleMarkAllRead = () => {
-    const confirmDo = window.confirm("มาร์คว่าอ่านทั้งหมด?");
-    if (!confirmDo) return;
-    setNotifications((prev) =>
-      prev.map((n) => ({
-        ...n,
-        views: (n.views || 0) + (n.views > 0 ? 0 : 1),
-      })),
+    requestConfirm(
+      "ยืนยันการทำรายการ",
+      "คุณต้องการมาร์คว่าอ่านทั้งหมดใช่หรือไม่?",
+      "info",
+      () => {
+        setNotifications((prev) =>
+          prev.map((n) => ({
+            ...n,
+            views: (n.views || 0) + (n.views > 0 ? 0 : 1),
+          })),
+        );
+        setPopupData({
+          title: "สำเร็จ",
+          message: "มาร์คอ่านทั้งหมดแล้ว",
+          type: "success",
+        });
+        setPopupOpen(true);
+      },
     );
   };
 
   const handleDeleteRead = () => {
-    const confirmDo = window.confirm("ลบรายการที่อ่านแล้วทั้งหมด?");
-    if (!confirmDo) return;
-    const idsToKeep = new Set(
-      notifications.filter((n) => statusKey(n) === "unread").map((n) => n.id),
+    requestConfirm(
+      "ยืนยันการลบ",
+      "คุณต้องการลบรายการที่อ่านแล้วทั้งหมดใช่หรือไม่?",
+      "danger",
+      () => {
+        const idsToKeep = new Set(
+          notifications
+            .filter((n) => statusKey(n) === "unread")
+            .map((n) => n.id),
+        );
+        setNotifications((prev) => prev.filter((n) => idsToKeep.has(n.id)));
+        setPopupData({
+          title: "สำเร็จ",
+          message: "ลบรายการที่อ่านแล้วเรียบร้อย",
+          type: "success",
+        });
+        setPopupOpen(true);
+      },
     );
-    setNotifications((prev) => prev.filter((n) => idsToKeep.has(n.id)));
   };
 
   // ---------- Derived ----------
@@ -449,7 +566,7 @@ const DecideCHRO = () => {
     const unread = notifications.filter(
       (n) => statusKey(n) === "unread",
     ).length;
-    const read = notifications.filter((n) => statusKey(n) === "read").length;
+    const read = total - unread;
     const approved = notifications.filter(
       (n) => statusKey(n) === "approved",
     ).length;
@@ -495,11 +612,16 @@ const DecideCHRO = () => {
   if (loading) {
     return (
       <CHROLayout>
-        <div className="decide-chro-content">
-          <div className="decide-chro-loading">
-            <div className="decide-chro-spinner"></div>
-            <p>กำลังโหลดข้อมูล...</p>
-          </div>
+        <div
+          style={{
+            position: "relative",
+            height: "100vh",
+            margin: "-32px -40px",
+            width: "calc(100% + 80px)",
+            zIndex: 200,
+          }}
+        >
+          <LoadingCHRO />
         </div>
       </CHROLayout>
     );
@@ -544,41 +666,50 @@ const DecideCHRO = () => {
             <input
               className="decide-chro-input"
               type="text"
-              placeholder="🔍 ค้นหาหัวข้อ/ข้อความ/ชื่อ..."
+              placeholder="ค้นหาหัวข้อ/ข้อความ/ชื่อ..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
-            <select
-              className="decide-chro-select"
+            <CustomSelect
+              className="decide-chro-filter"
+              options={[
+                { value: "all", label: "ทุกประเภท" },
+                { value: "leave", label: "การลา" },
+                { value: "delegation", label: "ฝากงาน" },
+                { value: "announcement", label: "ประกาศ" },
+                {
+                  value: "change_request",
+                  label: "เปลี่ยนแปลงข้อมูล/เลิกจ้าง",
+                },
+                { value: "alert", label: "แจ้งเตือน" },
+              ]}
               value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-            >
-              <option value="all">ทุกประเภท</option>
-              <option value="leave">การลา</option>
-              <option value="delegation">ฝากงาน</option>
-              <option value="announcement">ประกาศ</option>
-              <option value="change_request">เปลี่ยนแปลงข้อมูล/เลิกจ้าง</option>
-              <option value="alert">แจ้งเตือน</option>
-            </select>
-            <select
-              className="decide-chro-select"
+              onChange={setTypeFilter}
+              placeholder="ทุกประเภท"
+            />
+            <CustomSelect
+              className="decide-chro-filter"
+              options={[
+                { value: "all", label: "ทุกสถานะ" },
+                { value: "unread", label: "ยังไม่อ่าน" },
+                { value: "read", label: "อ่านแล้ว" },
+                { value: "approved", label: "อนุมัติแล้ว" },
+                { value: "rejected", label: "ปฏิเสธแล้ว" },
+              ]}
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="all">ทุกสถานะ</option>
-              <option value="unread">ยังไม่อ่าน</option>
-              <option value="read">อ่านแล้ว</option>
-              <option value="approved">อนุมัติแล้ว</option>
-              <option value="rejected">ปฏิเสธแล้ว</option>
-            </select>
-            <select
-              className="decide-chro-select"
+              onChange={setStatusFilter}
+              placeholder="ทุกสถานะ"
+            />
+            <CustomSelect
+              className="decide-chro-filter"
+              options={[
+                { value: "latest", label: "ล่าสุดก่อน" },
+                { value: "oldest", label: "เก่าสุดก่อน" },
+              ]}
               value={sortOrder}
-              onChange={(e) => setSortOrder(e.target.value)}
-            >
-              <option value="latest">ล่าสุดก่อน</option>
-              <option value="oldest">เก่าสุดก่อน</option>
-            </select>
+              onChange={setSortOrder}
+              placeholder="ลำดับ"
+            />
           </div>
           <div className="decide-chro-controls-right">
             <div className="decide-chro-view-toggle">
@@ -651,7 +782,22 @@ const DecideCHRO = () => {
                         </p>
                       </div>
                     </div>
-                    <div className={`type-badge type-${t.key}`}>{t.label}</div>
+                    <div className="decide-chro-badges">
+                      <div className={`type-badge type-${t.key}`}>
+                        {t.label}
+                      </div>
+                      <div
+                        className={`decide-chro-status-badge status-${sKey}`}
+                      >
+                        {sKey === "approved"
+                          ? "อนุมัติแล้ว"
+                          : sKey === "rejected"
+                            ? "ปฏิเสธแล้ว"
+                            : sKey === "read"
+                              ? "อ่านแล้ว"
+                              : "รออนุมัติ"}
+                      </div>
+                    </div>
                   </div>
                   <div className="decide-chro-card-body">
                     <div className="decide-chro-info-grid">
@@ -726,32 +872,8 @@ const DecideCHRO = () => {
                           </div>
                         </>
                       )}
-                      <div className="decide-chro-info-item">
-                        <span className="decide-chro-info-label">สถานะ:</span>
-                        <span
-                          className={`decide-chro-info-value status-dot status-${sKey}`}
-                        >
-                          {sKey === "approved"
-                            ? "อนุมัติแล้ว"
-                            : sKey === "rejected"
-                              ? "ปฏิเสธแล้ว"
-                              : sKey === "read"
-                                ? "รับทราบ"
-                                : "รออนุมัติ/อ่าน"}
-                        </span>
-                      </div>
                     </div>
-                    <div className="decide-chro-status-section">
-                      <div className={`decide-chro-status badge-${sKey}`}>
-                        {sKey === "approved"
-                          ? "อนุมัติแล้ว"
-                          : sKey === "rejected"
-                            ? "ปฏิเสธแล้ว"
-                            : sKey === "read"
-                              ? "อ่านแล้ว"
-                              : "ยังไม่อ่าน"}
-                      </div>
-                    </div>
+
                     <div className="decide-chro-actions">
                       {n.type === "leave_request" && (
                         <>
@@ -1156,14 +1278,29 @@ const DecideCHRO = () => {
             </div>
           </div>
         )}
+        <ConfirmationModal
+          isOpen={confirmModal.isOpen}
+          onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+          onConfirm={confirmModal.onConfirm}
+          title={confirmModal.title}
+          message={confirmModal.message}
+          type={confirmModal.type}
+          confirmLabel="ยืนยัน"
+          cancelLabel="ยกเลิก"
+        />
+
         {/* SUCCESS POPUP (CHRO EXCLUSIVE) */}
-        <CHROPopup
-          isOpen={popupOpen}
+        <PopupErrorCHRO
+          isOpen={popupOpen && popupData.type === "error"}
           onClose={() => setPopupOpen(false)}
           title={popupData.title}
           message={popupData.message}
-          autoClose={true}
-          duration={5000}
+        />
+        <PopupDoneCHRO
+          isOpen={popupOpen && popupData.type === "success"}
+          onClose={() => setPopupOpen(false)}
+          title={popupData.title}
+          message={popupData.message}
         />
       </div>
     </CHROLayout>

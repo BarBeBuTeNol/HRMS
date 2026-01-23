@@ -1,0 +1,146 @@
+.crm-overlay-chro {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 23, 42, 0.7); /* Darker backdrop for CHRO */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.crm-content-chro {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  width: 450px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  border: 1px solid #e2e8f0;
+  animation: slideIn 0.3s ease-out;
+}
+
+.crm-title-chro {
+  margin-top: 0;
+  color: #1e293b;
+  font-size: 1.25rem;
+  border-bottom: 2px solid #fbbf24; /* Gold accent */
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+}
+
+.crm-changes-list-chro {
+  margin-bottom: 20px;
+  max-height: 200px;
+  overflow-y: auto;
+  background: #f8fafc;
+  padding: 10px;
+  border-radius: 6px;
+}
+
+.crm-change-item-chro {
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+  color: #334155;
+}
+
+.crm-old-val {
+  text-decoration: line-through;
+  color: #94a3b8;
+  margin-right: 5px;
+}
+
+.crm-new-val {
+  color: #059669;
+  font-weight: 500;
+}
+
+.crm-textarea-chro {
+  width: 100%;
+  min-height: 100px;
+  margin-bottom: 20px;
+  padding: 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-family: inherit;
+  resize: vertical;
+  color: #000000;
+}
+
+.crm-textarea-chro:focus {
+  outline: none;
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.2);
+}
+
+.crm-textarea-chro::placeholder {
+  color: #000000 !important;
+  opacity: 1;
+}
+
+.crm-textarea-chro::-webkit-input-placeholder {
+  color: #000000 !important;
+  opacity: 1;
+}
+
+.crm-textarea-chro::-moz-placeholder {
+  color: #000000 !important;
+  opacity: 1;
+}
+
+.crm-textarea-chro:-ms-input-placeholder {
+  color: #000000 !important;
+  opacity: 1;
+}
+
+.crm-actions-chro {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.crm-btn-cancel-chro {
+  padding: 8px 16px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #64748b;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.crm-btn-cancel-chro:hover {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.crm-btn-submit-chro {
+  padding: 8px 16px;
+  background: #fbbf24; /* Gold */
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #78350f; /* Dark brown text for contrast on gold */
+  font-weight: 600;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(251, 191, 36, 0.3);
+}
+
+.crm-btn-submit-chro:hover {
+  background: #f59e0b;
+  transform: translateY(-1px);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

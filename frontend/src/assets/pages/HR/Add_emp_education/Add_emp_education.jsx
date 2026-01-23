@@ -13,7 +13,7 @@ import {
 } from "react-icons/fa";
 import HRLayout from "../../../Component/HR/HRLayout";
 import EditEmpNav from "../../../Component/HR/EditEmpNav";
-import PopupNotification from "../../../Component/popup_notifications/PopupNotification";
+import PopupNotification from "../../../Component/popup_notifications/popup_notifications-hr/PopupHR";
 import "./Add_emp_education.css";
 
 const AddEmpEducation = () => {
@@ -41,7 +41,7 @@ const AddEmpEducation = () => {
   // Local state for image and IDs if not passed
   const [currentImage, setCurrentImage] = useState(empImage);
   const [currentPersonalId, setCurrentPersonalId] = useState(
-    personalId || empId
+    personalId || empId,
   );
 
   useEffect(() => {
@@ -346,8 +346,8 @@ const AddEmpEducation = () => {
                 {isSaved
                   ? "Saved"
                   : isEditMode
-                  ? "Save Changes"
-                  : "Complete Registration"}
+                    ? "Save Changes"
+                    : "Complete Registration"}
               </button>
             </div>
           </motion.div>

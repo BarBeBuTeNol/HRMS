@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 :root {
   /* Modern Dark Theme Palette */
@@ -15,16 +13,20 @@
   --accent-danger: #ef4444; /* Danger Red */
   --border-color: #374151;
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
-    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-md:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    sans-serif;
   margin: 0;
   padding: 0;
   width: 100%;
@@ -60,4 +62,52 @@ html,
   --input-padding-x: 2.5rem; /* Left padding for icons */
   --input-padding-y: 0.5rem;
   --radius-md: 0.5rem;
+
+  /* Breakpoints */
+  --mobile-max: 767px;
+  --tablet-min: 768px;
+  --tablet-max: 1023px;
+  --desktop-min: 1024px;
+}
+
+/* Utility Classes */
+@media (max-width: 767px) {
+  .hidden-mobile {
+    display: none !important;
+  }
+  .flex-column-mobile {
+    flex-direction: column !important;
+  }
+  .w-full-mobile {
+    width: 100% !important;
+  }
+  .p-mobile {
+    padding: 1rem !important;
+  }
+  .grid-responsive {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .hidden-tablet {
+    display: none !important;
+  }
+  .grid-responsive {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hidden-desktop {
+    display: none !important;
+  }
+}
+
+/* Fluid Typography Helper */
+.text-fluid-title {
+  font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+}
+.text-fluid-base {
+  font-size: clamp(0.875rem, 1.5vw, 1rem);
 }

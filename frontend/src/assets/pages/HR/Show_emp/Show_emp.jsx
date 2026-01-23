@@ -25,7 +25,7 @@ import {
   FaChevronDown,
 } from "react-icons/fa";
 import HRLayout from "../../../Component/HR/HRLayout";
-import PopupNotification from "../../../Component/popup_notifications/PopupNotification";
+import PopupNotification from "../../../Component/popup_notifications/popup_notifications-hr/PopupHR";
 import LogService from "../../../../services/LogService";
 import "./Show_emp.css";
 
@@ -173,7 +173,7 @@ const Show_emp = () => {
         // LOGGING
         try {
           const currentUser = JSON.parse(
-            localStorage.getItem("currentUser") || "{}"
+            localStorage.getItem("currentUser") || "{}",
           );
           await LogService.createLog({
             userId: currentUser.id || currentUser.user_id,
@@ -187,7 +187,7 @@ const Show_emp = () => {
         }
 
         setEmployeeList((prev) =>
-          prev.filter((e) => e.id !== deleteConfirm.empId)
+          prev.filter((e) => e.id !== deleteConfirm.empId),
         );
         setPopup({
           isOpen: true,
@@ -747,8 +747,8 @@ const Show_emp = () => {
                     {empTab === "personal"
                       ? "Personal"
                       : empTab === "employee"
-                      ? "Job"
-                      : "Education"}{" "}
+                        ? "Job"
+                        : "Education"}{" "}
                     Info
                   </button>
                   <button

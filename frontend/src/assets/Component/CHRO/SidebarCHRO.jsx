@@ -12,6 +12,7 @@ import {
   FaChevronLeft,
   FaChevronRight,
   FaUserTie,
+  FaFileSignature,
 } from "react-icons/fa";
 import "./SidebarCHRO.css";
 
@@ -39,6 +40,11 @@ const SidebarCHRO = ({ isOpen, toggleSidebar }) => {
       path: "/chro/announcements",
       label: "Announcements",
       icon: <FaBullhorn />,
+    },
+    {
+      path: "/chro/leave-request",
+      label: "Request Leave",
+      icon: <FaFileSignature />,
     },
     {
       path: "/chro/show-log",

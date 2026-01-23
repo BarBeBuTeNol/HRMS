@@ -1,0 +1,88 @@
+.popup-error-chro-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: var(--chro-backdrop-blur, blur(24px));
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.popup-error-chro-container {
+  background: var(--chro-card-bg);
+  border: 1px solid var(--chro-glass-border, rgba(255, 255, 255, 0.15));
+  box-shadow: var(--chro-shadow);
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  transform: scale(0.9);
+  animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.popup-error-chro-icon-wrapper {
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.popup-error-chro-icon {
+  width: 64px;
+  height: 64px;
+  color: var(--chro-danger, #ef4444);
+  filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.4));
+}
+
+.popup-error-chro-title {
+  color: var(--chro-text-primary, #f8fafc);
+  font-family: var(--chro-font-family, "Outfit", sans-serif);
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.popup-error-chro-message {
+  color: var(--chro-text-secondary, #cbd5e1);
+  font-family: var(--chro-font-family, "Outfit", sans-serif);
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.popup-error-chro-button {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--chro-danger, #ef4444);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  padding: 0.75rem 2rem;
+  border-radius: 8px;
+  font-family: var(--chro-font-family, "Outfit", sans-serif);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.popup-error-chro-button:hover {
+  background: var(--chro-danger, #ef4444);
+  color: white;
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes popIn {
+  to {
+    transform: scale(1);
+  }
+}

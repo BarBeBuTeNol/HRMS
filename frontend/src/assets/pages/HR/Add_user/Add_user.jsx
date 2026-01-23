@@ -16,7 +16,7 @@ import {
   FaCheck,
 } from "react-icons/fa";
 import HRLayout from "../../../Component/HR/HRLayout";
-import PopupNotification from "../../../Component/popup_notifications/PopupNotification";
+import PopupNotification from "../../../Component/popup_notifications/popup_notifications-hr/PopupHR";
 import "./Add_user.css";
 
 const AddUser = () => {

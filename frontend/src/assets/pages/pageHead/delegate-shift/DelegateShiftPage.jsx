@@ -10,7 +10,7 @@ import {
   FaCheckCircle,
   FaFilter,
 } from "react-icons/fa";
-import axios from "axios";
+import api from "../../../../services/api";
 
 const DelegateShiftPage = () => {
   // State for Stepper
@@ -40,9 +40,7 @@ const DelegateShiftPage = () => {
       const user = JSON.parse(localStorage.getItem("user"));
       if (!user) return;
 
-      const response = await axios.get(
-        `http://localhost:3000/api/head/delegation-data/${user.id}`
-      );
+      const response = await api.get(`/head/delegation-data/${user.id}`);
 
       const { workItems, employees } = response.data;
 
@@ -111,7 +109,7 @@ const DelegateShiftPage = () => {
         priority: priority,
       };
 
-      await axios.post("http://localhost:3000/api/head/delegate-work", payload);
+      await api.post("/head/delegate-work", payload);
 
       alert("Delegate Shift Submitted Successfully!");
       // Reset or Redirect
@@ -161,8 +159,8 @@ const DelegateShiftPage = () => {
                 {step === 1
                   ? "Select Task"
                   : step === 2
-                  ? "Select Staff"
-                  : "Confirm"}
+                    ? "Select Staff"
+                    : "Confirm"}
               </span>
             </div>
           ))}

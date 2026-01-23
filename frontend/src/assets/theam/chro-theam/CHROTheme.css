@@ -1,0 +1,43 @@
+/* CHRO Exclusive Theme Variables - Deep Purple & Platinum Executive Suite */
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap");
+
+:root {
+  /* Core Colors - Deep Executive Purple */
+  --chro-bg: #0f172a; /* Slate 900 base */
+  --chro-bg-gradient: linear-gradient(
+    135deg,
+    #1e1b4b 0%,
+    /* Indigo 950 */ #312e81 50%,
+    /* Indigo 900 */ #0f172a 100% /* Slate 900 */
+  );
+  --chro-sidebar-bg: rgba(30, 27, 75, 0.95); /* Indigo 950 with opacity */
+
+  /* Text - Platinum & Silver */
+  --chro-text-primary: #f8fafc; /* Slate 50 */
+  --chro-text-secondary: #cbd5e1; /* Slate 300 */
+  --chro-text-muted: #94a3b8; /* Slate 400 */
+
+  /* Accent - Platinum/Silver Glow */
+  --chro-accent-color: #e2e8f0; /* Slate 200 - Platinum */
+  --chro-accent-hover: #f1f5f9; /* Slate 100 - Bright Silver */
+  --chro-accent-glow: 0 0 20px rgba(226, 232, 240, 0.3);
+  --chro-secondary-accent: #6366f1; /* Indigo 500 - Subtle highlight */
+
+  /* Semantic */
+  --chro-danger: #ef4444;
+  --chro-success: #10b981;
+  --chro-warning: #f59e0b;
+
+  /* Interactions */
+  --chro-hover-bg: rgba(255, 255, 255, 0.1);
+  --chro-active-bg: rgba(99, 102, 241, 0.2);
+  --chro-glass-border: rgba(255, 255, 255, 0.15);
+
+  /* Components */
+  --chro-card-bg: rgba(30, 27, 75, 0.7);
+  --chro-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  --chro-backdrop-blur: blur(24px);
+
+  /* Font */
+  --chro-font-family: "Outfit", sans-serif;
+}

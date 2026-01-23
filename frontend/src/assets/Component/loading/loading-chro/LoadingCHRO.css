@@ -1,0 +1,207 @@
+/* LOADING CHRO - COMMAND CENTER STYLE */
+@import "../../../theam/chro-theam/CHROTheme.css";
+
+.loading-chro-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, #1e1b4b 0%, #020617 100%);
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 900;
+  overflow: hidden;
+}
+
+/* Base Command Center Container */
+.chro-command-center {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 3rem;
+  /* Removed perspective to ensure flat, 2D geometric precision */
+}
+
+/* --- RINGS --- */
+.ring {
+  position: absolute;
+  border-radius: 50%;
+  box-sizing: border-box; /* Key for correct border alignment */
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.05);
+}
+
+.ring-outer {
+  width: 100%;
+  height: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 2px solid var(--chro-accent-color);
+  border-bottom: 2px solid var(--chro-secondary-accent);
+  animation: rotateRight 6s linear infinite;
+  box-shadow: 0 0 15px rgba(226, 232, 240, 0.1);
+}
+
+.ring-middle {
+  width: 70%;
+  height: 70%;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-left: 2px solid var(--chro-secondary-accent);
+  border-right: 2px solid var(--chro-accent-color);
+  animation: rotateLeft 4s linear infinite;
+}
+
+.ring-inner {
+  width: 45%;
+  height: 45%;
+  border: 1px dashed rgba(255, 255, 255, 0.4);
+  animation: rotateRight 10s linear infinite;
+}
+
+/* --- CORE & SCANNER --- */
+.core-scanner {
+  position: absolute;
+  /* Fixed even pixel size to prevent sub-pixel centering offsets */
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(99, 102, 241, 0.15) 0%,
+    transparent 70%
+  );
+  /* Ensure children are positioned relative to this container's exact center */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 
+   FIX: Use absolute positioning with top/left 50% and transform-origin 
+   to ensure the line pivots EXACTLY from the geometric center. 
+   Previous gradient method caused sub-pixel shifts.
+*/
+.scanner-beam {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 50%; /* Radius length */
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    var(--chro-accent-color) 0%,
+    transparent 100%
+  );
+  box-shadow: 0 0 8px var(--chro-accent-color);
+  transform-origin: 0% 50%; /* Pivot from the left edge (center of circle) */
+  animation: scanRotation 3s linear infinite;
+  opacity: 0.8;
+  margin-top: -1px; /* Center the 2px height exactly on the 50% line */
+}
+
+/* --- LOGO TEXT --- */
+.chro-logo-container {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 10;
+  pointer-events: none; /* Allows clicks to pass through if needed */
+}
+
+.chro-logo-text {
+  font-family: var(--chro-font-family);
+  font-weight: 800;
+  font-size: 2.2rem;
+  color: var(--chro-text-primary);
+  letter-spacing: 0.1em;
+  background: linear-gradient(to bottom, #ffffff, #cbd5e1);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.5));
+}
+
+.chro-logo-sub {
+  font-family: var(--chro-font-family);
+  font-size: 0.65rem;
+  letter-spacing: 0.5em;
+  color: var(--chro-secondary-accent);
+  margin-top: -5px;
+  font-weight: 600;
+}
+
+/* --- BOTTOM STATUS --- */
+/* --- BOTTOM STATUS --- */
+.loading-status {
+  width: 100%; /* Ensure full width for centering context */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.typing-text {
+  font-family: "Courier New", monospace;
+  color: var(--chro-text-secondary);
+  font-size: 0.85rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  opacity: 0.8;
+  animation: blinkText 2s infinite;
+  text-align: center; /* Ensure text itself is centered */
+}
+
+/* --- ANIMATIONS --- */
+@keyframes rotateRight {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes rotateLeft {
+  0% {
+    transform: rotate(360deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes scanRotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes lineMove {
+  0% {
+    left: -40%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+@keyframes blinkText {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}

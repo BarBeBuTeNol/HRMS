@@ -1,0 +1,64 @@
+@import "../../../theam/epm_theam/EmployeeTheme.css";
+
+.loading-emp-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: var(--emp-bg);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.loading-emp-card {
+  background: white;
+  padding: 2.5rem;
+  border-radius: 1rem;
+  box-shadow: var(--emp-shadow);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  border: 1px solid var(--emp-divider);
+}
+
+.loading-emp-dots {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  background: var(--emp-accent-color);
+  border-radius: 50%;
+  animation: empBounce 0.6s infinite alternate;
+}
+
+.dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.loading-emp-text {
+  font-family: "Inter", sans-serif;
+  color: var(--emp-text-secondary);
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+@keyframes empBounce {
+  from {
+    transform: translateY(0);
+    opacity: 0.7;
+  }
+  to {
+    transform: translateY(-10px);
+    opacity: 1;
+  }
+}
