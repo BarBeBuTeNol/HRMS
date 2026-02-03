@@ -49,7 +49,6 @@ export default function DirectPosition() {
   const [errorPopup, setErrorPopup] = useState({
     isOpen: false,
     title: "Error",
-    title: "Error",
     message: "",
   });
   const [warningPopup, setWarningPopup] = useState({

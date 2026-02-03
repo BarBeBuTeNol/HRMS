@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FaUser,
   FaIdCard,
@@ -10,36 +10,71 @@ import {
   FaCode,
   FaCloudUploadAlt,
   FaCheckCircle,
+  FaFile,
+  FaTrash,
+  FaPlus,
 } from "react-icons/fa";
 import HRLayout from "../../../Component/HR/HRLayout";
 import EditEmpNav from "../../../Component/HR/EditEmpNav";
 import PopupNotification from "../../../Component/popup_notifications/popup_notifications-hr/PopupHR";
+import PopupDoneHR from "../../../Component/poup_done/poup_done-hr/PopupDoneHR";
+import PopupErrorHR from "../../../Component/popup-error/popup-error-hr/PopupErrorHR";
 import "./Add_emp_education.css";
 
 const AddEmpEducation = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { userId: paramUserId } = useParams();
+
   const {
     empId = "",
     personalId = "",
     empImage = "",
-    userId = null,
-    isEditMode,
-  } = location.state || {}; // Access state correctly
+    imageUrl: stateImageUrl = "",
+    userId: stateUserId = null,
+    isEditMode: stateEditMode,
+  } = location.state || {};
 
-  const [educationLevel, setEducationLevel] = useState("");
-  const [university, setUniversity] = useState("");
-  const [program, setProgram] = useState("");
-  const [experienceFile, setExperienceFile] = useState(null);
+  // Prioritize Param ID -> State ID
+  const userId = paramUserId || stateUserId;
+  const isEditMode = !!paramUserId || stateEditMode;
+
+  const [educationList, setEducationList] = useState([]);
+  const [newEducation, setNewEducation] = useState({
+    level: "",
+    university: "",
+    major: "",
+  });
+  const [showAddForm, setShowAddForm] = useState(true);
   const [skill, setSkill] = useState("");
   const [isSaved, setIsSaved] = useState(false);
-  const [showPopup, setShowPopup] = useState(false);
+
+  // Popup States
+  const [notification, setNotification] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info",
+  });
+  const [donePopup, setDonePopup] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+  });
+  const [errorPopup, setErrorPopup] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+  });
+
+  // New File State
+  const [educationFiles, setEducationFiles] = useState([]);
 
   // Track original form data for dirty checking
   const [originalForm, setOriginalForm] = useState(null);
 
   // Local state for image and IDs if not passed
-  const [currentImage, setCurrentImage] = useState(empImage);
+  const [currentImage, setCurrentImage] = useState(empImage || stateImageUrl);
   const [currentPersonalId, setCurrentPersonalId] = useState(
     personalId || empId,
   );
@@ -51,20 +86,42 @@ const AddEmpEducation = () => {
         const res = await fetch(`/api/users/${userId}`);
         if (res.ok) {
           const data = await res.json();
-          if (data.education_level) setEducationLevel(data.education_level);
-          if (data.institution) setUniversity(data.institution);
-          if (data.program) setProgram(data.program);
+          if (data.education_level || data.institution || data.program) {
+            // Handle legacy single-row data or new multi-row data
+            const initialList = [];
+            if (data.education_level || data.institution || data.program) {
+              initialList.push({
+                id: Date.now(),
+                level: data.education_level || "",
+                university: data.institution || "",
+                major: data.program || "",
+              });
+            }
+            // If API returns a list (e.g. data.educationList), use that instead:
+            if (data.educationList && Array.isArray(data.educationList)) {
+              setEducationList(data.educationList);
+            } else {
+              setEducationList(initialList);
+            }
+          }
           if (data.skills) setSkill(data.skills);
-          if (data.image_url && !currentImage) setCurrentImage(data.image_url);
+          if ((data.image_url || data.profile_image_url) && !currentImage)
+            setCurrentImage(data.image_url || data.profile_image_url);
           if (data.emp_code) setCurrentPersonalId(data.emp_code);
 
-          // Prepare original form for dirty checking - Keys MUST match useState order
+          // Prepare original form for dirty checking
           const loadedForm = {
-            educationLevel: data.education_level
-              ? String(data.education_level)
-              : "",
-            university: data.institution ? String(data.institution) : "",
-            program: data.program ? String(data.program) : "",
+            educationList:
+              data.educationList ||
+              (data.education_level
+                ? [
+                    {
+                      level: data.education_level,
+                      university: data.institution,
+                      major: data.program,
+                    },
+                  ]
+                : []),
             skill: data.skills ? String(data.skills) : "",
           };
           setOriginalForm(JSON.stringify(loadedForm));
@@ -78,72 +135,183 @@ const AddEmpEducation = () => {
     }
   }, [userId, currentImage]);
 
-  const handleFileChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setExperienceFile(e.target.files[0]);
+  // --- Validation Helpers ---
+  const validateFile = (file) => {
+    const validTypes = [
+      "application/pdf",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "image/jpeg",
+      "image/jpg",
+      "application/msword", // .doc
+    ];
+
+    const maxSize = 10 * 1024 * 1024; // 10MB
+
+    if (!validTypes.includes(file.type)) {
+      setErrorPopup({
+        isOpen: true,
+        title: "Invalid File Type",
+        message: `File "${file.name}" is not supported. Use PDF, DOC/DOCX, or JPG.`,
+      });
+      return false;
     }
+
+    if (file.size > maxSize) {
+      setErrorPopup({
+        isOpen: true,
+        title: "File Too Large",
+        message: `File "${file.name}" exceeds 10MB limit.`,
+      });
+      return false;
+    }
+    return true;
+  };
+
+  const handleFileChange = (e) => {
+    const newFiles = Array.from(e.target.files);
+    const validFiles = newFiles.filter(validateFile);
+
+    if (educationFiles.length + validFiles.length > 5) {
+      setErrorPopup({
+        isOpen: true,
+        title: "Limit Exceeded",
+        message: "You can only upload a maximum of 5 files.",
+      });
+      return;
+    }
+    setEducationFiles((prev) => [...prev, ...validFiles]);
+  };
+
+  const removeFile = (index) => {
+    setEducationFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleAddEducation = () => {
+    if (educationList.length >= 5) {
+      setErrorPopup({
+        isOpen: true,
+        title: "Limit Exceeded",
+        message: "You can only add up to 5 education entries.",
+      });
+      return;
+    }
+    if (
+      !newEducation.level ||
+      !newEducation.university ||
+      !newEducation.major
+    ) {
+      setErrorPopup({
+        isOpen: true,
+        title: "Missing Information",
+        message: "Please fill in all education fields.",
+      });
+      return;
+    }
+    setEducationList([...educationList, { ...newEducation, id: Date.now() }]);
+    setNewEducation({ level: "", university: "", major: "" });
+  };
+
+  const handleRemoveEducation = (id) => {
+    setEducationList(educationList.filter((item) => item.id !== id));
   };
 
   // Dirty check
   const isDirty = (() => {
-    // If file uploaded, it's dirty
-    if (experienceFile) return true;
+    // If files added, it's dirty
+    if (educationFiles.length > 0) return true;
     if (!originalForm) return false;
+
+    // Simple comparison for now. Ideally sort lists before comparing.
     const currentForm = {
-      educationLevel,
-      university,
-      program,
+      educationList,
       skill,
     };
+
     return JSON.stringify(currentForm) !== originalForm;
   })();
 
   const handleSave = async () => {
     try {
-      const payload = {
-        userId: userId,
-        educationLevel: educationLevel,
-        institution: university,
-        program: program,
-        previousExperience: "",
-        skills: skill,
-      };
+      // Use FormData for file uploads
+      const formData = new FormData();
+      formData.append("userId", userId);
+      // We send the list as a JSON string. Backend must parse this.
+      formData.append("educationList", JSON.stringify(educationList));
+      // Keeping legacy fields for compatibility if needed, or sending empty/first item
+      if (educationList.length > 0) {
+        formData.append("educationLevel", educationList[0].level);
+        formData.append("institution", educationList[0].university);
+        formData.append("program", educationList[0].major);
+      } else {
+        formData.append("educationLevel", "");
+        formData.append("institution", "");
+        formData.append("program", "");
+      }
+      formData.append("skills", skill);
+      formData.append("previousExperience", ""); // Legacy field empty
+
+      educationFiles.forEach((file) => {
+        formData.append("educationFiles", file);
+      });
 
       const res = await fetch("/api/employee-data/education", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: formData,
       });
 
       const result = await res.json();
 
       if (res.ok) {
         setIsSaved(true);
-        setShowPopup(true);
+        setEducationFiles([]); // Clear files after save
 
         // Update dirty state
         const sentForm = {
-          educationLevel: payload.educationLevel,
-          university: payload.institution,
-          program: payload.program,
-          skill: payload.skills,
+          educationList: educationList,
+          skill: skill,
         };
         setOriginalForm(JSON.stringify(sentForm));
 
-        if (!isEditMode) {
-          // Only navigate if NOT in edit mode
-          setTimeout(() => {
-            navigate("/hr/show-emp", { state: { newEmployee: payload } });
-          }, 3000);
-        } else {
-          // Stay on page
-        }
+        setDonePopup({
+          isOpen: true,
+          title: "Success",
+          message: isEditMode
+            ? "Education details updated successfully."
+            : "Employee registration has been completed successfully.",
+        });
       } else {
-        alert("Error saving data: " + result.message);
+        setErrorPopup({
+          isOpen: true,
+          title: "Error Saving",
+          message: "Error saving data: " + result.message,
+        });
       }
     } catch (err) {
       console.error("Network Error:", err);
-      alert("Network Error: " + err.message);
+      setErrorPopup({
+        isOpen: true,
+        title: "Network Error",
+        message: "Network Error: " + err.message,
+      });
+    }
+  };
+
+  const handleDoneClose = () => {
+    setDonePopup({ ...donePopup, isOpen: false });
+    if (!isEditMode) {
+      // Only navigate if NOT in edit mode
+      setTimeout(() => {
+        // Navigate relative to where we might want to go?
+        // User didn't specify next step after education, but usually it's done.
+        // Assuming /hr/show-emp is the destination as per logic.
+        // Need to pass state if needed.
+        // Re-creating the navigate state from original
+        const sentForm = {
+          educationList: educationList,
+          skill: skill,
+        };
+        navigate("/hr/show-emp", { state: { newEmployee: sentForm } });
+      }, 500);
     }
   };
 
@@ -228,44 +396,100 @@ const AddEmpEducation = () => {
                 <FaGraduationCap className="section-icon" />
                 <span>Academic Background</span>
               </div>
-              <div className="education-fields-grid">
-                <div className="form-group span-1">
-                  <label>Education Level</label>
-                  <div className="input-group">
-                    <FaBook className="input-icon" />
-                    <input
-                      type="text"
-                      value={educationLevel}
-                      onChange={(e) => setEducationLevel(e.target.value)}
-                      placeholder="e.g. Bachelor's Degree"
-                    />
+
+              {/* Education List */}
+              <div className="education-list">
+                {educationList.map((edu, index) => (
+                  <div key={edu.id} className="education-item-card">
+                    <div className="edu-info">
+                      <h4>{edu.university}</h4>
+                      <p>
+                        {edu.level} - {edu.major}
+                      </p>
+                    </div>
+                    <button
+                      className="btn-remove-edu"
+                      onClick={() => handleRemoveEducation(edu.id)}
+                    >
+                      <FaTrash />
+                    </button>
                   </div>
-                </div>
-                <div className="form-group span-1">
-                  <label>University / Institution</label>
-                  <div className="input-group">
-                    <FaUniversity className="input-icon" />
-                    <input
-                      type="text"
-                      value={university}
-                      onChange={(e) => setUniversity(e.target.value)}
-                      placeholder="University Name"
-                    />
-                  </div>
-                </div>
-                <div className="form-group span-2">
-                  <label>Program / Major</label>
-                  <div className="input-group">
-                    <FaGraduationCap className="input-icon" />
-                    <input
-                      type="text"
-                      value={program}
-                      onChange={(e) => setProgram(e.target.value)}
-                      placeholder="Field of Study"
-                    />
-                  </div>
-                </div>
+                ))}
               </div>
+
+              {/* Add New Education Form */}
+              {educationList.length < 5 && (
+                <div className="add-education-form">
+                  <h4 className="add-edu-header">
+                    Add Education ({educationList.length}/5)
+                  </h4>
+                  <div className="education-fields-grid">
+                    <div className="form-group span-1">
+                      <label>Education Level</label>
+                      <div className="input-group">
+                        <input
+                          type="text"
+                          value={newEducation.level}
+                          onChange={(e) =>
+                            setNewEducation({
+                              ...newEducation,
+                              level: e.target.value,
+                            })
+                          }
+                          placeholder="e.g. Bachelor's Degree"
+                          maxLength={255}
+                        />
+                      </div>
+                    </div>
+                    <div className="form-group span-1">
+                      <label>University / Institution</label>
+                      <div className="input-group">
+                        <input
+                          type="text"
+                          value={newEducation.university}
+                          onChange={(e) =>
+                            setNewEducation({
+                              ...newEducation,
+                              university: e.target.value,
+                            })
+                          }
+                          placeholder="University Name"
+                          maxLength={255}
+                        />
+                      </div>
+                    </div>
+                    <div className="form-group span-2">
+                      <label>Program / Major</label>
+                      <div className="input-group">
+                        <input
+                          type="text"
+                          value={newEducation.major}
+                          onChange={(e) =>
+                            setNewEducation({
+                              ...newEducation,
+                              major: e.target.value,
+                            })
+                          }
+                          placeholder="Field of Study"
+                          maxLength={255}
+                        />
+                      </div>
+                    </div>
+                    <div
+                      className="form-group span-2"
+                      style={{ textAlign: "right" }}
+                    >
+                      <button
+                        type="button"
+                        className="btn-add-edu"
+                        onClick={handleAddEducation}
+                      >
+                        <FaPlus /> Add Education
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Section 2: Skills & Experience */}
@@ -278,6 +502,8 @@ const AddEmpEducation = () => {
                 <div className="form-group span-2">
                   <label>Professional Skills</label>
                   <div className="input-group">
+                    {/* Textarea icons are positioned at top in CSS */}
+                    {/* <FaCode className="input-icon" />  Optional for textarea if desired, CSS supports it */}
                     <textarea
                       value={skill}
                       onChange={(e) => setSkill(e.target.value)}
@@ -285,63 +511,80 @@ const AddEmpEducation = () => {
                     />
                   </div>
                 </div>
+
+                {/* File Upload Section */}
                 <div className="form-group span-2">
-                  <label>Previous Experience File</label>
-                  <label htmlFor="exp-upload" className="file-upload-zone">
-                    <input
-                      id="exp-upload"
-                      type="file"
-                      accept=".pdf,.doc,.docx"
-                      onChange={handleFileChange}
-                      hidden
-                    />
-                    <div className="upload-content">
-                      <FaCloudUploadAlt className="upload-icon" />
-                      <span>Click to upload or drag and drop</span>
-                      {experienceFile ? (
-                        <span className="file-name">
-                          <FaCheckCircle
-                            style={{ marginRight: 5, verticalAlign: "middle" }}
-                          />
-                          {experienceFile.name}
-                        </span>
-                      ) : (
-                        <span style={{ fontSize: "0.8rem", opacity: 0.7 }}>
-                          PDF, DOC, DOCX up to 10MB
-                        </span>
-                      )}
+                  <label>Education Documents (Max 5)</label>
+                  <div className="file-upload-wrapper">
+                    <div className="uploaded-files-list">
+                      <AnimatePresence>
+                        {educationFiles.map((file, index) => (
+                          <motion.div
+                            key={`ed-${index}`}
+                            className="file-item"
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                          >
+                            <div className="file-info">
+                              <FaFile className="file-icon" />
+                              <div className="file-details">
+                                <span className="file-name">{file.name}</span>
+                                <span className="file-size">
+                                  {(file.size / 1024).toFixed(1)} KB
+                                </span>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              className="btn-remove-file"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeFile(index);
+                              }}
+                            >
+                              <FaTrash />
+                            </button>
+                          </motion.div>
+                        ))}
+                      </AnimatePresence>
                     </div>
-                  </label>
+
+                    {educationFiles.length < 5 && (
+                      <>
+                        <input
+                          type="file"
+                          id="edu-upload"
+                          multiple
+                          onChange={handleFileChange}
+                          style={{ display: "none" }}
+                          accept=".pdf,.doc,.docx,.jpg,.jpeg"
+                        />
+                        <button
+                          type="button"
+                          className="btn-add-file"
+                          onClick={() =>
+                            document.getElementById("edu-upload").click()
+                          }
+                        >
+                          <FaCloudUploadAlt /> Add Document
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div
-              className="form-actions"
-              style={{
-                display: "flex",
-                gap: "1rem",
-                justifyContent: "center", // Centered
-              }}
-            >
-              <button
-                onClick={handleCancel}
-                className="btn-back"
-                style={{ width: "300px" }} // Expanded
-              >
+            <div className="form-actions">
+              <button onClick={handleCancel} className="btn-back">
                 Back
               </button>
               <button
                 onClick={handleSave}
                 className="btn-save"
                 disabled={isEditMode ? !isDirty : false}
-                style={{
-                  width: isEditMode ? "300px" : "100%", // Expanded
-                  flex: isEditMode ? "none" : 1,
-                  opacity: isEditMode && !isDirty ? 0.5 : 1,
-                  cursor: isEditMode && !isDirty ? "not-allowed" : "pointer",
-                }}
               >
                 {isSaved
                   ? "Saved"
@@ -354,15 +597,23 @@ const AddEmpEducation = () => {
         </motion.div>
       </div>
       <PopupNotification
-        isOpen={showPopup}
-        onClose={() => setShowPopup(false)}
-        title="Success!"
-        message={
-          isEditMode
-            ? "Education details updated successfully."
-            : "Employee registration has been completed successfully."
-        }
-        type="success"
+        isOpen={notification.isOpen}
+        onClose={() => setNotification({ ...notification, isOpen: false })}
+        title={notification.title}
+        message={notification.message}
+        type={notification.type}
+      />
+      <PopupDoneHR
+        isOpen={donePopup.isOpen}
+        onClose={handleDoneClose}
+        title={donePopup.title}
+        message={donePopup.message}
+      />
+      <PopupErrorHR
+        isOpen={errorPopup.isOpen}
+        onClose={() => setErrorPopup({ ...errorPopup, isOpen: false })}
+        title={errorPopup.title}
+        message={errorPopup.message}
       />
     </HRLayout>
   );

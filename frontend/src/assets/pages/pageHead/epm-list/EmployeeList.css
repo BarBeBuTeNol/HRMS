@@ -9,18 +9,26 @@
   overflow: hidden;
 }
 
+/* Content Area */
 .head-emp-list-content {
   flex: 1;
-  margin-left: 260px; /* Shift content to right of fixed sidebar */
   padding: 0;
   height: 100vh;
   overflow-y: auto;
-  position: relative;
+  position: relative; /* For dynamic margin */
+  transition: margin-left 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.head-emp-list-content.sidebar-open {
+  margin-left: 260px;
+}
+.head-emp-list-content.sidebar-closed {
+  margin-left: 80px;
 }
 
 .head-emp-list-container {
-  --emp-card-bg: rgba(30, 48, 70, 0.6);
-  --emp-card-hover: rgba(30, 48, 70, 0.9);
+  --emp-card-bg: rgba(30, 48, 70, 0.4);
+  --emp-card-hover: rgba(30, 48, 70, 0.8);
   --emp-border: rgba(197, 160, 89, 0.2);
   --emp-text-main: #e2e8f0;
   --emp-text-sub: #94a3b8;
@@ -45,21 +53,39 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.header-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .head-emp-title {
   font-size: 2rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+  background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   margin: 0;
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.head-emp-date {
+  color: var(--emp-text-sub);
+  font-size: 0.9rem;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .head-emp-stats-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1.5rem;
 }
 
@@ -72,7 +98,31 @@
   align-items: center;
   gap: 1rem;
   backdrop-filter: blur(10px);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.head-emp-stat-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(255, 255, 255, 0.03),
+    transparent
+  );
+  transform: translateX(-100%);
+  transition: 0.5s;
+}
+.head-emp-stat-card:hover::before {
+  transform: translateX(100%);
 }
 
 .head-emp-stat-card:hover {
@@ -117,6 +167,8 @@
   border: 1px solid rgba(255, 255, 255, 0.05);
   margin-bottom: 2rem;
   flex-wrap: wrap;
+  align-items: center;
+  backdrop-filter: blur(10px);
 }
 
 .head-emp-search {
@@ -151,43 +203,242 @@
   color: var(--emp-text-sub);
 }
 
-.head-emp-filter select {
-  padding: 0.8rem 2rem 0.8rem 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+/* Custom Dropdown Styles - Enhanced */
+.head-emp-filter {
+  min-width: 260px;
+  position: relative;
+  z-index: 50; /* Ensure on top */
+}
+
+.custom-dropdown-comp {
+  position: relative;
+  width: 100%;
+  font-family: inherit;
+}
+
+.dropdown-trigger {
+  width: 100%;
+  padding: 0.8rem 1.2rem;
+  background: rgba(15, 23, 42, 0.8); /* Semi-transparent Navy */
+  border: 1px solid var(--emp-highlight); /* Gold Border */
   border-radius: 12px;
   color: #fff;
-  font-family: inherit;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   cursor: pointer;
-  appearance: none;
-  min-width: 180px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(8px);
 }
 
-.head-emp-filter {
+.dropdown-trigger:hover {
+  background: rgba(30, 41, 59, 0.9);
+  box-shadow: 0 8px 20px rgba(197, 160, 89, 0.2);
+  transform: translateY(-2px);
+  border-color: #e0b769; /* Brighter Gold */
+}
+
+.dropdown-trigger.open {
+  background: #1e293b;
+  box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.2);
+  border-color: var(--emp-highlight);
+}
+
+.dropdown-trigger span {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 120%;
+  left: 0;
+  width: 100%;
+  background: rgba(30, 41, 59, 0.95); /* Glass dark bg */
+  border: 1px solid rgba(197, 160, 89, 0.3);
+  border-radius: 16px;
+  padding: 0.5rem;
+  z-index: 100;
+  max-height: 320px;
+  overflow-y: auto;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(16px);
+  animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top center;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: scaleY(0.9) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1) translateY(0);
+  }
+}
+
+.dropdown-item {
+  padding: 0.9rem 1.2rem;
+  margin-bottom: 4px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #cbd5e1;
+  border: 1px solid transparent; /* Prepare for hover border */
+  transition: all 0.2s ease;
+  font-size: 0.95rem;
+  background: transparent;
+}
+
+.dropdown-item:last-child {
+  margin-bottom: 0;
+}
+
+.dropdown-item:hover {
+  background: linear-gradient(
+    90deg,
+    rgba(197, 160, 89, 0.15),
+    rgba(197, 160, 89, 0.05)
+  );
+  color: #fff;
+  border-color: rgba(197, 160, 89, 0.3);
+  padding-left: 1.5rem; /* Slide effect */
+}
+
+.dropdown-item.selected {
+  background: linear-gradient(135deg, var(--emp-highlight), #9f7d3d);
+  color: #0f172a;
+  font-weight: 700;
+  box-shadow: 0 4px 15px rgba(197, 160, 89, 0.4);
+  transform: scale(1.02); /* Pop out */
+}
+
+/* Check icon styles */
+.check-icon {
+  font-size: 0.9rem;
+  color: var(--emp-highlight);
+}
+
+.dropdown-item.selected .check-icon {
+  color: #0f172a; /* Dark check on gold bg */
+}
+
+/* Custom Scrollbar for dropdown */
+.dropdown-menu::-webkit-scrollbar {
+  width: 5px;
+}
+.dropdown-menu::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+.dropdown-menu::-webkit-scrollbar-thumb {
+  background: rgba(197, 160, 89, 0.5);
+  border-radius: 4px;
+}
+.dropdown-menu::-webkit-scrollbar-thumb:hover {
+  background: var(--emp-highlight);
+}
+
+/* View Toggle */
+.view-toggle-group {
+  display: flex;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.25rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.view-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  color: var(--emp-text-sub);
+  font-size: 1.1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.view-toggle-btn.active {
+  background: var(--emp-highlight);
+  color: #0f172a;
+  box-shadow: 0 2px 8px rgba(197, 160, 89, 0.4);
+}
+.view-toggle-btn:hover:not(.active) {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Status Legend */
+.status-legend {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--emp-text-sub);
+}
+.legend-item .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
   position: relative;
 }
-.head-emp-filter::after {
-  content: "▼";
-  font-size: 0.7rem;
+.legend-item .dot::after {
+  content: "";
   position: absolute;
-  right: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--emp-text-sub);
-  pointer-events: none;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  opacity: 0.5;
+}
+.legend-item .dot.active {
+  background: #10b981;
+  color: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+}
+.legend-item .dot.inactive {
+  background: #ef4444;
+  color: #ef4444;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+}
+.legend-item .dot.on-leave {
+  background: #f59e0b;
+  color: #f59e0b;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
 }
 
-/* Employee Grid */
+/* Employee Grid (Card View) */
 .head-emp-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.5rem;
 }
 
 .head-emp-card {
   background: var(--emp-card-bg);
   border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08); /* Brighter border */
   overflow: hidden;
   position: relative;
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -200,21 +451,38 @@
   background: var(--emp-card-hover);
   border-color: var(--emp-highlight);
   box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.6);
+  z-index: 5;
+}
+
+/* Shine Effect on Card */
+.card-shine-effect {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(
+    circle at top right,
+    rgba(255, 255, 255, 0.05),
+    transparent 60%
+  );
+  pointer-events: none;
+  opacity: 0.5;
 }
 
 .card-header-bg {
-  height: 80px;
+  height: 90px;
   background: linear-gradient(
     90deg,
     rgba(15, 23, 42, 0) 0%,
-    rgba(197, 160, 89, 0.2) 50%,
+    rgba(197, 160, 89, 0.15) 50%,
     rgba(15, 23, 42, 0) 100%
   );
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
-  opacity: 0.5;
+  opacity: 0.8;
 }
 
 .card-content {
@@ -228,97 +496,152 @@
   text-align: center;
 }
 
+.avatar-container {
+  margin-bottom: 1rem;
+  position: relative;
+  width: 100px;
+  height: 100px;
+}
+.avatar-glow {
+  position: absolute;
+  inset: -5px;
+  background: radial-gradient(circle, var(--emp-highlight) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.head-emp-card:hover .avatar-glow {
+  opacity: 0.5;
+}
+
 .emp-avatar {
-  width: 90px;
-  height: 90px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
   border: 3px solid var(--emp-highlight);
   box-shadow: 0 0 20px rgba(197, 160, 89, 0.3);
   object-fit: cover;
-  margin-bottom: 1rem;
   background: #1e293b;
+  position: relative;
+  z-index: 2;
+  transition: border-color 0.3s;
+}
+.head-emp-card:hover .emp-avatar {
+  border-color: #fff;
 }
 
 .emp-name {
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-size: 1.35rem;
+  font-weight: 700;
   color: #fff;
   margin-bottom: 0.25rem;
+  letter-spacing: -0.5px;
 }
 
 .emp-pos {
   font-size: 0.9rem;
   color: var(--emp-highlight);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.8rem;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 500;
+  letter-spacing: 1px;
+  font-weight: 600;
 }
 
 .emp-status {
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
+  padding: 0.35rem 0.85rem;
+  border-radius: 30px;
   font-size: 0.75rem;
   font-weight: 600;
-  margin-bottom: 1.25rem;
-  display: inline-block;
+  margin-bottom: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  text-transform: capitalize;
+}
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .status-active {
-  background: rgba(16, 185, 129, 0.2);
+  background: rgba(16, 185, 129, 0.15);
   color: #34d399;
   border: 1px solid rgba(16, 185, 129, 0.3);
 }
-
 .status-inactive {
-  background: rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.15);
   color: #f87171;
   border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.status-on-leave {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
 .emp-details {
   width: 100%;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding-top: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.6rem;
 }
 
 .detail-row {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.6rem;
   font-size: 0.85rem;
   color: var(--emp-text-sub);
 }
 
-.detail-row svg {
-  color: var(--emp-highlight);
+.detail-icon {
+  color: var(--emp-highlight) !important;
+  opacity: 0.9;
+  filter: drop-shadow(0 0 2px rgba(197, 160, 89, 0.3));
 }
 
 .emp-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.8rem;
   width: 100%;
   margin-top: auto;
 }
 
 .action-btn {
   flex: 1;
-  padding: 0.6rem;
-  border-radius: 8px;
+  padding: 0.75rem;
+  border-radius: 12px;
   border: none;
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
+  gap: 0.5rem;
+  text-decoration: none;
+  letter-spacing: 0.3px;
 }
 
 .btn-primary {
@@ -326,8 +649,9 @@
   color: #0f172a;
 }
 .btn-primary:hover {
-  background: var(--emp-text-main);
-  box-shadow: 0 0 15px rgba(197, 160, 89, 0.5);
+  background: #e0b769; /* Slightly brighter gold */
+  box-shadow: 0 4px 15px rgba(197, 160, 89, 0.4);
+  transform: translateY(-2px);
 }
 
 .btn-secondary {
@@ -336,8 +660,138 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+/* LIST VIEW (Table Styles) */
+.head-emp-list-view {
+  background: rgba(30, 48, 70, 0.4);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+
+.emp-table-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 0.5fr;
+  padding: 1rem 1.5rem;
+  background: rgba(15, 23, 42, 0.8);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--emp-text-sub);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 1px;
+  align-items: center;
+}
+
+/* Center all header columns except the first one (Employee Name) */
+.emp-table-header > div:not(:first-child) {
+  text-align: center;
+  display: flex;
+  justify-content: center;
+}
+
+.emp-table-body {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.emp-list-item {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 0.5fr;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  align-items: center;
+  transition: background 0.2s;
+}
+
+/* Center all list item cells except the first one (Employee Name) */
+.emp-list-item > div:not(.cell-employee) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.cell-employee {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.list-avatar {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--emp-highlight);
+}
+.list-info {
+  display: flex;
+  flex-direction: column;
+}
+.list-name {
+  font-weight: 600;
+  color: #fff;
+}
+.list-email {
+  font-size: 0.8rem;
+  color: var(--emp-text-sub);
+}
+
+.cell-id .id-badge {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  font-family: monospace;
+}
+
+.cell-pos {
+  color: var(--emp-highlight);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+.cell-contact {
+  font-size: 0.9rem;
+  color: #cbd5e1;
+}
+
+.emp-status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.mini-action-btn {
+  width: 35px;
+  height: 35px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--emp-text-main);
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+.mini-action-btn:hover {
+  background: var(--emp-highlight);
+  color: #0f172a;
+  transform: scale(1.1);
+}
+
+/* Scrollbar for list view */
+.emp-table-body::-webkit-scrollbar {
+  width: 6px;
+}
+.emp-table-body::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
 }
 
 /* Loading State */
@@ -351,20 +805,196 @@
 }
 
 /* Responsive */
+@media (max-width: 900px) {
+  /* For Tablets/Small Laptops -> Hide less import columns or enable scroll */
+  .emp-table-header,
+  .emp-list-item {
+    grid-template-columns: 2fr 1fr 1fr 1fr auto;
+  }
+  .cell-contact,
+  .emp-table-header > div:nth-child(5) {
+    display: none; /* Hide phone on smaller screens */
+  }
+}
+
 @media (max-width: 768px) {
+  /* On mobile, if sidebar is visible (icons), we need space */
+  /* Assuming sidebar is fixed width ~80px or overlay */
+  /* If the sidebar component logic doesn't hide it on mobile, we must push content */
+
+  .head-emp-list-content.sidebar-open,
+  .head-emp-list-content.sidebar-closed {
+    margin-left: 80px; /* Keep space for the icon toolbar */
+    width: calc(100% - 80px); /* Adjust width */
+    padding-bottom: 80px;
+  }
+
   .head-emp-list-container {
     padding: 1rem;
+    padding-top: 2rem;
   }
+
+  .head-emp-title-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  /* Make controls clearer on small screens */
+  .head-emp-controls {
+    gap: 0.8rem;
+  }
+
+  .head-emp-search,
+  .head-emp-filter,
+  .view-toggle-group {
+    width: 100%;
+  }
+
+  /* Adjust grid columns for very small screens */
+  .head-emp-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .head-emp-header {
+    margin-bottom: 1.5rem;
+  }
+
   .head-emp-controls {
     flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
   }
+
   .head-emp-search,
-  .head-emp-filter select {
+  .head-emp-filter,
+  .view-toggle-group {
     width: 100%;
     min-width: 0;
   }
-  /* On Mobile, remove left margin if sidebar becomes overlapping/drawer */
-  .head-emp-list-content {
-    margin-left: 80px; /* Or 0 if using drawer */
+
+  .view-toggle-group {
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05); /* Make it visible on mobile */
+    border-radius: 12px;
+    padding: 4px;
+  }
+
+  .head-emp-grid {
+    grid-template-columns: 1fr; /* Stack cards on mobile */
+    gap: 1rem;
+  }
+
+  /* Optimize List View for Mobile */
+  .head-emp-list-view {
+    display: block; /* Keep visible */
+  }
+
+  .emp-table-header {
+    display: none; /* Hide header on mobile for list view */
+  }
+
+  /* Transform List Items into Cards for Mobile */
+  .emp-list-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    margin-bottom: 1rem;
+  }
+
+  /* Reset center alignment for mobile card view to natural flow manually if needed, 
+     but flex-start above handles main axis. 
+     We need to override the specific centering we added for Desktop List View. */
+  /* Label - Value layout for mobile list items */
+  .emp-list-item > div:not(.cell-employee) {
+    display: flex;
+    width: 100%;
+    justify-content: space-between !important;
+    align-items: flex-start; /* Align to top if text wraps */
+    text-align: right; /* Ensure values align right */
+    padding: 0.8rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    gap: 1rem; /* Space between label and value */
+  }
+
+  /* Prevent labels from shrinking or wrapping */
+  .emp-list-item > div:not(.cell-employee)::before {
+    flex-shrink: 0;
+    text-align: left;
+  }
+
+  /* Ensure ID badge is not full width and sits on the right */
+  .cell-id {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    align-items: center;
+  }
+
+  .cell-id .id-badge {
+    margin-left: auto;
+    width: auto;
+    min-width: auto;
+    text-align: right;
+    background: transparent;
+    border: none;
+    padding: 0;
+    color: #fff;
+    font-size: 0.95rem; /* Match other values */
+    font-family: inherit; /* Remove monospace if preferred, or keep it. Let's match other fields */
+  }
+
+  .emp-list-item > div:last-child {
+    border-bottom: none;
+  }
+
+  /* Add pseudo-labels for mobile list view data */
+  .cell-id::before {
+    content: "ID:";
+    color: #94a3b8;
+    font-size: 0.8rem;
+  }
+  .cell-pos::before {
+    content: "Position:";
+    color: #94a3b8;
+    font-size: 0.8rem;
+  }
+  .cell-status::before {
+    content: "Status:";
+    color: #94a3b8;
+    font-size: 0.8rem;
+  }
+  .cell-contact::before {
+    content: "Contact:";
+    color: #94a3b8;
+    font-size: 0.8rem;
+  }
+  .cell-action::before {
+    content: "Action:";
+    color: #94a3b8;
+    font-size: 0.8rem;
+    display: none;
+  } /* Hide action label */
+
+  .cell-action {
+    justify-content: flex-end !important;
+  }
+
+  /* Cell Employee (Avatar + Name) adjustments */
+  .cell-employee {
+    width: 100%;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 1rem;
+  }
+
+  .status-legend {
+    flex-direction: column;
+    gap: 0.8rem;
   }
 }

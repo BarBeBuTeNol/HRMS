@@ -14,21 +14,88 @@
 }
 
 .exclusive-calendar-container {
-  width: 100%; /* Fill container */
-  height: 100%; /* Fill height */
-  min-height: 90vh; /* Ensure tall enough */
-  margin: 0; /* Remove margin as it's inside layout */
-  padding: 2rem;
-  background: rgba(20, 20, 30, 0.75); /* Darker semi-transparent bg */
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 3rem; /* Increased from 2rem for better HD spacing */
+  background: rgba(20, 20, 30, 0.75);
   backdrop-filter: blur(15px);
-  border-radius: 20px; /* Slight radius */
-  border: none;
-  box-shadow: none; /* Layout handles shadow if needed */
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.05); /* Soft border */
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
   color: var(--exclusive-cal-text);
   font-family: "Outfit", sans-serif;
   position: relative;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Base Layout Container Transitions */
+.calendar-layout-head,
+.calendar-layout-emp {
+  min-height: 100vh;
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  background: var(--head-bg-gradient, #0f172a);
+  display: flex;
+  margin-left: 0 !important; /* Reset layout margin */
+  width: 100%;
+}
+
+/* Specific Roles Sidebar Margins on Content Area */
+.calendar-layout-head .calendar-content-area { margin-left: 260px; }
+.calendar-layout-head.sidebar-collapsed .calendar-content-area { margin-left: 80px; }
+
+.calendar-layout-emp .calendar-content-area { margin-left: 280px; }
+.calendar-layout-emp.sidebar-collapsed .calendar-content-area { margin-left: 85px; }
+
+/* Ensure content area fills space and transitions smoothly */
+.calendar-content-area {
+  flex: 1;
+  width: auto; /* Changed from 100% to allow margin to work */
+  padding: 0;
+  overflow-x: hidden;
+  transition: margin-left 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Responsiveness for Head and Employee Roles (Manual Layouts) */
+@media (max-width: 1024px) {
+  .calendar-layout-head .calendar-content-area,
+  .calendar-layout-head.sidebar-collapsed .calendar-content-area {
+    margin-left: 80px;
+  }
+  .calendar-layout-emp .calendar-content-area,
+  .calendar-layout-emp.sidebar-collapsed .calendar-content-area {
+    margin-left: 85px;
+  }
+}
+
+@media (max-width: 768px) {
+  .calendar-layout-head .calendar-content-area,
+  .calendar-layout-head.sidebar-collapsed .calendar-content-area {
+    margin-left: 80px;
+  }
+  .calendar-layout-emp .calendar-content-area,
+  .calendar-layout-emp.sidebar-collapsed .calendar-content-area {
+    margin-left: 85px;
+  }
+}
+
+/* Adjustments for HR/CHRO roles (Using Layout Components) */
+.calendar-layout-hr,
+.calendar-layout-chro {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+}
+
+/* Mobile specific overlap fix for all containers */
+@media (max-width: 768px) {
+  .exclusive-calendar-container {
+    padding: 1rem;
+    padding-left: 0.5rem; /* Tighter padding for mobile */
+  }
 }
 
 /* Glassmorphism Header */
@@ -36,26 +103,64 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
-  padding: 1.5rem 3rem;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 20px;
+  margin-bottom: 3rem; /* Increased gap */
+  padding: 2rem 4rem; /* More horizontal padding */
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 24px;
   border: var(--exclusive-cal-border);
-  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
+  box-shadow: 
+    inset 0 0 20px rgba(0, 0, 0, 0.1),
+    0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 .exclusive-calendar-title {
-  font-size: 2.5rem;
+  font-size: 3rem;
   font-weight: 800;
-  letter-spacing: -1px;
-  background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+  letter-spacing: -1.5px;
+  background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center; /* Back to horizontal alignment for icon + text */
+  gap: 20px;
+}
+
+.calendar-icon-wrapper {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
   display: flex;
   align-items: center;
-  gap: 15px;
+  justify-content: center;
+}
+
+.exclusive-calendar-title div:last-child {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+}
+
+.exclusive-calendar-title span:first-child {
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  color: #a5b4fc;
+  font-weight: 700;
+  -webkit-text-fill-color: #a5b4fc;
+  margin-bottom: -5px;
+}
+
+.exclusive-calendar-title span:last-child {
+  background: linear-gradient(to right, #ffffff, #c7d2fe);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 2.5rem;
+  font-weight: 800;
 }
 
 .exclusive-calendar-nav {
@@ -139,6 +244,38 @@
   z-index: 10;
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
   border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Full HD Optimizations */
+@media (min-width: 1400px) {
+  .exclusive-calendar-container {
+    padding: 4rem 6rem;
+  }
+  
+  .exclusive-calendar-header {
+    margin-bottom: 4rem;
+    padding: 2.5rem 5rem;
+  }
+  
+  .exclusive-calendar-day-header {
+    font-size: 1.25rem;
+    padding: 2rem;
+  }
+  
+  .exclusive-calendar-day {
+    min-height: 140px;
+    padding: 15px;
+  }
+  
+  .exclusive-calendar-grid {
+    gap: 20px;
+  }
+
+  .exclusive-calendar-day-number {
+    font-size: 1.6rem;
+    width: 48px;
+    height: 48px;
+  }
 }
 
 .exclusive-calendar-day.holiday-mode {
@@ -279,7 +416,8 @@
   background: rgba(30, 30, 46, 0.85);
   backdrop-filter: blur(25px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6),
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.6),
     inset 0 0 0 1px rgba(255, 255, 255, 0.05);
   overflow: hidden;
   border-radius: 24px;
@@ -766,4 +904,405 @@
   .premium-event-card {
     padding: 0.8rem;
   }
+}
+
+/* Component-Specific Variables for Add Event Modal */
+:root {
+  --exclusive-form-bg: #1e1e2d;
+  --exclusive-form-border: #3f3f5f;
+  --exclusive-form-focus: #6366f1;
+  --exclusive-form-focus-glow: rgba(99, 102, 241, 0.3);
+  --exclusive-form-text: #ffffff;
+  --exclusive-form-placeholder: rgba(255, 255, 255, 0.5);
+  --exclusive-form-radius: 12px;
+  --exclusive-form-padding: 14px 18px;
+  --exclusive-form-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ADD EVENT COMPONENT STYLES (Refined) */
+
+.add-event-header {
+  position: relative;
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  padding: 2.5rem 2rem;
+  overflow: hidden;
+  color: white;
+}
+
+.header-orb {
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 150px;
+  height: 150px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  filter: blur(40px);
+}
+
+.add-event-header h2 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.add-event-header p {
+  color: rgba(255, 255, 255, 0.8);
+  margin-top: 5px;
+  font-size: 0.95rem;
+}
+
+.premium-close-absolute {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.2);
+  border: none;
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--exclusive-form-transition);
+}
+
+.premium-close-absolute:hover {
+  background: rgba(0, 0, 0, 0.4);
+  transform: scale(1.1);
+}
+
+.add-event-body {
+  padding: 2rem;
+}
+
+.premium-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.5px;
+}
+
+/* Unified Input Wrapper Style */
+.input-wrapper,
+.custom-select-wrapper {
+  position: relative;
+  border-radius: var(--exclusive-form-radius);
+  background: var(--exclusive-form-bg);
+  border: 1px solid var(--exclusive-form-border);
+  transition: var(--exclusive-form-transition);
+  width: 100%; /* Ensure full width */
+  box-sizing: border-box; /* Include padding/border in width */
+  min-height: 50px; /* Enforce overlapping minimum height to ensure equality */
+  display: flex; /* Flexbox for alignment */
+  align-items: center;
+}
+
+/* Focus State */
+.input-wrapper:focus-within,
+.custom-select-wrapper:focus-within {
+  border-color: var(--exclusive-form-focus);
+  box-shadow:
+    0 0 0 1px var(--exclusive-form-focus),
+    0 0 15px var(--exclusive-form-focus-glow);
+  background: #252538; /* Slightly lighter on focus */
+}
+
+/* Input & Select Inner Elements */
+.input-wrapper input,
+.input-wrapper textarea,
+.custom-select-wrapper select {
+  width: 100%;
+  background: transparent;
+  border: none !important; /* Force remove border */
+  box-shadow: none !important; /* Force remove shadow */
+  color: var(--exclusive-form-text);
+  padding: var(--exclusive-form-padding);
+  font-size: 0.95rem;
+  font-family: inherit;
+  outline: none !important; /* Remove default focus outline, handled by wrapper */
+  font-weight: 500;
+  appearance: none; /* Important for Select to behave like text input */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  height: 100%; /* Fill wrapper */
+  margin: 0; /* consistent */
+  display: block;
+}
+
+/* Ensure no focus ring on the select itself specifically */
+.custom-select-wrapper select:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* Placeholder styling */
+.input-wrapper input::placeholder,
+.input-wrapper textarea::placeholder {
+  color: var(--exclusive-form-placeholder);
+}
+
+.input-wrapper textarea {
+  min-height: 100px;
+  resize: none;
+  align-self: flex-start; /* Align text to top */
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: start; /* Align tops */
+}
+
+/* Select Specifics */
+.custom-select-wrapper select {
+  cursor: pointer;
+  z-index: 1;
+}
+
+/* Options */
+.custom-select-wrapper select option {
+  background: var(--exclusive-form-bg);
+  color: white;
+  padding: 10px;
+}
+
+/* Layout for select indicator */
+.select-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  position: absolute;
+  right: 18px;
+  top: 50%; /* Centered vertically */
+  transform: translateY(-50%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.select-indicator.holiday {
+  background: #ef4444;
+  box-shadow: 0 0 8px #ef4444;
+}
+.select-indicator.event {
+  background: #3b82f6;
+  box-shadow: 0 0 8px #3b82f6;
+}
+.select-indicator.meeting {
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.cancel-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 12px 20px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancel-btn:hover {
+  color: white;
+  text-decoration: underline;
+}
+
+.save-btn {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  border: none;
+  color: white;
+  padding: 12px 30px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+  background-size: 200% auto;
+  transition: 0.5s;
+}
+
+.save-btn:hover {
+  background-position: right center;
+  box-shadow: 0 8px 25px rgba(79, 70, 229, 0.6);
+}
+
+.quick-add-btn.full-width {
+  width: 100%;
+  margin-top: 15px;
+  padding: 12px;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  color: #a5b4fc;
+}
+
+.quick-add-btn.full-width:hover {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: white;
+}
+
+/* Responsive Design for New Event Modal */
+@media (max-width: 768px) {
+  /* Stack form inputs vertically */
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 1.2rem;
+  }
+
+  /* Adjust Modal Size for Mobile */
+  .exclusive-calendar-modal.premium-modal {
+    width: 95%;
+    max-width: 100%;
+    margin: 1rem;
+    max-height: 90vh; /* Prevent overflowing screen height */
+    overflow-y: auto; /* Allow scrolling within modal */
+    border-radius: 16px;
+  }
+
+  .add-event-header {
+    padding: 1.5rem;
+    text-align: center;
+  }
+
+  .add-event-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .add-event-body {
+    padding: 1.5rem;
+  }
+
+  .premium-form {
+    gap: 1.2rem;
+  }
+
+  /* Make sure inputs are touch-friendly size */
+  .input-wrapper,
+  .custom-select-wrapper {
+    min-height: 52px;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+    gap: 1rem;
+  }
+
+  .form-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .premium-close-absolute {
+    top: 10px;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+  }
+}
+
+/* Delete Button Styles */
+.delete-event-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-event-btn:hover {
+  background: rgba(239, 68, 68, 0.15); /* Red tint */
+  color: #ef4444; /* Red color */
+  transform: scale(1.1);
+}
+
+/* Custom Confirmation Modal */
+.confirm-modal-content {
+  background: #1e1e2d;
+  padding: 2rem;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 400px;
+  border: 1px solid #3f3f5f;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.confirm-title {
+  color: white;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.confirm-text {
+  color: #a0a0b0;
+  margin-bottom: 2rem;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.confirm-actions button {
+  padding: 10px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.btn-cancel {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.btn-cancel:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.btn-delete-confirm {
+  background: #ef4444;
+  color: white;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.btn-delete-confirm:hover {
+  background: #dc2626;
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
 }

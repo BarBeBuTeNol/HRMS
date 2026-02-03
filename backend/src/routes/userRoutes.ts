@@ -1,7 +1,16 @@
 import { Router } from "express";
 import pool from "../config/db";
 import { RowDataPacket } from "mysql2";
-import { createUser, deleteUser, getUserById, listUsers, updateUser, bulkUpdateUsers, resetUserPassword } from "../controllers/userController";
+import {
+  createUser,
+  deleteUser,
+  getUserById,
+  listUsers,
+  updateUser,
+  bulkUpdateUsers,
+  resetUserPassword,
+  getUserProfile,
+} from "../controllers/userController";
 import { requireAuth } from "../middlewares/authMiddleware";
 
 const router = Router();
@@ -32,7 +41,7 @@ router.get("/active-status", async (_req, res) => {
   try {
     // 1. Get Total Users Count
     const [totalRows] = await pool.query<RowDataPacket[]>(
-      `SELECT COUNT(*) as count FROM users`
+      `SELECT COUNT(*) as count FROM users`,
     );
     const totalUsers = totalRows[0]?.count || 0;
 
@@ -48,7 +57,7 @@ router.get("/active-status", async (_req, res) => {
        FROM users u
        LEFT JOIN roles r ON u.role_id = r.id
        LEFT JOIN user_sessions us ON u.id = us.user_id
-       ORDER BY us.last_activity DESC`
+       ORDER BY us.last_activity DESC`,
     );
 
     const usersWithStatus = rows.map((u) => ({
@@ -57,7 +66,9 @@ router.get("/active-status", async (_req, res) => {
       last_login: u.last_activity, // Display last activity
     }));
 
-    const onlineCount = usersWithStatus.filter((u) => u.status === "Online").length;
+    const onlineCount = usersWithStatus.filter(
+      (u) => u.status === "Online",
+    ).length;
     // console.log(`🔍 Active Status Check: Total ${totalUsers}, Online ${onlineCount}`);
 
     res.json({
@@ -72,26 +83,32 @@ router.get("/active-status", async (_req, res) => {
   }
 });
 
-/** ───────── POST /api/users/heartbeat ───────── 
+/** ───────── POST /api/users/heartbeat ─────────
  * Upsert into user_sessions
  */
 router.post("/heartbeat", async (req, res) => {
   try {
     const { userId } = req.body;
     if (!userId) return res.status(400).json({ error: "userId required" });
-    
-    const ip = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '';
+
+    const ip =
+      (req.headers["x-forwarded-for"] as string) ||
+      req.socket.remoteAddress ||
+      "";
 
     // console.log(`💓 Heartbeat received for User ID: ${userId} from IP: ${ip}`);
-    
+
     // Upsert into user_sessions
-    await pool.query(`
+    await pool.query(
+      `
       INSERT INTO user_sessions (user_id, ip_address, last_activity)
       VALUES (?, ?, NOW())
       ON DUPLICATE KEY UPDATE 
         ip_address = VALUES(ip_address),
         last_activity = NOW()
-    `, [userId, ip]);
+    `,
+      [userId, ip],
+    );
 
     res.json({ ok: true });
   } catch (err: any) {
@@ -99,8 +116,6 @@ router.post("/heartbeat", async (req, res) => {
     res.status(500).json({ error: "DB error" });
   }
 });
-
-
 
 // ...
 
@@ -110,9 +125,13 @@ router.get("/", listUsers);
 /** ───────── GET /api/users/:id ───────── */
 router.get("/:id", getUserById);
 
+/** ───────── GET /api/users/:id/profile ───────── */
+router.get("/:id/profile", getUserProfile);
+
 router.get("/head/employees", async (req, res) => {
   const departmentId = Number(req.query.departmentId);
-  if (!departmentId) return res.status(400).json({ error: "Missing departmentId" });
+  if (!departmentId)
+    return res.status(400).json({ error: "Missing departmentId" });
 
   try {
     const [rows] = await pool.query<RowDataPacket[]>(
@@ -128,7 +147,7 @@ router.get("/head/employees", async (req, res) => {
       WHERE u.department_id = ?
       ORDER BY u.id ASC
       `,
-      [departmentId]
+      [departmentId],
     );
 
     res.json(rows);
@@ -138,8 +157,7 @@ router.get("/head/employees", async (req, res) => {
   }
 });
 
-
-/** ───────── GET /api/users/employee/:id/detail ───────── 
+/** ───────── GET /api/users/employee/:id/detail ─────────
  * ดึงข้อมูลรายละเอียดพนักงานแบบเต็ม
  */
 router.get("/employee/:id/detail", async (req, res) => {
@@ -172,10 +190,11 @@ router.get("/employee/:id/detail", async (req, res) => {
       WHERE u.id = ?
         AND u.role_id = 5
       `,
-      [empId]
+      [empId],
     );
 
-    if (!rows.length) return res.status(404).json({ error: "Employee not found" });
+    if (!rows.length)
+      return res.status(404).json({ error: "Employee not found" });
     res.json(rows[0]);
   } catch (err: any) {
     console.error("❌ SQL ERROR:", err.sqlMessage || err.message);
@@ -183,12 +202,11 @@ router.get("/employee/:id/detail", async (req, res) => {
   }
 });
 
-
 // POST /api/users
 router.patch("/bulk", requireAuth, bulkUpdateUsers);
 router.post("/", createUser); // Create might be public or require auth depending on logic, leaving as is for now or add if needed. Usually Create User is Admin only.
-// If create user is used by admin page, it should probably be protected too, but focusing on user request for Direct Position logging first. 
-// Actually, Direct Position page uses create? No, it uses list, update, bulk. 
+// If create user is used by admin page, it should probably be protected too, but focusing on user request for Direct Position logging first.
+// Actually, Direct Position page uses create? No, it uses list, update, bulk.
 // Let's protect the ones relevant to Direct Position specifically first to be safe, or just protect update/bulk as planned.
 
 router.post("/:id/reset-password", requireAuth, resetUserPassword);

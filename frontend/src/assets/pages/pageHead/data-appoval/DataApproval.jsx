@@ -125,7 +125,10 @@ const DataApproval = () => {
 
         {/* Content */}
         {loading ? (
-          <div className="loading-spinner">Loading...</div>
+          <div className="loading-spinner">
+              <div className="spinner-icon"></div>
+              <span>Syncing Data...</span>
+          </div>
         ) : requests.length === 0 ? (
           <div className="empty-state">
             <h3>No requests found.</h3>
@@ -188,43 +191,17 @@ const DataApproval = () => {
                 )}
 
                 {activeTab === "history" && (
-                  <div
-                    style={{
-                      marginTop: "1rem",
-                      paddingTop: "1rem",
-                      borderTop: "1px solid var(--head-glass-border)",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        fontSize: "0.9rem",
-                      }}
-                    >
-                      <span
-                        style={{
-                          color:
-                            req.status === "Approved"
-                              ? "var(--head-success)"
-                              : "var(--head-danger)",
-                          fontWeight: "bold",
-                        }}
-                      >
+                  <div className="history-section">
+                    <div className="history-header">
+                      <span className={`status-text ${req.status.toLowerCase()}`}>
                         {req.status}
                       </span>
-                      <span style={{ color: "var(--head-text-muted)" }}>
+                      <span className="history-date">
                         {new Date(req.updated_at).toLocaleDateString()}
                       </span>
                     </div>
                     {req.comment_by_approver && (
-                      <div
-                        style={{
-                          fontSize: "0.85rem",
-                          color: "var(--head-text-secondary)",
-                          marginTop: "0.5rem",
-                        }}
-                      >
+                      <div className="history-note">
                         Note: {req.comment_by_approver}
                       </div>
                     )}

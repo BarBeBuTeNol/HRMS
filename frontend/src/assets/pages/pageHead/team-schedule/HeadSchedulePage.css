@@ -1,53 +1,68 @@
-/* HeadSchedulePage.css - Matrix Refactor */
+/* Import Head Theme Variables */
+@import "../../../Component/Head/HeadSidebar.css";
 
+/* Or define local mapping to match HeadTheme */
 :root {
-  --hs-bg: #0f172a;
-  --hs-card-bg: rgba(30, 41, 59, 0.6);
-  --hs-border: rgba(255, 255, 255, 0.1);
-  --hs-gold: #c5a059;
-  --hs-gold-hover: #e0b769;
-  --hs-text-main: #fff;
-  --hs-text-sub: #94a3b8;
+  --head-bg: #0f172a;
+  --head-bg-gradient: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+
+  --head-text-primary: #ffffff;
+  --head-text-secondary: #94a3b8;
+
+  --head-accent: #c5a059;
+  --head-accent-hover: #e0b769;
+  --head-accent-glow: rgba(197, 160, 89, 0.4);
+
+  --head-glass-border: rgba(255, 255, 255, 0.1);
+  --head-card-bg: rgba(30, 41, 59, 0.6);
+  --head-danger: #ef4444;
 }
 
 /* Base Layout */
 .head-schedule-layout {
   display: flex;
   min-height: 100vh;
-  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+  background: var(--head-bg-gradient);
   font-family: "Outfit", sans-serif;
-  color: var(--hs-text-main);
+  color: var(--head-text-primary);
+  overflow: hidden;
 }
 
+/* Sidebar Wrapper Logic */
 .head-sidebar-wrapper {
-  /* Since sidebar is fixed (based on HeadSidebar.css), we need to reserve space */
-  /* If Sidebar is 80px collapsed or 260px expanded, this is tricky. */
-  /* Best approach for fixed sidebar is padding on content */
-  /* display: none; Removed to show sidebar */
-  width: 260px; /* Reserve space if needed, though sidebar is fixed */
   flex-shrink: 0;
+  transition: width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Match Sidebar transition roughly */
+  /* Default widths for PC */
+}
+
+.head-sidebar-wrapper.expanded {
+  width: 260px;
+}
+
+.head-sidebar-wrapper.collapsed {
+  width: 80px;
 }
 
 .head-schedule-content {
   flex: 1;
-  /* margin-left: 260px; REMOVED: Wrapper already reserves space */
   padding: 2rem;
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
-  height: 100vh; /* Full Height for Sticky Scroll */
+  height: 100vh;
+  transition: padding 0.3s;
 }
 
 /* Header Controls */
 .hs-matrix-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end; /* Align bottom */
+  align-items: flex-end;
   margin-bottom: 1.5rem;
-  background: var(--hs-card-bg);
+  background: var(--head-card-bg);
   padding: 1.5rem;
   border-radius: 16px;
-  border: 1px solid var(--hs-border);
+  border: 1px solid var(--head-glass-border);
   backdrop-filter: blur(10px);
   flex-wrap: wrap;
   gap: 1rem;
@@ -56,13 +71,13 @@
 .hs-header-left .hs-title {
   font-size: 1.8rem;
   font-weight: 700;
-  color: var(--hs-gold);
+  color: var(--head-accent);
   margin: 0;
 }
 
 .hs-header-left .hs-subtitle {
   font-size: 0.9rem;
-  color: var(--hs-text-sub);
+  color: var(--head-text-secondary);
   margin: 4px 0 0;
 }
 
@@ -70,91 +85,172 @@
   display: flex;
   gap: 1rem;
   align-items: center;
+  flex-wrap: wrap;
 }
 
-/* Controls */
+/* ------------------------------------------------------------------
+   Theme Update: All Positions Select & Filters 
+   ------------------------------------------------------------------ */
+
 .hs-filter-wrapper {
+  position: relative;
   display: flex;
   align-items: center;
-  background: rgba(0, 0, 0, 0.2);
-  padding: 0 10px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(15, 23, 42, 0.6);
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid var(--head-glass-border);
+  transition: all 0.3s ease;
+  min-width: 180px; /* Give it some width */
+}
+
+.hs-filter-wrapper:hover,
+.hs-filter-wrapper:focus-within {
+  border-color: var(--head-accent);
+  box-shadow: 0 0 10px var(--head-accent-glow);
+  background: rgba(15, 23, 42, 0.8);
 }
 
 .hs-filter-icon {
-  color: var(--hs-text-sub);
+  color: var(--head-accent); /* Make icon accent color */
   margin-right: 8px;
+  font-size: 1rem;
 }
 
 .hs-select {
+  appearance: none;
+  -webkit-appearance: none;
   background: transparent;
   border: none;
-  color: white;
-  padding: 0.6rem;
+  color: var(--head-text-primary);
+  padding: 0.8rem;
   font-family: inherit;
-  outline: none;
+  font-size: 0.95rem;
+  width: 100%;
   cursor: pointer;
+  outline: none;
+}
+
+/* Add custom arrow for select */
+.hs-filter-wrapper::after {
+  content: "▼";
+  font-size: 0.7rem;
+  color: var(--head-text-secondary);
+  position: absolute;
+  right: 12px;
+  pointer-events: none;
+  transition: transform 0.3s;
+}
+
+.hs-filter-wrapper:hover::after {
+  color: var(--head-accent);
+  transform: rotate(180deg);
 }
 
 .hs-select option {
   background: #1e293b;
   color: white;
+  padding: 10px;
 }
 
+/* Specific styling for All Position option */
+.hs-select option:checked {
+  background: var(--head-accent);
+  color: #0f172a;
+  font-weight: 600;
+}
+
+/* Search Box Theme */
+.hs-filter-wrapper.search {
+  min-width: 200px;
+}
+
+.hs-search-input {
+  background: transparent;
+  border: none;
+  color: var(--head-text-primary);
+  padding: 0.8rem;
+  outline: none;
+  width: 100%;
+  font-size: 0.95rem;
+}
+
+.hs-search-input::placeholder {
+  color: var(--head-text-secondary);
+  opacity: 0.7;
+}
+
+/* View Toggle Theme */
 .hs-view-toggle {
   display: flex;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: 12px;
   padding: 4px;
   gap: 4px;
+  border: 1px solid var(--head-glass-border);
 }
 
 .hs-view-toggle button {
   background: transparent;
   border: none;
-  color: var(--hs-text-sub);
-  padding: 6px 12px;
+  color: var(--head-text-secondary);
+  padding: 8px 16px;
   cursor: pointer;
   border-radius: 8px;
   font-weight: 500;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
+}
+
+.hs-view-toggle button:hover {
+  color: var(--head-text-primary);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .hs-view-toggle button.active {
-  background: var(--hs-gold);
+  background: var(--head-accent);
   color: #0f172a;
   font-weight: 600;
+  box-shadow: 0 4px 12px var(--head-accent-glow);
 }
 
+/* Date Nav Theme */
 .hs-date-nav {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(0, 0, 0, 0.2);
-  padding: 0.5rem 1rem;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(15, 23, 42, 0.6);
+  padding: 0.6rem 1.2rem;
+  border-radius: 12px;
+  border: 1px solid var(--head-glass-border);
   font-weight: 600;
-  min-width: 200px;
+  min-width: 220px;
   justify-content: space-between;
+  color: var(--head-text-primary);
 }
 
 .hs-date-nav button {
-  background: none;
-  border: none;
-  color: var(--hs-text-sub);
+  background: transparent;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  color: var(--head-text-secondary);
   cursor: pointer;
   display: flex;
   align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
 }
 
 .hs-date-nav button:hover {
-  color: white;
+  border-color: var(--head-accent);
+  color: var(--head-accent);
+  background: rgba(197, 160, 89, 0.1);
 }
 
+/* Gold Button Theme */
 .hs-btn-gold {
-  background: linear-gradient(135deg, var(--hs-gold), #9f7d3d);
+  background: linear-gradient(135deg, var(--head-accent), #9f7d3d);
   border: none;
   color: #fff;
   padding: 0.7rem 1.2rem;
@@ -164,34 +260,43 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  box-shadow: 0 4px 15px rgba(197, 160, 89, 0.3);
-  transition: transform 0.2s;
+  box-shadow: 0 4px 15px var(--head-accent-glow);
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
 }
 
 .hs-btn-gold:hover {
   transform: translateY(-2px);
-  background: linear-gradient(135deg, var(--hs-gold-hover), var(--hs-gold));
+  background: linear-gradient(
+    135deg,
+    var(--head-accent-hover),
+    var(--head-accent)
+  );
+  box-shadow: 0 6px 20px var(--head-accent-glow);
 }
 
 /* Matrix Table Container */
 .hs-matrix-container {
   flex: 1;
-  overflow: hidden; /* Manage internal scroll */
+  overflow: hidden;
   background: rgba(30, 41, 59, 0.4);
   border-radius: 16px;
-  border: 1px solid var(--hs-border);
+  border: 1px solid var(--head-glass-border);
   display: flex;
   flex-direction: column;
+  position: relative; /* Context for sticky */
 }
 
 .hs-table-wrapper {
   flex: 1;
-  overflow: auto; /* Scrollable area */
+  overflow: auto;
 }
 
 .hs-matrix-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate; /* Required for sticky borders usually, but collapse works fine too sometimes */
+  border-spacing: 0;
   white-space: nowrap;
 }
 
@@ -199,13 +304,14 @@
 .hs-sticky-col-header {
   position: sticky;
   left: 0;
-  z-index: 10;
-  background: #1e293b; /* Match header bg */
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 20; /* Higher than cell content */
+  background: #1e293b;
+  border-right: 1px solid var(--head-glass-border);
+  border-bottom: 1px solid var(--head-glass-border);
   min-width: 250px;
   padding: 1rem;
   text-align: left;
-  color: var(--hs-text-sub);
+  color: var(--head-text-secondary);
   font-weight: 600;
   text-transform: uppercase;
   font-size: 0.8rem;
@@ -215,20 +321,30 @@
 .hs-sticky-col-cell {
   position: sticky;
   left: 0;
-  z-index: 5;
-  background: #0f172a; /* Match row bg */
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  z-index: 10; /* Higher than regular cells */
+  background: #0f172a;
+  border-right: 1px solid var(--head-glass-border);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05); /* Match row border */
   padding: 0.8rem 1rem;
 }
 
 /* Headers */
 .hs-date-header {
+  position: sticky; /* Sticky headers vertically? No, just normal th */
+  top: 0;
+  z-index: 15; /* Be on top of everything when scrolling vertical, but horizontal sticky col is > 15? */
+  background: #1e293b; /* Solid bg due to scrolling content under */
   padding: 0.8rem;
   text-align: center;
-  background: rgba(255, 255, 255, 0.02);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--head-glass-border);
   border-left: 1px solid rgba(255, 255, 255, 0.02);
   min-width: 60px;
+}
+
+/* Correction for Sticky Header top z-index vs Sticky Col left z-index */
+/* Corner (Top-Left) needs highest z-index */
+thead tr th.hs-sticky-col-header {
+  z-index: 30;
 }
 
 .hs-date-num {
@@ -238,7 +354,7 @@
 
 .hs-date-day {
   font-size: 0.75rem;
-  color: var(--hs-text-sub);
+  color: var(--head-text-secondary);
   text-transform: uppercase;
 }
 
@@ -248,20 +364,19 @@
 }
 
 .hs-date-header.is-holiday {
-  background: rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.15);
   color: #f87171;
+  border-bottom: 2px solid var(--head-danger);
 }
 
 .hs-date-header.is-today {
-  background: rgba(197, 160, 89, 0.2);
-  color: var(--hs-gold);
-  border-bottom: 2px solid var(--hs-gold);
+  background: rgba(197, 160, 89, 0.15);
+  color: var(--head-accent);
+  border-bottom: 2px solid var(--head-accent);
 }
 
 /* Rows */
 .hs-matrix-table tbody tr {
-  /* border-bottom: 1px solid rgba(255, 255, 255, 0.02); */
-  border-bottom: none; /* Let cells handle borders */
   transition: background 0.1s;
 }
 
@@ -269,10 +384,10 @@
   background: rgba(255, 255, 255, 0.02);
 }
 .hs-matrix-table tbody tr:hover .hs-sticky-col-cell {
-  background: #151e32; /* Slightly lighter than base for hover */
+  background: #151e32;
 }
 .hs-matrix-table tbody tr:hover td.is-today {
-  background: rgba(197, 160, 89, 0.15); /* Keep today highlight on hover */
+  background: rgba(197, 160, 89, 0.1);
 }
 
 /* Cells */
@@ -280,15 +395,15 @@
   padding: 4px;
   text-align: center;
   border-left: 1px solid rgba(255, 255, 255, 0.02);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
   height: 60px;
+  vertical-align: middle;
 }
 
 .hs-cell.is-today {
-  background: rgba(197, 160, 89, 0.1);
-  border-left: 1px solid rgba(197, 160, 89, 0.3);
-  border-right: 1px solid rgba(197, 160, 89, 0.3);
-  position: relative; /* Ensure borders render on top if needed */
+  background: rgba(197, 160, 89, 0.05);
+  border-left: 1px solid rgba(197, 160, 89, 0.2);
+  border-right: 1px solid rgba(197, 160, 89, 0.2);
 }
 
 .hs-cell-content {
@@ -304,8 +419,6 @@
 }
 
 /* Cell Types */
-.type-shift {
-}
 .label-M {
   background: rgba(96, 165, 250, 0.15);
   color: #60a5fa;
@@ -322,7 +435,7 @@
   border: 1px solid rgba(167, 139, 250, 0.3);
 }
 .label-OFF {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.03);
   color: #64748b;
   font-size: 0.7rem;
 }
@@ -353,17 +466,18 @@
   height: 36px;
   border-radius: 50%;
   border: 2px solid rgba(255, 255, 255, 0.1);
+  object-fit: cover;
 }
 
 .hs-emp-name {
   font-weight: 600;
   font-size: 0.9rem;
-  color: white;
+  color: var(--head-text-primary);
 }
 
 .hs-emp-pos {
   font-size: 0.75rem;
-  color: var(--hs-text-sub);
+  color: var(--head-text-secondary);
 }
 
 /* Legend */
@@ -374,7 +488,7 @@
   background: rgba(0, 0, 0, 0.2);
   padding: 6px 14px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--head-glass-border);
 }
 
 .hs-legend-item {
@@ -382,7 +496,7 @@
   align-items: center;
   gap: 6px;
   font-size: 0.75rem;
-  color: var(--hs-text-sub);
+  color: var(--head-text-secondary);
   font-weight: 500;
 }
 
@@ -423,7 +537,7 @@
   background: rgba(255, 255, 255, 0.2);
 }
 
-/* Empty State aesthetics - make it look intentional */
+/* Empty State aesthetics */
 .hs-cell-content.label-OFF {
   background: repeating-linear-gradient(
     45deg,
@@ -437,16 +551,6 @@
   border: 1px solid rgba(255, 255, 255, 0.02);
 }
 
-/* Search Input */
-.hs-search-input {
-  background: transparent;
-  border: none;
-  color: white;
-  padding: 0.6rem;
-  outline: none;
-  min-width: 150px;
-}
-
 /* Clickable Cell */
 .hs-cell.is-clickable {
   cursor: pointer;
@@ -455,7 +559,7 @@
   background: rgba(255, 255, 255, 0.05);
 }
 
-/* Small Modal Logic */
+/* Modal */
 .hs-modal-overlay {
   position: fixed;
   inset: 0;
@@ -471,15 +575,16 @@
   background: #1e293b;
   padding: 2rem;
   border-radius: 16px;
-  border: 1px solid var(--hs-gold);
+  border: 1px solid var(--head-accent);
   width: 320px;
   text-align: center;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  position: relative;
 }
 
 .hs-modal-content h3 {
   margin-top: 0;
-  color: var(--hs-gold);
+  color: var(--head-accent);
 }
 
 .hs-modal-actions {
@@ -525,9 +630,9 @@
   gap: 20px;
   padding: 1rem 1.5rem;
   background: #1e293b;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--head-glass-border);
   font-size: 0.9rem;
-  color: var(--hs-text-sub);
+  color: var(--head-text-secondary);
   font-weight: 500;
   position: sticky;
   bottom: 0;
@@ -540,4 +645,239 @@
   background: rgba(255, 255, 255, 0.05);
   padding: 4px 12px;
   border-radius: 20px;
+}
+
+/* --- Mobile / Responsive Fixes --- */
+@media (max-width: 1024px) {
+  /* If state is synchronized, these classes handle tablet too. 
+       But ensure good UX on smaller screens. */
+}
+
+@media (max-width: 768px) {
+  /* On Mobile, the SidebarWrapper should behave well */
+  .head-sidebar-wrapper.expanded {
+    /* On Mobile, 260px pushes content too far? 
+        If users want "No Overlap", we push content. 
+        Then content needs horizontal scroll or wraps. 
+        Given structure flex-row, content shrinks. 
+     */
+    min-width: 260px; /* Force wrapper to hold space */
+  }
+
+  .head-sidebar-wrapper.collapsed {
+    min-width: 80px;
+  }
+
+  /* If sidebar is fixed, we need a margin/padding equal to it. 
+     The wrapper approach does this naturally since it's a flex item with width.
+     The issue is if sidebar is fixed position, wrapper is empty.
+     The Sidebar CSS says position: fixed.
+     So wrapper is empty box.
+     We must ensure wrapper matches sidebar width.
+  */
+
+  .head-schedule-content {
+    width: 100%; /* Ensure content takes remaining space */
+    padding: 1rem;
+    overflow-x: auto; /* Allow horizontal scroll if squeezed */
+  }
+
+  /* Stack Header Elements */
+  .hs-matrix-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.5rem;
+  }
+
+  .hs-header-controls {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .hs-filter-wrapper,
+  .hs-view-toggle,
+  .hs-date-nav,
+  .hs-btn-gold {
+    width: 100%;
+    justify-content: center;
+    min-width: unset;
+  }
+
+  .hs-filter-wrapper.search input {
+    width: 100%;
+  }
+
+  .hs-legend {
+    overflow-x: auto;
+    white-space: nowrap;
+    width: 100%;
+    scrollbar-width: none;
+  }
+
+  /* Responsive Table */
+  .hs-sticky-col-header,
+  .hs-sticky-col-cell {
+    min-width: 120px;
+    max-width: 120px;
+    font-size: 0.8rem;
+    padding: 0.5rem;
+  }
+
+  .hs-emp-cell {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 4px;
+  }
+  .hs-emp-cell img {
+    width: 32px;
+    height: 32px;
+  }
+  .hs-emp-name {
+    font-size: 0.75rem;
+    white-space: normal;
+  }
+  .hs-emp-pos {
+    display: none;
+  }
+
+  .hs-matrix-footer {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+/* --- Custom Dropdown Styles (Matches Employee List) --- */
+.custom-dropdown-comp {
+  position: relative;
+  width: 100%;
+  font-family: inherit;
+  z-index: 50; /* Ensure on top for dropdown */
+}
+
+.dropdown-trigger {
+  width: 100%;
+  padding: 0.8rem 1.2rem;
+  background: rgba(15, 23, 42, 0.8); /* Semi-transparent Navy */
+  border: 1px solid var(--head-glass-border); /* Use local var */
+  border-radius: 12px;
+  color: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(8px);
+}
+
+.dropdown-trigger:hover {
+  background: rgba(30, 41, 59, 0.9);
+  box-shadow: 0 8px 20px rgba(197, 160, 89, 0.2);
+  transform: translateY(-2px);
+  border-color: #e0b769; /* Brighter Gold */
+}
+
+.dropdown-trigger.open {
+  background: #1e293b;
+  box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.2);
+  border-color: var(--head-accent);
+}
+
+.dropdown-trigger span {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 120%;
+  left: 0;
+  width: 100%;
+  background: rgba(30, 41, 59, 0.95); /* Glass dark bg */
+  border: 1px solid rgba(197, 160, 89, 0.3);
+  border-radius: 16px;
+  padding: 0.5rem;
+  z-index: 1000; /* Higher z-index for schedule page overlap */
+  max-height: 320px;
+  overflow-y: auto;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(16px);
+  animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top center;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: scaleY(0.9) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1) translateY(0);
+  }
+}
+
+.dropdown-item {
+  padding: 0.9rem 1.2rem;
+  margin-bottom: 4px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #cbd5e1;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  font-size: 0.95rem;
+  background: transparent;
+}
+
+.dropdown-item:last-child {
+  margin-bottom: 0;
+}
+
+.dropdown-item:hover {
+  background: linear-gradient(
+    90deg,
+    rgba(197, 160, 89, 0.15),
+    rgba(197, 160, 89, 0.05)
+  );
+  color: #fff;
+  border-color: rgba(197, 160, 89, 0.3);
+  padding-left: 1.5rem; /* Slide effect */
+}
+
+.dropdown-item.selected {
+  background: linear-gradient(135deg, var(--head-accent), #9f7d3d);
+  color: #0f172a;
+  font-weight: 700;
+  box-shadow: 0 4px 15px rgba(197, 160, 89, 0.4);
+  transform: scale(1.02); /* Pop out */
+}
+
+.check-icon {
+  font-size: 0.9rem;
+  color: var(--head-accent);
+}
+
+.dropdown-item.selected .check-icon {
+  color: #0f172a;
+}
+
+/* Override hs-filter-wrapper padding for custom dropdown */
+.hs-filter-wrapper:has(.custom-dropdown-comp) {
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible; /* Allow dropdown to overflow */
+}
+.hs-filter-wrapper:has(.custom-dropdown-comp):hover {
+  background: transparent;
+  box-shadow: none;
+  border: none;
 }

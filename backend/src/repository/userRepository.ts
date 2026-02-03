@@ -50,10 +50,12 @@ class UserRepository {
                 u.status, u.prefix as prefix_name,
                 (SELECT MAX(last_activity) FROM user_sessions WHERE user_id = u.id) as last_active,
                 r.role_name, d.department_name,
-                ei.position_id, jp.position_name AS job_position, ei.emp_code, ei.employment_status
+                ei.position_id, jp.position_name AS job_position, ei.emp_code, ei.employment_status,
+                ud.profile_image_url
             FROM users u
             LEFT JOIN roles r        ON u.role_id = r.id
             LEFT JOIN departments d  ON u.department_id = d.id
+            LEFT JOIN user_detail ud ON u.id = ud.user_id
             LEFT JOIN emp_info ei    ON u.id = ei.user_id
                 AND ei.id = (SELECT MAX(id) FROM emp_info WHERE user_id = u.id)
             LEFT JOIN job_positions jp ON ei.position_id = jp.id
@@ -88,7 +90,7 @@ class UserRepository {
                 ud.address, ud.birthdate as birth_date, ud.gender, ud.marital_status,
                 ud.personal_id, ud.nationality, ud.religion, ud.blood_type,
                 ud.emergency_contact_name, ud.emergency_contact_phone, 
-                ud.relation_to_emergency_contact,
+                ud.relation_to_emergency_contact, ud.profile_image_url,
                 ei.emp_code, ei.employment_status, ei.work_start_time, ei.work_end_time,
                 ei.hire_date, ei.salary, ei.benefits, ei.position_id, jp.position_name AS job_position,
                 ei.performance_review, ei.training_info,

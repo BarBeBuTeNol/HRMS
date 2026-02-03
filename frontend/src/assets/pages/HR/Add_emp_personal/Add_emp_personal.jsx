@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   FaUser,
@@ -18,13 +18,25 @@ import EditEmpNav from "../../../Component/HR/EditEmpNav";
 import HRLayout from "../../../Component/HR/HRLayout";
 import LogService from "../../../../services/LogService";
 import "./Add_emp_personal.css";
-import PopupNotification from "../../../Component/popup_notifications/popup_notifications-hr/PopupHR";
+// New Popup Imports
+import PopupCHRO from "../../../Component/popup_notifications/popup_notifications-chro/PopupCHRO";
+import PopupErrorCHRO from "../../../Component/popup-error/popup-error-chro/PopupErrorCHRO";
+import PopupDoneCHRO from "../../../Component/poup_done/poup_done-chro/PopupDoneCHRO";
 
 const AddEmpPersonal = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { userId, empId, firstName, lastName, email, isEditMode } =
-    location.state || {}; // Access state correctly
+  const params = useParams(); // Get params
+
+  // Logic: Params userId takes precedence (edit route), then state userId (add/navigation)
+  const paramUserId = params.userId;
+  const stateUserId = location.state?.userId;
+  const userId = paramUserId || stateUserId;
+
+  const { empId, firstName, lastName, email } = location.state || {};
+
+  // Decide edit mode: if we have a userId, we are effectively in edit mode for that user
+  const isEditMode = !!userId || location.state?.isEditMode;
 
   const [form, setForm] = useState({
     userId: "",
@@ -76,7 +88,9 @@ const AddEmpPersonal = () => {
 
     if (!userId) {
       if (!isEditMode) {
-        // Only warn if strict add mode missing ID
+        // Only warn if strict add mode missing ID and NOT in edit mode
+        // But if isEditMode is false and no userId, we are in "Create" mode step 2?
+        // Actually this page seems to require a User ID even for creation (step 1 was create user).
         setPopup({
           isOpen: true,
           title: "Missing User ID",
@@ -89,13 +103,13 @@ const AddEmpPersonal = () => {
       return;
     }
 
-    // Pre-fill from navigation state if available
+    // Pre-fill from navigation state if available (fallback)
     setForm((prev) => ({
       ...prev,
       firstName: firstName || prev.firstName,
       lastName: lastName || prev.lastName,
       email: email || prev.email,
-      empId: empId || "",
+      empId: empId || prev.empId,
       userId: userId,
     }));
 
@@ -110,7 +124,11 @@ const AddEmpPersonal = () => {
             ? new Date(data.birth_date).toISOString().split("T")[0]
             : "";
 
+          // Debug data to ensure we are getting fields
+          console.log("Fetched User Data:", data);
+
           // Map backend fields to form state - Keys MUST match useState order
+          // Ensure we handle null/undefined correctly with fallback to empty string
           const loadedForm = {
             userId: userId,
             empId: data.emp_code ? String(data.emp_code) : empId || "",
@@ -137,7 +155,7 @@ const AddEmpPersonal = () => {
               ? String(data.relation_to_emergency_contact)
               : "",
             image: null,
-            imageUrl: data.image_url || "",
+            imageUrl: data.image_url || data.profile_image_url || "", // Handle both potential keys
           };
 
           setForm((prev) => ({
@@ -175,12 +193,64 @@ const AddEmpPersonal = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    // Validation Rules
+    switch (name) {
+      case "personalId":
+        if (!/^\d*$/.test(value)) return; // Numbers only
+        if (value.length > 13) return;
+        break;
+
+      case "emergencyContactPhone":
+        if (!/^\d*$/.test(value)) return; // Numbers only
+        if (value.length > 12) return;
+        break;
+
+      case "religion":
+        if (!/^[a-zA-Z0-9\u0E00-\u0E7F\s]*$/.test(value)) return;
+        if (value.length > 25) return;
+        break;
+
+      case "nationality":
+      case "relationToEmergencyContact":
+        if (!/^[a-zA-Z0-9\u0E00-\u0E7F\s]*$/.test(value)) return;
+        if (value.length > 255) return;
+        break;
+
+      case "emergencyContactName":
+        if (!/^[a-zA-Z0-9\u0E00-\u0E7F\s]*$/.test(value)) return;
+        if (value.length > 100) return;
+        break;
+
+      case "address":
+        // Allow common address characters: / . , -
+        if (!/^[a-zA-Z0-9\u0E00-\u0E7F\s\/\.,\-]*$/.test(value)) return;
+        if (value.length > 255) return;
+        break;
+
+      default:
+        break;
+    }
+
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Validate File Type (JPG, JPEG, PNG Only)
+      const validTypes = ["image/jpeg", "image/png", "image/jpg"];
+      if (!validTypes.includes(file.type)) {
+        setPopup({
+          isOpen: true,
+          title: "Invalid File Type",
+          message: "Please upload only JPG, JPEG, or PNG files.",
+          type: "error",
+        });
+        e.target.value = ""; // Reset input
+        return;
+      }
+
       setForm((prev) => ({
         ...prev,
         image: file,
@@ -206,28 +276,36 @@ const AddEmpPersonal = () => {
     }
 
     try {
-      const payload = {
-        userId: form.userId,
-        personalId: form.personalId,
-        gender: form.gender,
-        birthDate: form.birthDate,
-        address: form.address,
-        maritalStatus: form.maritalStatus,
-        nationality: form.nationality,
-        religion: form.religion,
-        bloodType: form.bloodType,
-        emergencyContactName: form.emergencyContactName,
-        emergencyContactPhone: form.emergencyContactPhone,
-        relationToEmergencyContact: form.relationToEmergencyContact,
-      };
+      const formData = new FormData();
+      formData.append("userId", form.userId);
+      formData.append("personalId", form.personalId);
+      formData.append("gender", form.gender);
+      formData.append("birthDate", form.birthDate);
+      formData.append("address", form.address);
+      formData.append("maritalStatus", form.maritalStatus);
+      formData.append("nationality", form.nationality);
+      formData.append("religion", form.religion);
+      formData.append("bloodType", form.bloodType);
+      formData.append("emergencyContactName", form.emergencyContactName);
+      formData.append("emergencyContactPhone", form.emergencyContactPhone);
+      formData.append(
+        "relationToEmergencyContact",
+        form.relationToEmergencyContact,
+      );
+
+      if (form.image) {
+        formData.append("image", form.image);
+      }
 
       const res = await fetch("/api/employee-data/personal", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        // Do NOT set Content-Type header for FormData, browser does it automatically with boundary
+        body: formData,
       });
 
       if (res.ok) {
+        const resultData = await res.json();
+
         // LOGGING
         try {
           const currentUser = JSON.parse(
@@ -246,12 +324,18 @@ const AddEmpPersonal = () => {
 
         // Update original form after successful save
         const { image, ...currentRest } = form;
+
+        // If image was uploaded, update local URL if returned
+        if (resultData.imageUrl) {
+          setForm((prev) => ({ ...prev, imageUrl: resultData.imageUrl }));
+        }
+
         setOriginalForm(JSON.stringify(currentRest));
 
         const empList = JSON.parse(
           localStorage.getItem("emp_personal_list") || "[]",
         );
-        empList.push(form);
+        empList.push(form); // Note: This local storage list might need update if we want to store URL instead of file object, but for now keeping as is.
         localStorage.setItem("emp_personal_list", JSON.stringify(empList));
 
         if (isEditMode) {
@@ -313,15 +397,44 @@ const AddEmpPersonal = () => {
     visible: { opacity: 1, x: 0 },
   };
 
-  return (
-    <HRLayout>
-      <PopupNotification
+  const renderPopup = () => {
+    if (!popup.isOpen) return null;
+
+    if (popup.type === "error") {
+      return (
+        <PopupErrorCHRO
+          isOpen={popup.isOpen}
+          onClose={() => setPopup({ ...popup, isOpen: false })}
+          title={popup.title}
+          message={popup.message}
+        />
+      );
+    }
+    if (popup.type === "success") {
+      return (
+        <PopupDoneCHRO
+          isOpen={popup.isOpen}
+          onClose={() => setPopup({ ...popup, isOpen: false })}
+          title={popup.title}
+          message={popup.message}
+        />
+      );
+    }
+    // Default / Warning / Info
+    return (
+      <PopupCHRO
         isOpen={popup.isOpen}
         onClose={() => setPopup({ ...popup, isOpen: false })}
         title={popup.title}
         message={popup.message}
-        type={popup.type}
+        type={popup.type} // pass warning or info
       />
+    );
+  };
+
+  return (
+    <HRLayout>
+      {renderPopup()}
       <div className="add-emp-personal-page">
         {/* Header Section */}
         {isEditMode ? (
@@ -362,12 +475,7 @@ const AddEmpPersonal = () => {
               )}
             </div>
             {form.empId && (
-              <div
-                className="emp-id-display"
-                style={{ marginTop: "1rem", color: "#ddd", fontWeight: "bold" }}
-              >
-                ID: {form.empId}
-              </div>
+              <div className="emp-id-display">ID: {form.empId}</div>
             )}
 
             <label htmlFor="image-upload" className="personal-upload-btn">
@@ -395,7 +503,6 @@ const AddEmpPersonal = () => {
                   <div className="form-group span-1">
                     <label>Employee ID</label>
                     <div className="input-group">
-                      <FaAddressCard className="input-icon" />
                       <input
                         type="text"
                         name="empId"
@@ -408,7 +515,6 @@ const AddEmpPersonal = () => {
                   <div className="form-group span-1">
                     <label>National ID</label>
                     <div className="input-group">
-                      <FaAddressCard className="input-icon" />
                       <input
                         type="text"
                         name="personalId"
@@ -423,7 +529,6 @@ const AddEmpPersonal = () => {
                   <div className="form-group span-1">
                     <label>Gender</label>
                     <div className="input-group">
-                      <FaVenusMars className="input-icon" />
                       <select
                         name="gender"
                         value={form.gender}
@@ -442,7 +547,6 @@ const AddEmpPersonal = () => {
                   <div className="form-group span-1">
                     <label>First Name</label>
                     <div className="input-group">
-                      <FaUser className="input-icon" />
                       <input
                         type="text"
                         name="firstName"
@@ -455,7 +559,6 @@ const AddEmpPersonal = () => {
                   <div className="form-group span-1">
                     <label>Last Name</label>
                     <div className="input-group">
-                      <FaUser className="input-icon" />
                       <input
                         type="text"
                         name="lastName"
@@ -468,7 +571,6 @@ const AddEmpPersonal = () => {
                   <div className="form-group span-1">
                     <label>Date of Birth</label>
                     <div className="input-group">
-                      <FaBirthdayCake className="input-icon" />
                       <input
                         type="date"
                         name="birthDate"
@@ -481,12 +583,12 @@ const AddEmpPersonal = () => {
                   <div className="form-group span-1">
                     <label>Religion</label>
                     <div className="input-group">
-                      <FaPray className="input-icon" />
                       <input
                         type="text"
                         name="religion"
                         value={form.religion}
                         onChange={handleChange}
+                        maxLength={25}
                         required
                       />
                     </div>
@@ -504,7 +606,6 @@ const AddEmpPersonal = () => {
                   <div className="form-group span-2">
                     <label>Email Address</label>
                     <div className="input-group">
-                      <FaEnvelope className="input-icon" />
                       <input
                         type="email"
                         name="email"
@@ -517,12 +618,12 @@ const AddEmpPersonal = () => {
                   <div className="form-group span-2">
                     <label>Home Address</label>
                     <div className="input-group">
-                      <FaMapMarkerAlt className="input-icon" />
                       <input
                         type="text"
                         name="address"
                         value={form.address}
                         onChange={handleChange}
+                        maxLength={255}
                         required
                       />
                     </div>
@@ -538,22 +639,25 @@ const AddEmpPersonal = () => {
                 </div>
                 <div className="form-fields-grid">
                   <div className="form-group span-1">
-                    <label>Nationality</label>
+                    <label>Blood Type</label>
                     <div className="input-group">
-                      <FaGlobe className="input-icon" />
-                      <input
-                        type="text"
-                        name="nationality"
-                        value={form.nationality}
+                      <select
+                        name="bloodType"
+                        value={form.bloodType}
                         onChange={handleChange}
                         required
-                      />
+                      >
+                        <option value="">Select</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="AB">AB</option>
+                        <option value="O">O</option>
+                      </select>
                     </div>
                   </div>
                   <div className="form-group span-1">
                     <label>Marital Status</label>
                     <div className="input-group">
-                      <FaHeart className="input-icon" />
                       <select
                         name="maritalStatus"
                         value={form.maritalStatus}
@@ -568,21 +672,16 @@ const AddEmpPersonal = () => {
                     </div>
                   </div>
                   <div className="form-group span-2">
-                    <label>Blood Type</label>
+                    <label>Nationality</label>
                     <div className="input-group">
-                      <FaTint className="input-icon" />
-                      <select
-                        name="bloodType"
-                        value={form.bloodType}
+                      <input
+                        type="text"
+                        name="nationality"
+                        value={form.nationality}
                         onChange={handleChange}
+                        maxLength={255}
                         required
-                      >
-                        <option value="">Select</option>
-                        <option value="A">A</option>
-                        <option value="B">B</option>
-                        <option value="AB">AB</option>
-                        <option value="O">O</option>
-                      </select>
+                      />
                     </div>
                   </div>
                 </div>
@@ -598,12 +697,12 @@ const AddEmpPersonal = () => {
                   <div className="form-group span-2">
                     <label>Contact Name</label>
                     <div className="input-group">
-                      <FaUser className="input-icon" />
                       <input
                         type="text"
                         name="emergencyContactName"
                         value={form.emergencyContactName}
                         onChange={handleChange}
+                        maxLength={100}
                         required
                       />
                     </div>
@@ -611,12 +710,12 @@ const AddEmpPersonal = () => {
                   <div className="form-group span-1">
                     <label>Phone Number</label>
                     <div className="input-group">
-                      <FaPhone className="input-icon" />
                       <input
                         type="text"
                         name="emergencyContactPhone"
                         value={form.emergencyContactPhone}
                         onChange={handleChange}
+                        maxLength={12}
                         required
                       />
                     </div>
@@ -624,13 +723,13 @@ const AddEmpPersonal = () => {
                   <div className="form-group span-1">
                     <label>Relationship</label>
                     <div className="input-group">
-                      <FaUser className="input-icon" />
                       <input
                         type="text"
                         name="relationToEmergencyContact"
                         value={form.relationToEmergencyContact}
                         onChange={handleChange}
                         placeholder="e.g. Father"
+                        maxLength={255}
                         required
                       />
                     </div>
@@ -639,19 +738,11 @@ const AddEmpPersonal = () => {
               </div>
 
               {/* Action Buttons */}
-              <div
-                className="form-actions"
-                style={{
-                  display: "flex",
-                  gap: "1rem",
-                  justifyContent: "center", // Centered
-                }}
-              >
+              <div className="form-actions">
                 <button
                   type="button"
                   className="btn-cancel"
                   onClick={handleCancel}
-                  style={{ width: "300px" }} // Expanded
                 >
                   {isEditMode ? "Back" : "Cancel"}
                 </button>
@@ -659,18 +750,6 @@ const AddEmpPersonal = () => {
                   type="submit"
                   className="btn-next"
                   disabled={isEditMode ? !isDirty : !isFormFilled}
-                  style={{
-                    width: isEditMode ? "300px" : "100%", // Expanded
-                    flex: isEditMode ? "none" : 1,
-                    opacity:
-                      (isEditMode && !isDirty) || (!isEditMode && !isFormFilled)
-                        ? 0.5
-                        : 1,
-                    cursor:
-                      (isEditMode && !isDirty) || (!isEditMode && !isFormFilled)
-                        ? "not-allowed"
-                        : "pointer",
-                  }}
                 >
                   {isEditMode ? "Save Changes" : "Proceed to Step 2"}
                 </button>

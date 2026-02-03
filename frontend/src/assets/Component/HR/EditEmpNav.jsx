@@ -4,9 +4,23 @@ import "./EditEmpNav.css";
 
 const EditEmpNav = ({ userId, activeTab }) => {
   const tabs = [
-    { id: "personal", label: "Personal Info", path: "/hr/add-emp-personal" },
-    { id: "job", label: "Job Info", path: "/hr/add-emp-info" },
-    { id: "education", label: "Education", path: "/hr/add-emp-education" },
+    {
+      id: "personal",
+      label: "Personal Info",
+      path: userId ? `/hr/edit-emp-personal/${userId}` : "/hr/add-emp-personal",
+    },
+    {
+      id: "job",
+      label: "Job Info",
+      path: userId ? `/hr/edit-emp-info/${userId}` : "/hr/add-emp-info",
+    },
+    {
+      id: "education",
+      label: "Education",
+      path: userId
+        ? `/hr/edit-emp-education/${userId}`
+        : "/hr/add-emp-education",
+    },
   ];
 
   return (

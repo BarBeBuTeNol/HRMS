@@ -1,91 +1,102 @@
 import React, { useState, useEffect } from "react";
 import "./DelegateShiftPage.css";
-import HeadSidebar from "../../../Component/Head/HeadSidebar"; // Correct path based on file structure
+import HeadSidebar from "../../../Component/Head/HeadSidebar";
 import {
   FaExchangeAlt,
-  FaUserClock,
+  FaBriefcase,
+  FaCheckCircle,
+  FaSearch,
+  FaCalendarAlt,
+  FaArrowRight,
   FaHistory,
   FaExclamationTriangle,
-  FaSearch,
-  FaCheckCircle,
-  FaFilter,
+  FaClock,
+  FaUserFriends,
+  FaChartLine
 } from "react-icons/fa";
 import api from "../../../../services/api";
 
 const DelegateShiftPage = () => {
-  // State for Stepper
-  const [activeStep, setActiveStep] = useState(1); // 1: Select Tasks, 2: Select Replacement, 3: Review & Confirm
-
-  // State for Filters
+  const [activeStep, setActiveStep] = useState(1);
   const [filterDate, setFilterDate] = useState("");
   const [filterName, setFilterName] = useState("");
-
-  // State for Selection
+  
   const [selectedTask, setSelectedTask] = useState(null);
   const [selectedReplacement, setSelectedReplacement] = useState(null);
   const [delegationReason, setDelegationReason] = useState("");
   const [priority, setPriority] = useState("Normal");
 
-  // Data from API
   const [shifts, setShifts] = useState([]);
   const [staffList, setStaffList] = useState([]);
-  const [history] = useState([]); // Pending implementation for history endpoint
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Mock stats for the "Hero" section (In real app, fetch these)
+  const stats = {
+    activeDelegations: 12,
+    pendingApproval: 4,
+    efficiency: "94%"
+  };
 
   useEffect(() => {
     fetchData();
   }, []);
 
   const fetchData = async () => {
+    setLoading(true);
     try {
       const user = JSON.parse(localStorage.getItem("user"));
       if (!user) return;
 
       const response = await api.get(`/head/delegation-data/${user.id}`);
-
       const { workItems, employees } = response.data;
 
-      // Transform Work Items
       const formattedShifts = workItems.map((item) => ({
         id: item.id,
         employee: `${item.first_name} ${item.last_name}`,
-        type: item.type,
+        type: item.type, 
         title: item.title,
-        date: item.work_date.split("T")[0], // Simple date formatting
+        date: item.work_date ? item.work_date.split("T")[0] : "N/A",
         status: "Active",
-        original_user_id: item.user_id, // This should come from the API
+        original_user_id: item.user_id,
+        image: item.profile_image_url || null
       }));
       setShifts(formattedShifts);
 
-      // Transform Employees
       const formattedStaff = employees.map((emp) => ({
         id: emp.id,
         name: `${emp.first_name} ${emp.last_name}`,
         role: emp.position_name || "Employee",
-        status: "Available", // Simplified status for now
-        workload: "Medium", // Placeholder
+        status: "Available", // Logic placeholder
+        image: emp.profile_image_url || null,
       }));
       setStaffList(formattedStaff);
     } catch (error) {
       console.error("Error fetching delegation data:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Filter Logic
   const filteredShifts = shifts.filter((shift) => {
-    return (
-      (filterDate === "" || shift.date === filterDate) &&
-      (filterName === "" ||
-        shift.employee.toLowerCase().includes(filterName.toLowerCase()))
-    );
+    const matchesName =
+      filterName === "" ||
+      shift.employee.toLowerCase().includes(filterName.toLowerCase()) ||
+      shift.title.toLowerCase().includes(filterName.toLowerCase());
+    const matchesDate = filterDate === "" || shift.date === filterDate;
+    return matchesName && matchesDate;
   });
 
-  // Handlers
-  const handleTaskSelect = (task) => {
-    setSelectedTask(task);
-  };
+  const filteredStaff = staffList.filter(
+    (s) =>
+      s.name.toLowerCase().includes(filterName.toLowerCase()) ||
+      s.role.toLowerCase().includes(filterName.toLowerCase())
+  );
 
+  const handleTaskSelect = (task) => setSelectedTask(task);
+  
   const handleReplacementSelect = (staff) => {
-    if (staff.status === "Busy") return; // Prevent selecting busy staff
+    if (staff.status === "Busy") return;
     setSelectedReplacement(staff);
   };
 
@@ -110,16 +121,14 @@ const DelegateShiftPage = () => {
       };
 
       await api.post("/head/delegate-work", payload);
-
       alert("Delegate Shift Submitted Successfully!");
-      // Reset or Redirect
+      
       setActiveStep(1);
       setSelectedTask(null);
       setSelectedReplacement(null);
       setDelegationReason("");
-      fetchData(); // Refresh data
+      fetchData();
     } catch (error) {
-      console.error("Error submitting delegation:", error);
       alert("Failed to delegate shift.");
     }
   };
@@ -129,371 +138,269 @@ const DelegateShiftPage = () => {
       <HeadSidebar />
 
       <div className="delegate-main-content">
-        {/* Header */}
+        {/* --- Header Section --- */}
         <header className="delegate-header">
-          <h1 className="page-title">Delegate Shift Manager</h1>
-          <p className="page-subtitle">
-            Manage scheduling conflicts and reassign tasks efficiently.
-          </p>
+          <div className="header-title-group">
+            <h1>Delegate Work Manager</h1>
+            <p>Optimize your team's workflow by reassigning tasks efficiently.</p>
+          </div>
+          <div className="header-stats">
+            <div className="stat-pill">
+              <FaClock /> Pending: <strong>{stats.pendingApproval}</strong>
+            </div>
+            <div className="stat-pill">
+              <FaBriefcase /> Active: <strong>{stats.activeDelegations}</strong>
+            </div>
+            <div className="stat-pill">
+              <FaChartLine /> Efficiency: <strong>{stats.efficiency}</strong>
+            </div>
+          </div>
         </header>
 
-        {/* Stepper */}
-        <div className="stepper-container">
-          <div className="progress-line">
+        {/* --- Interactive Stepper --- */}
+        <div className="delegate-stepper">
+          <div className="stepper-track"></div>
+          {[
+            { id: 1, label: "Select Work", icon: <FaBriefcase /> },
+            { id: 2, label: "Assign Staff", icon: <FaUserFriends /> },
+            { id: 3, label: "Confirm", icon: <FaCheckCircle /> },
+          ].map((step) => (
             <div
-              className="progress-line-fill"
-              style={{ width: `${(activeStep - 1) * 50}%` }}
-            ></div>
-          </div>
-          {[1, 2, 3].map((step) => (
-            <div
-              key={step}
-              className={`step-item ${activeStep >= step ? "active" : ""} ${
-                activeStep > step ? "completed" : ""
-              }`}
+              key={step.id}
+              className={`stepper-item ${activeStep >= step.id ? "active" : ""} ${activeStep > step.id ? "completed" : ""}`}
+              onClick={() => { if(step.id < activeStep) setActiveStep(step.id) }} 
             >
-              <div className="step-circle">
-                {activeStep > step ? <FaCheckCircle /> : step}
-              </div>
-              <span className="step-label">
-                {step === 1
-                  ? "Select Task"
-                  : step === 2
-                    ? "Select Staff"
-                    : "Confirm"}
-              </span>
+              <div className="stepper-icon-box">{step.icon}</div>
+              <span className="stepper-label">{step.label}</span>
             </div>
           ))}
         </div>
 
+        {/* --- Main Content Grid --- */}
         <div className="delegate-content-grid">
-          {/* LEFT PANEL: MAIN INTERACTION */}
-          <div className="left-panel">
-            {/* STEP 1: SELECT TASK */}
+          
+          {/* Left Column: Dynamic Content based on Step */}
+          <div className="delegate-col-main">
+            
+            {/* STEP 1: Select Work */}
             {activeStep === 1 && (
-              <div className="glass-card fade-in">
-                <h2 className="section-title">
-                  <FaUserClock /> Select Original Shift/Task
-                </h2>
+              <div className="selection-card-unified">
+                <div className="card-header-row">
+                  <h3><FaBriefcase /> Available Work Items</h3>
+                </div>
 
-                <div className="filter-bar">
-                  <div
-                    className="input-group"
-                    style={{ flex: 1, position: "relative" }}
-                  >
-                    <FaSearch
-                      style={{
-                        position: "absolute",
-                        left: "15px",
-                        top: "50%",
-                        transform: "translateY(-50%)",
-                        color: "var(--head-text-muted)",
-                      }}
-                    />
-                    <input
-                      type="text"
-                      className="custom-input"
-                      placeholder="Search employee name..."
-                      style={{ paddingLeft: "40px" }}
+                <div className="filter-toolbar">
+                  <div className="search-input-wrapper">
+                    <FaSearch className="search-icon-float" />
+                    <input 
+                      type="text" 
+                      placeholder="Search task, shift, or employee..." 
                       value={filterName}
                       onChange={(e) => setFilterName(e.target.value)}
                     />
                   </div>
-                  <input
-                    type="date"
-                    className="custom-input"
-                    value={filterDate}
-                    onChange={(e) => setFilterDate(e.target.value)}
-                  />
+                  <div className="date-picker-wrapper" onClick={() => document.getElementById('chk-date').showPicker()}>
+                     <input 
+                       id="chk-date"
+                       type="date" 
+                       value={filterDate}
+                       onChange={(e) => setFilterDate(e.target.value)}
+                     />
+                  </div>
                 </div>
 
-                <div className="selection-list">
-                  {filteredShifts.map((shift) => (
-                    <div
-                      key={shift.id}
-                      className={`list-item ${
-                        selectedTask?.id === shift.id ? "selected" : ""
-                      }`}
-                      onClick={() => handleTaskSelect(shift)}
-                    >
-                      <div className="item-info">
-                        <h4>{shift.title}</h4>
-                        <p>
-                          {shift.employee} • {shift.date}
-                        </p>
-                      </div>
-                      <span
-                        className={`status-badge ${
-                          shift.type === "Shift" ? "shift" : "task"
-                        }`}
-                      >
-                        {shift.type}
-                      </span>
-                    </div>
-                  ))}
-                  {filteredShifts.length === 0 && (
-                    <p
-                      style={{
-                        textAlign: "center",
-                        color: "var(--head-text-muted)",
-                        padding: "2rem",
-                      }}
-                    >
-                      No shifts found.
-                    </p>
-                  )}
+                <div className="work-item-list">
+                   {loading ? (
+                     <div className="state-loading"><span>Loading...</span></div>
+                   ) : filteredShifts.length > 0 ? (
+                     filteredShifts.map((item) => (
+                       <div 
+                         key={`${item.type}-${item.id}`}
+                         className={`work-item-card ${selectedTask?.id === item.id && selectedTask?.type === item.type ? 'selected' : ''}`}
+                         onClick={() => handleTaskSelect(item)}
+                       >
+                         <div className={`wi-icon type-${item.type.toLowerCase()}`}>
+                           {item.type === 'Shift' ? <FaClock/> : <FaBriefcase/>}
+                         </div>
+                         <div className="wi-details">
+                           <h4>{item.title}</h4>
+                           <span>{item.type} • ID: #{item.id}</span>
+                         </div>
+                         <div className="wi-owner">
+                           <div className="owner-avatar">
+                             {item.image ? <img src={item.image} alt="owner" /> : <div className="placeholder">{item.employee.charAt(0)}</div>}
+                           </div>
+                           <span style={{fontSize: '0.9rem'}}>{item.employee}</span>
+                         </div>
+                         <div className="wi-date">{item.date}</div>
+                         <div className="wi-status">
+                           <span className="status-badge status-active">Active</span>
+                         </div>
+                       </div>
+                     ))
+                   ) : (
+                     <div className="state-empty">
+                       <FaBriefcase />
+                       <p>No work items found</p>
+                     </div>
+                   )}
                 </div>
               </div>
             )}
 
-            {/* STEP 2: SELECT REPLACEMENT */}
+            {/* STEP 2: Select Staff */}
             {activeStep === 2 && (
-              <div className="glass-card fade-in">
-                <h2 className="section-title">
-                  <FaExchangeAlt /> Select Replacement Staff
-                </h2>
-                <div className="selection-list">
-                  {staffList.map((staff) => (
-                    <div
+              <div className="selection-card-unified">
+                <div className="card-header-row">
+                  <h3><FaUserFriends /> Select Replacement</h3>
+                  <div className="search-input-wrapper" style={{maxWidth: '300px'}}>
+                    <FaSearch className="search-icon-float" />
+                    <input 
+                      type="text" 
+                      placeholder="Find staff..." 
+                      value={filterName}
+                      onChange={(e) => setFilterName(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="staff-selection-grid">
+                  {filteredStaff.map((staff) => (
+                    <div 
                       key={staff.id}
-                      className={`list-item ${
-                        selectedReplacement?.id === staff.id ? "selected" : ""
-                      } ${staff.status === "Busy" ? "disabled" : ""}`}
+                      className={`staff-card-modern ${selectedReplacement?.id === staff.id ? 'selected' : ''} ${staff.status === 'Busy' ? 'disabled' : ''}`}
                       onClick={() => handleReplacementSelect(staff)}
-                      style={{
-                        opacity: staff.status === "Busy" ? 0.6 : 1,
-                        cursor:
-                          staff.status === "Busy" ? "not-allowed" : "pointer",
-                      }}
                     >
-                      <div className="item-info">
-                        <h4>{staff.name}</h4>
-                        <p>
-                          {staff.role} • Workload: {staff.workload}
-                        </p>
+                      <div className="staff-img-wrapper">
+                         {staff.image ? <img src={staff.image} alt={staff.name} /> : <div className="placeholder">{staff.name.charAt(0)}</div>}
+                         <div className={`availability-dot dot-${staff.status.toLowerCase()}`}></div>
                       </div>
-                      <div style={{ textAlign: "right" }}>
-                        <span
-                          className={`status-badge ${
-                            staff.status === "Available" ? "available" : "busy"
-                          }`}
-                        >
-                          {staff.status}
-                        </span>
-                        {staff.status === "Busy" && (
-                          <div
-                            className="conflict-warning"
-                            style={{
-                              marginTop: "5px",
-                              fontSize: "0.7rem",
-                              padding: "0.2rem 0.5rem",
-                            }}
-                          >
-                            <FaExclamationTriangle /> {staff.conflict}
-                          </div>
-                        )}
-                      </div>
+                      <h4>{staff.name}</h4>
+                      <p>{staff.role}</p>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* STEP 3: CONFIRM */}
+            {/* STEP 3: Confirm */}
             {activeStep === 3 && (
-              <div className="glass-card fade-in">
-                <h2 className="section-title">
-                  <FaCheckCircle /> Finalize Delegation
-                </h2>
+              <div className="selection-card-unified">
+                <div className="confirm-glass-card">
+                  <div className="card-header-row">
+                    <h3><FaCheckCircle /> Final Confirmation</h3>
+                  </div>
+                  
+                  <div className="input-modern-group">
+                    <label>Reason for Delegation</label>
+                    <textarea 
+                      className="textarea-modern"
+                      placeholder="Please explain why this delegation is occurring..."
+                      value={delegationReason}
+                      onChange={(e) => setDelegationReason(e.target.value)}
+                    />
+                  </div>
 
-                <div style={{ marginBottom: "1.5rem" }}>
-                  <label
-                    style={{
-                      display: "block",
-                      color: "var(--head-text-secondary)",
-                      marginBottom: "0.5rem",
-                    }}
-                  >
-                    Reason for Delegation
-                  </label>
-                  <textarea
-                    className="custom-input"
-                    rows="3"
-                    placeholder="E.g. Sick leave, Emergency..."
-                    value={delegationReason}
-                    onChange={(e) => setDelegationReason(e.target.value)}
-                    style={{ width: "100%", resize: "none" }}
-                  ></textarea>
-                </div>
+                  <div className="input-modern-group">
+                    <label>Priority Level</label>
+                    <div className="priority-selector">
+                      {["Low", "Normal", "High", "Urgent"].map(p => (
+                        <div 
+                          key={p} 
+                          className={`p-option ${priority === p ? 'active' : ''} ${p.toLowerCase()}`}
+                          onClick={() => setPriority(p)}
+                        >
+                          {p}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
 
-                <div style={{ marginBottom: "1.5rem" }}>
-                  <label
-                    style={{
-                      display: "block",
-                      color: "var(--head-text-secondary)",
-                      marginBottom: "0.5rem",
-                    }}
-                  >
-                    Priority Level
-                  </label>
-                  <select
-                    className="custom-select"
-                    style={{ width: "100%" }}
-                    value={priority}
-                    onChange={(e) => setPriority(e.target.value)}
-                  >
-                    <option>Low</option>
-                    <option>Normal</option>
-                    <option>High</option>
-                    <option>Urgent</option>
-                  </select>
+                  <div style={{display: 'flex', gap: '1rem', background: 'rgba(239, 68, 68, 0.1)', padding: '1rem', borderRadius: '12px', alignItems: 'center'}}>
+                    <FaExclamationTriangle style={{color: '#ef4444', fontSize: '1.5rem'}} />
+                    <div style={{color: '#fca5a5', fontSize: '0.9rem'}}>
+                      <strong>Warning:</strong> Delegating this task will transfer full responsibility to the selected employee. An instant notification will be sent.
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
           </div>
 
-          {/* RIGHT PANEL: SUMMARY & ACTIONS */}
-          <div className="right-panel">
-            <div className="action-panel">
-              <div className="summary-card">
-                <h3
-                  style={{
-                    color: "var(--head-text-primary)",
-                    marginBottom: "1rem",
-                    borderBottom: "1px solid var(--head-glass-border)",
-                    paddingBottom: "0.5rem",
-                  }}
-                >
-                  Delegation Summary
-                </h3>
-
-                <div className="summary-row">
-                  <span className="summary-label">Shift/Task</span>
-                  <span className="summary-value">
-                    {selectedTask ? selectedTask.title : "-"}
-                  </span>
+          {/* Right Column: Sticky Summary */}
+          <div className="delegate-col-sidebar">
+            <div className="summary-glass-panel">
+              <div className="summary-title">Summary</div>
+              
+              <div className="summary-details">
+                <div className="summary-item">
+                  <label>Selected Work</label>
+                  <div className="summary-value">
+                     {selectedTask ? (
+                       <><FaBriefcase /> {selectedTask.title}</>
+                     ) : <span className="empty-val">- None -</span>}
+                  </div>
                 </div>
-                <div className="summary-row">
-                  <span className="summary-label">Original Owner</span>
-                  <span className="summary-value">
-                    {selectedTask ? selectedTask.employee : "-"}
-                  </span>
-                </div>
-                <div className="summary-row">
-                  <span className="summary-label">New Assignee</span>
-                  <span className="summary-value">
-                    {selectedReplacement ? selectedReplacement.name : "-"}
-                  </span>
-                </div>
-                <div className="summary-row" style={{ border: "none" }}>
-                  <span className="summary-label">Date</span>
-                  <span className="summary-value">
-                    {selectedTask ? selectedTask.date : "-"}
-                  </span>
+                
+                <div className="summary-item">
+                   <label>Current Owner</label>
+                   <div className="summary-value">
+                     {selectedTask ? (
+                       <>{selectedTask.employee}</>
+                     ) : <span className="empty-val">-</span>}
+                   </div>
                 </div>
 
-                <div
-                  style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}
-                >
-                  {activeStep > 1 && (
-                    <button
-                      className="primary-btn"
-                      style={{
-                        background: "transparent",
-                        border: "1px solid var(--head-text-muted)",
-                        color: "var(--head-text-muted)",
-                      }}
-                      onClick={handlePrevStep}
-                    >
-                      Back
-                    </button>
-                  )}
-                  {activeStep < 3 ? (
-                    <button
-                      className="primary-btn"
-                      disabled={
-                        activeStep === 1 ? !selectedTask : !selectedReplacement
-                      }
-                      onClick={handleNextStep}
-                    >
-                      Next Step
-                    </button>
-                  ) : (
-                    <button className="primary-btn" onClick={handleSubmit}>
-                      Confirm Assignment
-                    </button>
-                  )}
+                <div style={{height: '1px', background: 'rgba(255,255,255,0.1)'}}></div>
+
+                <div className="summary-item">
+                  <label>Assigned To</label>
+                  <div className="summary-value">
+                    {selectedReplacement ? (
+                       <><FaExchangeAlt /> {selectedReplacement.name}</>
+                     ) : <span className="empty-val">- None -</span>}
+                  </div>
+                </div>
+
+                <div className="summary-item">
+                  <label>New Role</label>
+                  <div className="summary-value">
+                     {selectedReplacement ? selectedReplacement.role : <span className="empty-val">-</span>}
+                  </div>
                 </div>
               </div>
 
-              {/* HISTORY WIDGET */}
-              <div className="glass-card" style={{ padding: "1rem" }}>
-                <h4
-                  style={{
-                    color: "var(--head-text-primary)",
-                    fontSize: "1rem",
-                    marginBottom: "1rem",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.5rem",
-                  }}
-                >
-                  <FaHistory /> Recent History
-                </h4>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "0.8rem",
-                  }}
-                >
-                  {history.map((item) => (
-                    <div
-                      key={item.id}
-                      style={{
-                        background: "rgba(255,255,255,0.03)",
-                        padding: "0.8rem",
-                        borderRadius: "8px",
-                        borderLeft:
-                          item.status === "Approved"
-                            ? "3px solid var(--head-success)"
-                            : "3px solid var(--head-warning)",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          fontSize: "0.8rem",
-                          marginBottom: "0.3rem",
-                        }}
-                      >
-                        <span style={{ color: "var(--head-text-primary)" }}>
-                          {item.original} → {item.replacement.split(" ")[1]}
-                        </span>
-                        <span
-                          style={{
-                            color:
-                              item.status === "Approved"
-                                ? "var(--head-success)"
-                                : "var(--head-warning)",
-                          }}
-                        >
-                          {item.status}
-                        </span>
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "0.75rem",
-                          color: "var(--head-text-muted)",
-                        }}
-                      >
-                        {item.task}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <div className="action-buttons">
+                {activeStep < 3 ? (
+                  <button 
+                    className="btn-primary-glow"
+                    disabled={activeStep === 1 ? !selectedTask : !selectedReplacement}
+                    onClick={handleNextStep}
+                  >
+                    Next Step <FaArrowRight style={{marginLeft:'8px'}}/>
+                  </button>
+                ) : (
+                  <button className="btn-primary-glow" onClick={handleSubmit}>
+                    Confirm Delegation
+                  </button>
+                )}
+
+                {activeStep > 1 && (
+                  <button className="btn-secondary-outline" onClick={handlePrevStep}>
+                    Go Back
+                  </button>
+                )}
               </div>
+            </div>
+
+            {/* History Mini Widget */}
+            <div style={{marginTop: '2rem'}}>
+               <h4 style={{color: 'var(--text-muted)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px'}}>
+                 <FaHistory /> Recent History
+               </h4>
+               <div style={{fontSize: '0.85rem', color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: '1rem', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '12px'}}>
+                 No recent delegations found
+               </div>
             </div>
           </div>
         </div>

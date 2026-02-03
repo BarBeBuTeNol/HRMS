@@ -20,7 +20,17 @@
   overflow-x: hidden;
   height: 100vh;
   overflow-y: auto;
-  padding-left: 310px;
+  padding-left: 280px; /* Default expanded state */
+  transition: padding-left 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Match Sidebar spring transition */
+}
+
+/* Dynamic Sidebar Spacing */
+.head-profile-container.sidebar-open {
+  padding-left: 280px;
+}
+
+.head-profile-container.sidebar-closed {
+  padding-left: 100px;
 }
 
 .head-profile-content {
@@ -162,9 +172,71 @@
   align-items: start; /* Ensures items don't stretch to max height */
 }
 
+/* Mobile & Tablet Responsive */
 @media (max-width: 900px) {
+  .head-profile-container,
+  .head-profile-container.sidebar-open,
+  .head-profile-container.sidebar-closed {
+    padding-left: 90px !important; /* Fixed sidebar ~80px + gap */
+    padding-bottom: 80px;
+  }
+
+  .head-profile-content {
+    padding: 1rem;
+    max-width: 100%;
+  }
+
   .head-profile-grid {
     grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .head-profile-header-content {
+    margin-top: -40px;
+    padding: 0 1rem 1.5rem;
+  }
+
+  .head-profile-avatar-wrapper {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 0.5rem;
+  }
+
+  .head-profile-identity h1 {
+    font-size: 1.5rem;
+    flex-wrap: wrap; /* Badge might wrap */
+  }
+
+  .head-profile-role-badge {
+    font-size: 0.8rem;
+    padding: 0.2rem 0.75rem;
+  }
+
+  .head-profile-contact-pills {
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .head-profile-pill {
+    width: 100%;
+    justify-content: center;
+    font-size: 0.85rem;
+  }
+
+  .head-profile-info-grid-2 {
+    grid-template-columns: 1fr; /* Stack employment info on very small screens */
+    gap: 0.75rem;
+  }
+
+  .head-profile-section-card {
+    padding: 1rem;
+  }
+
+  .head-profile-card-header h3 {
+    font-size: 1.1rem;
   }
 }
 

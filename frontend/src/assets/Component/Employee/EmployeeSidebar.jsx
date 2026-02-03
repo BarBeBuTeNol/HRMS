@@ -18,8 +18,14 @@ import "./EmployeeSidebar.css";
 import "../../theam/epm_theam/EmployeeTheme.css";
 import LoadingEmp from "../loading/loading-emp/LoadingEmp";
 
-const EmployeeSidebar = () => {
+const EmployeeSidebar = ({ onToggle }) => {
   const [open, setOpen] = useState(true);
+
+  const handleToggle = () => {
+    const nextState = !open;
+    setOpen(nextState);
+    if (onToggle) onToggle(nextState);
+  };
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -40,6 +46,7 @@ const EmployeeSidebar = () => {
   const displayName = currentUser.username || currentUser.name || "Employee";
   const displayRole = currentUser.role || "Staff Member";
   const displayAvatar =
+    currentUser.profile_image_url ||
     currentUser.avatar ||
     "https://ui-avatars.com/api/?name=" +
       displayName +
@@ -143,7 +150,7 @@ const EmployeeSidebar = () => {
         {/* --- Toggle Button --- */}
         <button
           className="emp-toggle-btn"
-          onClick={() => setOpen(!open)}
+          onClick={handleToggle}
           aria-label="Toggle Sidebar"
         >
           {open ? <FaChevronLeft /> : <FaChevronRight />}

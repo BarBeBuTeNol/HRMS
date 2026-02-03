@@ -8,6 +8,38 @@ const router = express.Router();
 // ✅ Get schedules for conflict checking (Use Controller)
 router.get("/my-schedules", getMySchedules);
 
+// Helper to map DB Shift to Frontend Shift
+const mapToFrontendShift = (dbShift: string) => {
+  switch (dbShift) {
+    case "Morning":
+      return "M";
+    case "Afternoon":
+      return "A";
+    case "Night":
+      return "N";
+    case "Full-day":
+      return "F";
+    default:
+      return dbShift;
+  }
+};
+
+// Helper to map Frontend Shift to DB Shift
+const mapToDbShift = (feShift: string) => {
+  switch (feShift) {
+    case "M":
+      return "Morning";
+    case "A":
+      return "Afternoon";
+    case "N":
+      return "Night";
+    case "F":
+      return "Full-day";
+    default:
+      return feShift;
+  }
+};
+
 // ✅ ดึงข้อมูลทั้งหมด (JOIN users + department)
 router.get("/", async (req, res) => {
   try {
@@ -24,8 +56,12 @@ router.get("/", async (req, res) => {
       LEFT JOIN departments d ON u.department_id = d.id
       ORDER BY ws.work_date ASC
     `;
-    const [rows] = await db.query(sql);
-    res.json(rows);
+    const [rows]: any = await db.query(sql);
+    const mappedRows = rows.map((r: any) => ({
+      ...r,
+      shift: mapToFrontendShift(r.shift),
+    }));
+    res.json(mappedRows);
   } catch (err) {
     console.error("❌ Get schedules error:", err);
     res.status(500).json({ error: "Failed to fetch schedules" });
@@ -34,9 +70,9 @@ router.get("/", async (req, res) => {
 
 // ✅ GET: ดึงตารางงานของพนักงานคนเดียว
 router.get("/user/:userId", async (req, res) => {
-    try {
-      const { userId } = req.params;
-      const sql = `
+  try {
+    const { userId } = req.params;
+    const sql = `
         SELECT 
           ws.id,
           ws.user_id,
@@ -46,14 +82,17 @@ router.get("/user/:userId", async (req, res) => {
         WHERE ws.user_id = ?
         ORDER BY ws.work_date ASC
       `;
-      const [rows] = await db.query(sql, [userId]);
-      res.json(rows);
-    } catch (err) {
-      console.error("❌ Get user schedules error:", err);
-      res.status(500).json({ error: "Failed to fetch user schedules" });
-    }
-  });
-
+    const [rows]: any = await db.query(sql, [userId]);
+    const mappedRows = rows.map((r: any) => ({
+      ...r,
+      shift: mapToFrontendShift(r.shift),
+    }));
+    res.json(mappedRows);
+  } catch (err) {
+    console.error("❌ Get user schedules error:", err);
+    res.status(500).json({ error: "Failed to fetch user schedules" });
+  }
+});
 
 // ✅ เพิ่มหรืออัปเดตหลายรายการ (bulk-upsert)
 router.post("/bulk-upsert", async (req, res) => {
@@ -61,7 +100,9 @@ router.post("/bulk-upsert", async (req, res) => {
     const schedules = req.body;
 
     if (!Array.isArray(schedules) || schedules.length === 0) {
-      return res.status(400).json({ error: "Schedules must be a non-empty array" });
+      return res
+        .status(400)
+        .json({ error: "Schedules must be a non-empty array" });
     }
 
     console.log("📦 Received schedules:", schedules);
@@ -77,7 +118,7 @@ router.post("/bulk-upsert", async (req, res) => {
     const values = schedules.map((s: any) => [
       s.user_id,
       s.date,
-      s.shift,
+      mapToDbShift(s.shift), // Convert to ENUM
       new Date(),
       new Date(),
     ]);
@@ -96,10 +137,15 @@ router.delete("/date/:date", async (req, res) => {
     const { date } = req.params;
     const [result] = await db.query<ResultSetHeader>(
       "DELETE FROM work_schedules WHERE work_date = ?",
-      [date]
+      [date],
     );
 
-    res.status(200).json({ message: `✅ Deleted schedules on ${date}`, deleted: result.affectedRows });
+    res
+      .status(200)
+      .json({
+        message: `✅ Deleted schedules on ${date}`,
+        deleted: result.affectedRows,
+      });
   } catch (err) {
     console.error("❌ Delete error:", err);
     res.status(500).json({ error: "Failed to delete schedules" });
@@ -114,6 +160,21 @@ router.delete("/", async (req, res) => {
   } catch (err) {
     console.error("❌ Clear all error:", err);
     res.status(500).json({ error: "Failed to clear schedules" });
+  }
+});
+
+// ✅ ลบกะงานของพนักงานตามวันที่ระบุ (สำหรับกรณีเลือก OFF)
+router.delete("/user/:userId/date/:date", async (req, res) => {
+  try {
+    const { userId, date } = req.params;
+    await db.query(
+      "DELETE FROM work_schedules WHERE user_id = ? AND work_date = ?",
+      [userId, date],
+    );
+    res.status(200).json({ message: "✅ Shift removed (OFF)" });
+  } catch (err) {
+    console.error("❌ Delete user shift error:", err);
+    res.status(500).json({ error: "Failed to remove shift" });
   }
 });
 

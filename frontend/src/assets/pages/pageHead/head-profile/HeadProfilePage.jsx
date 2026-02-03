@@ -51,7 +51,7 @@ const HeadProfilePage = () => {
 
     // Reuse the same API endpoint as Employee Profile
     api
-      .get(`/api/users/${userId}/profile`)
+      .get(`/users/${userId}/profile`)
       .then((res) => setProfile(res.data))
       .catch((err) => {
         console.error(err);
@@ -59,6 +59,8 @@ const HeadProfilePage = () => {
       })
       .finally(() => setLoading(false));
   }, [userId]);
+
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   if (loading)
     return (
@@ -101,9 +103,13 @@ const HeadProfilePage = () => {
   return (
     <div className="head-profile-layout">
       <div className="head-profile-sidebar-wrapper">
-        <HeadSidebar />
+        <HeadSidebar onToggle={setIsSidebarOpen} />
       </div>
-      <div className="head-profile-container">
+      <div
+        className={`head-profile-container ${
+          isSidebarOpen ? "sidebar-open" : "sidebar-closed"
+        }`}
+      >
         <motion.div
           className="head-profile-content"
           variants={containerVariants}
@@ -124,7 +130,11 @@ const HeadProfilePage = () => {
               >
                 {profile.profile_pic ? (
                   <img
-                    src={profile.profile_pic}
+                    src={
+                      profile.profile_pic.startsWith("http")
+                        ? profile.profile_pic
+                        : `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/${profile.profile_pic}`
+                    }
                     alt="Profile"
                     className="head-profile-pic"
                   />

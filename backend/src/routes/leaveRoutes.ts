@@ -13,7 +13,7 @@ router.post("/", async (req, res) => {
     const [result] = await pool.query<ResultSetHeader>(
       `INSERT INTO leave_requests (user_id, leave_type, start_date, end_date, reason, status)
        VALUES (?, ?, ?, ?, ?, 'pending')`,
-      [user_id, leave_type, start_date, end_date, reason]
+      [user_id, leave_type, start_date, end_date, reason],
     );
 
     // 2) ดึงข้อมูลพนักงานหรกำ
@@ -21,7 +21,7 @@ router.post("/", async (req, res) => {
       `SELECT u.first_name, u.last_name, u.department_id
        FROM users u
        WHERE u.id = ?`,
-      [user_id]
+      [user_id],
     );
 
     if (emp) {
@@ -31,7 +31,7 @@ router.post("/", async (req, res) => {
          FROM users u
          WHERE u.department_id = ? AND u.role_id = 4
          LIMIT 1`,
-        [emp.department_id]
+        [emp.department_id],
       );
 
       if (head) {
@@ -40,7 +40,7 @@ router.post("/", async (req, res) => {
         await pool.query(
           `INSERT INTO notifications (user_id, message)
            VALUES (?, ?)`,
-          [head.id, message]
+          [head.id, message],
         );
         console.log("✅ Notification sent to Head:", head.id);
       } else {
@@ -55,10 +55,15 @@ router.post("/", async (req, res) => {
     });
   } catch (error: any) {
     console.error("❌ Error in POST /leave-requests:", error);
-    res.status(500).json({ success: false, message: "เกิดข้อผิดพลาด", error: error.message });
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "เกิดข้อผิดพลาด",
+        error: error.message,
+      });
   }
 });
-
 
 // GET: Fetch ALL leave requests (For HR)
 router.get("/all", async (req, res) => {
@@ -68,12 +73,14 @@ router.get("/all", async (req, res) => {
               u.first_name, u.last_name
        FROM leave_requests lr
        JOIN users u ON lr.user_id = u.id
-       ORDER BY lr.created_at DESC`
+       ORDER BY lr.created_at DESC`,
     );
     res.json(rows);
   } catch (error: any) {
     console.error("❌ Error in GET /leave-requests/all:", error);
-    res.status(500).json({ message: "Internal server error", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
 });
 
@@ -86,7 +93,7 @@ router.get("/:userId", async (req, res) => {
        FROM leave_requests
        WHERE user_id = ?
        ORDER BY created_at DESC`,
-      [userId]
+      [userId],
     );
     res.json(rows);
   } catch (error) {
@@ -102,7 +109,7 @@ router.get("/summary/:userId", async (req, res) => {
     // Calculate sum of days used per leave type for current year
     // Note: DATEDIFF + 1 is a simple approx. For exact business days, we need holiday logic similar to analytics.
     // However, to keep it efficient in SQL, we'll use this for now or implement a robust one if needed.
-    // Ideally, we store "days_count" in DB upon approval. 
+    // Ideally, we store "days_count" in DB upon approval.
     // For now, we'll use DATEDIFF.
     const [rows] = await pool.query(
       `SELECT leave_type, 
@@ -112,31 +119,35 @@ router.get("/summary/:userId", async (req, res) => {
          AND status = 'approved'
          AND YEAR(start_date) = YEAR(CURDATE())
        GROUP BY leave_type`,
-      [userId]
+      [userId],
     );
-    
+
     // Define quotas (could be from DB in future)
     const quotas: any = {
-      'Sick Leave': 30,
-      'Annual Leave': 15,
-      'Personal Leave': 10, // Business leave
-      'Other': 5
+      "Sick Leave": 30,
+      "Annual Leave": 15,
+      "Personal Leave": 10, // Business leave
+      Other: 5,
     };
 
     // Format result
-    const summary = Object.keys(quotas).map(type => {
-      const found: any = (rows as any[]).find((r: any) => r.leave_type === type);
+    const summary = Object.keys(quotas).map((type) => {
+      const found: any = (rows as any[]).find(
+        (r: any) => r.leave_type === type,
+      );
       return {
         type,
         used: found ? parseInt(found.used_days) : 0,
-        limit: quotas[type]
+        limit: quotas[type],
       };
     });
 
     res.json(summary);
   } catch (error: any) {
     console.error("❌ Error in GET /leave-requests/summary/:userId:", error);
-    res.status(500).json({ message: "Internal server error", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
 });
 
@@ -147,7 +158,7 @@ router.get("/for-head/:headId", async (req, res) => {
     // หา department ของหัวหน้า
     const [[head]]: any = await pool.query(
       `SELECT department_id FROM users WHERE id = ? AND role_id = 4`,
-      [headId]
+      [headId],
     );
 
     if (!head) return res.status(404).json({ message: "ไม่พบหัวหน้า" });
@@ -179,7 +190,7 @@ router.get("/for-head/:headId", async (req, res) => {
        
        WHERE u.department_id = ? AND lr.status = 'pending'
        ORDER BY lr.created_at DESC`,
-      [head.department_id]
+      [head.department_id],
     );
 
     res.json(rows);
@@ -199,8 +210,8 @@ router.put("/:id/status", async (req, res) => {
     let params = [status] as any[];
 
     if (rejection_reason !== undefined) {
-        query += `, rejection_reason = ?`;
-        params.push(rejection_reason);
+      query += `, rejection_reason = ?`;
+      params.push(rejection_reason);
     }
 
     query += ` WHERE id = ?`;
@@ -209,10 +220,16 @@ router.put("/:id/status", async (req, res) => {
     await pool.query(query, params);
 
     // Notify Employee
-    const [[leaveReq]]: any = await pool.query('SELECT user_id, leave_type FROM leave_requests WHERE id = ?', [id]);
+    const [[leaveReq]]: any = await pool.query(
+      "SELECT user_id, leave_type FROM leave_requests WHERE id = ?",
+      [id],
+    );
     if (leaveReq) {
-        const message = `คำขอลา "${leaveReq.leave_type}" ของคุณถูก ${status === 'approved' ? 'อนุมัติ ✅' : 'ปฏิเสธ ❌'}`;
-        await pool.query('INSERT INTO notifications (user_id, message, type, is_read, created_at) VALUES (?, ?, "system", 0, NOW())', [leaveReq.user_id, message]);
+      const message = `คำขอลา "${leaveReq.leave_type}" ของคุณถูก ${status === "approved" ? "อนุมัติ ✅" : "ปฏิเสธ ❌"}`;
+      await pool.query(
+        "INSERT INTO notifications (user_id, message, type, is_read, created_at) VALUES (?, ?, 'system', 0, NOW())",
+        [leaveReq.user_id, message],
+      );
     }
 
     res.json({ success: true, message: `อัปเดตคำขอลาเป็น ${status}` });
@@ -230,7 +247,7 @@ router.get("/stats/analytics/:headId", async (req, res) => {
     // 1. Get Head's Department
     const [[head]]: any = await pool.query(
       `SELECT department_id FROM users WHERE id = ? AND role_id = 4`,
-      [headId]
+      [headId],
     );
 
     if (!head) return res.status(404).json({ message: "Head not found" });
@@ -240,7 +257,7 @@ router.get("/stats/analytics/:headId", async (req, res) => {
       `SELECT id, first_name, last_name, email
        FROM users 
        WHERE department_id = ?`,
-      [head.department_id]
+      [head.department_id],
     );
 
     // 3. Get Approved Leaves for Department
@@ -249,131 +266,153 @@ router.get("/stats/analytics/:headId", async (req, res) => {
        FROM leave_requests lr
        JOIN users u ON lr.user_id = u.id
        WHERE u.department_id = ? AND lr.status = 'approved'`,
-      [head.department_id]
+      [head.department_id],
     );
 
     // 4. Get Holidays
     let holidays: any[] = [];
     try {
-        const [holidayRows]: any = await pool.query(`SELECT start_date, end_date FROM holiday_calendar`);
-        holidays = holidayRows;
+      const [holidayRows]: any = await pool.query(
+        `SELECT start_date, end_date FROM holiday_calendar`,
+      );
+      holidays = holidayRows;
     } catch (err) {
-        console.warn("Could not fetch holiday_calendar", err);
+      console.warn("Could not fetch holiday_calendar", err);
     }
 
     // --- Helper to calculate business days (excluding holidays) ---
     const calculateLeaveDays = (start: string | Date, end: string | Date) => {
-        let startDate = new Date(start);
-        let endDate = new Date(end);
-        let count = 0;
-        let curDate = new Date(startDate);
+      let startDate = new Date(start);
+      let endDate = new Date(end);
+      let count = 0;
+      let curDate = new Date(startDate);
 
-        while (curDate <= endDate) {
-            // Check if holiday
-            const isHoliday = holidays.some((h: any) => {
-                const hStart = new Date(h.start_date);
-                const hEnd = new Date(h.end_date);
-                return curDate >= hStart && curDate <= hEnd;
-            });
+      while (curDate <= endDate) {
+        // Check if holiday
+        const isHoliday = holidays.some((h: any) => {
+          const hStart = new Date(h.start_date);
+          const hEnd = new Date(h.end_date);
+          return curDate >= hStart && curDate <= hEnd;
+        });
 
-            if (!isHoliday) {
-                count++;
-            }
-            curDate.setDate(curDate.getDate() + 1);
+        if (!isHoliday) {
+          count++;
         }
-        return count;
+        curDate.setDate(curDate.getDate() + 1);
+      }
+      return count;
     };
 
     // --- Process Data ---
-    
+
     let totalLeaveDays = 0;
     const leaveTypeCount: Record<string, number> = {};
     const monthlyTrend: Record<string, number> = {};
     const userLeaveSummary: Record<number, number> = {};
 
     employees.forEach((emp: any) => {
-        userLeaveSummary[emp.id] = 0;
+      userLeaveSummary[emp.id] = 0;
     });
 
     leaves.forEach((leave: any) => {
-        const days = calculateLeaveDays(leave.start_date, leave.end_date);
-        
-        totalLeaveDays += days;
+      const days = calculateLeaveDays(leave.start_date, leave.end_date);
 
-        // Leave Type Distribution (Count of Requests)
-        leaveTypeCount[leave.leave_type] = (leaveTypeCount[leave.leave_type] || 0) + 1;
+      totalLeaveDays += days;
 
-        // Monthly Trend (Sum of Days)
-        const monthKey = new Date(leave.start_date).toLocaleString('default', { month: 'short' });
-        monthlyTrend[monthKey] = (monthlyTrend[monthKey] || 0) + days;
+      // Leave Type Distribution (Count of Requests)
+      leaveTypeCount[leave.leave_type] =
+        (leaveTypeCount[leave.leave_type] || 0) + 1;
 
-        if (userLeaveSummary[leave.user_id] !== undefined) {
-            userLeaveSummary[leave.user_id] += days;
-        }
+      // Monthly Trend (Sum of Days)
+      const monthKey = new Date(leave.start_date).toLocaleString("default", {
+        month: "short",
+      });
+      monthlyTrend[monthKey] = (monthlyTrend[monthKey] || 0) + days;
+
+      if (userLeaveSummary[leave.user_id] !== undefined) {
+        userLeaveSummary[leave.user_id] += days;
+      }
     });
 
     // 1. Attendance Rate (This Month)
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
     const totalEmployees = employees.length;
-    const workingDaysInMonth = 22; 
+    const workingDaysInMonth = 22;
     const totalPossibleDays = totalEmployees * workingDaysInMonth;
-    
+
     let thisMonthLeaveDays = 0;
     leaves.forEach((leave: any) => {
-        const s = new Date(leave.start_date);
-        if (s.getMonth() === currentMonth && s.getFullYear() === currentYear) {
-             thisMonthLeaveDays += calculateLeaveDays(leave.start_date, leave.end_date);
-        }
+      const s = new Date(leave.start_date);
+      if (s.getMonth() === currentMonth && s.getFullYear() === currentYear) {
+        thisMonthLeaveDays += calculateLeaveDays(
+          leave.start_date,
+          leave.end_date,
+        );
+      }
     });
-    
-    const attendanceRate = totalPossibleDays > 0 
-        ? ((totalPossibleDays - thisMonthLeaveDays) / totalPossibleDays) * 100 
+
+    const attendanceRate =
+      totalPossibleDays > 0
+        ? ((totalPossibleDays - thisMonthLeaveDays) / totalPossibleDays) * 100
         : 100;
 
     // 2. Pie Chart Data
-    const pieData = Object.keys(leaveTypeCount).map(key => ({
-        name: key,
-        value: leaveTypeCount[key]
+    const pieData = Object.keys(leaveTypeCount).map((key) => ({
+      name: key,
+      value: leaveTypeCount[key],
     }));
 
     // 3. Line Chart Data
-    const monthsOrder = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const lineData = monthsOrder.map(m => ({
-        name: m,
-        days: monthlyTrend[m] || 0
+    const monthsOrder = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    const lineData = monthsOrder.map((m) => ({
+      name: m,
+      days: monthlyTrend[m] || 0,
     }));
 
     // 4. Employee Stats
     const employeeStats = employees.map((emp: any) => {
-        const used = userLeaveSummary[emp.id] || 0;
-        return {
-            id: emp.id,
-            name: `${emp.first_name} ${emp.last_name}`,
-            department: head.department_id,
-            usedDays: used,
-            quota: 30, 
-            attendance: Math.max(0, 100 - ((used / 260) * 100)).toFixed(1)
-        };
+      const used = userLeaveSummary[emp.id] || 0;
+      return {
+        id: emp.id,
+        name: `${emp.first_name} ${emp.last_name}`,
+        department: head.department_id,
+        usedDays: used,
+        quota: 30,
+        attendance: Math.max(0, 100 - (used / 260) * 100).toFixed(1),
+      };
     });
 
     const topAbsentees = [...employeeStats]
-        .sort((a, b) => b.usedDays - a.usedDays)
-        .slice(0, 5);
+      .sort((a, b) => b.usedDays - a.usedDays)
+      .slice(0, 5);
 
     res.json({
-        attendanceRate: parseFloat(attendanceRate.toFixed(1)),
-        pieData,
-        lineData,
-        topAbsentees,
-        employeeStats
+      attendanceRate: parseFloat(attendanceRate.toFixed(1)),
+      pieData,
+      lineData,
+      topAbsentees,
+      employeeStats,
     });
-
   } catch (error: any) {
     console.error("❌ Error in GET /stats/analytics:", error);
-    res.status(500).json({ message: "Internal server error", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
 });
-
 
 export default router;

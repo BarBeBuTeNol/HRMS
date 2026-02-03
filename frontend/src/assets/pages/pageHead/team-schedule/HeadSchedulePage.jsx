@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./HeadSchedulePage.css";
 import HeadSidebar from "../../../Component/Head/HeadSidebar";
+import CustomDropdown from "../epm-list/CustomDropdown";
 import api from "../../../../services/api";
 import {
   FaChevronLeft,
@@ -101,20 +102,42 @@ const HeadSchedulePage = () => {
     }
   };
 
+  // Scroll to Today when view changes or loads
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const todayEl = document.querySelector(".hs-date-header.is-today");
+      if (todayEl) {
+        todayEl.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+          inline: "center",
+        });
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [viewMode, currentDate, employees]); // Trigger when view or data re-renders
+
   const saveShift = async (shiftType) => {
     if (!selectedCell) return;
     try {
-      const payload = [
-        {
-          user_id: selectedCell.empId,
-          date: selectedCell.dateStr,
-          shift: shiftType,
-        },
-      ];
+      if (shiftType === "OFF") {
+        // Call DELETE endpoint
+        await api.delete(
+          `/work-schedules/user/${selectedCell.empId}/date/${selectedCell.dateStr}`,
+        );
+      } else {
+        // Call Bulk Upsert
+        const payload = [
+          {
+            user_id: selectedCell.empId,
+            date: selectedCell.dateStr,
+            shift: shiftType,
+          },
+        ];
+        await api.post("/work-schedules/bulk-upsert", payload);
+      }
 
-      await api.post("/work-schedules/bulk-upsert", payload);
-
-      // Refresh local state without full refetch for speed (optimistic) OR just refetch
+      // Refresh local state
       fetchData();
       setShowAddModal(false);
     } catch (err) {
@@ -216,11 +239,18 @@ const HeadSchedulePage = () => {
     );
   };
 
+  // Sidebar State
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
+
   return (
     <div className="head-schedule-layout">
-      {/* Sidebar Wrapper */}
-      <div className="head-sidebar-wrapper">
-        <HeadSidebar />
+      {/* Sidebar Wrapper - Adjust width based on state */}
+      <div
+        className={`head-sidebar-wrapper ${
+          isSidebarOpen ? "expanded" : "collapsed"
+        }`}
+      >
+        <HeadSidebar onToggle={setSidebarOpen} />
       </div>
 
       <div className="head-schedule-content">
@@ -245,19 +275,12 @@ const HeadSchedulePage = () => {
 
             {/* Position Filter */}
             <div className="hs-filter-wrapper">
-              <FaFilter className="hs-filter-icon" />
-              <select
-                className="hs-select"
-                value={selectedPosition}
-                onChange={(e) => setSelectedPosition(e.target.value)}
-              >
-                <option value="All">All Positions</option>
-                {positions.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                ))}
-              </select>
+              <CustomDropdown
+                options={positions}
+                value={selectedPosition === "All" ? "" : selectedPosition}
+                onChange={(val) => setSelectedPosition(val || "All")}
+                placeholder="All Positions"
+              />
             </div>
 
             {/* View Mode */}

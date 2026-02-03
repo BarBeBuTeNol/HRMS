@@ -99,7 +99,20 @@ const Sidebar_HR = () => {
     >
       <div className="hr-sidebar-header">
         <div className="hr-user-avatar">
-          <FaUserCircle />
+          {currentUser.profile_image_url ? (
+            <img
+              src={currentUser.profile_image_url}
+              alt="Profile"
+              style={{
+                width: "40px",
+                height: "40px",
+                borderRadius: "50%",
+                objectFit: "cover",
+              }}
+            />
+          ) : (
+            <FaUserCircle />
+          )}
         </div>
 
         <AnimatePresence>

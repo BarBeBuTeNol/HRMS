@@ -1,23 +1,22 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  BarChart,
-  Bar,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
   PieChart,
   Pie,
   Cell,
-  LineChart,
-  Line,
+  BarChart,
+  Bar,
 } from "recharts";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-import api from "../../../../services/api"; // Assuming api is configured globally or I'll use direct path
+import api from "../../../../services/api";
 import HRLayout from "../../../Component/HR/HRLayout";
 import "./Show_static_switch.css";
 
@@ -29,19 +28,35 @@ import {
   FaExchangeAlt,
   FaUserClock,
   FaBuilding,
+  FaChartLine,
+  FaHourglassHalf,
+  FaCheckCircle,
+  FaTrophy,
 } from "react-icons/fa";
 
 const COLORS = [
-  "#0088FE",
-  "#00C49F",
-  "#FFBB28",
-  "#FF8042",
-  "#8884d8",
-  "#82ca9d",
+  "#60A5FA", // Blue-400
+  "#34D399", // Emerald-400
+  "#FBBF24", // Amber-400
+  "#F87171", // Red-400
+  "#818CF8", // Indigo-400
+  "#A78BFA", // Violet-400
 ];
 
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="custom-tooltip">
+        <p className="description">{`${label || ""}`}</p>
+        <p className="value">{`${payload[0].name}: ${payload[0].value}`}</p>
+      </div>
+    );
+  }
+  return null;
+};
+
 const Show_static_switch = () => {
-  const [activeTab, setActiveTab] = useState("stats"); // 'stats' or 'list'
+  const [activeTab, setActiveTab] = useState("stats");
   const [loading, setLoading] = useState(true);
   const [statsData, setStatsData] = useState({
     topSwappers: [],
@@ -51,15 +66,41 @@ const Show_static_switch = () => {
   });
   const [swapsList, setSwapsList] = useState([]);
   const [filters, setFilters] = useState({
-    range: "month", // today, week, month
-    department_id: "",
+    range: "month",
   });
 
-  // Fetch Data
+  // Calculate Summary Metrics
+  const summaryMetrics = useMemo(() => {
+    const totalSwaps = statsData.swapVolume.reduce(
+      (acc, curr) => acc + curr.count,
+      0,
+    );
+    const approvedCount = swapsList.filter(
+      (s) => s.status === "Approved",
+    ).length;
+    const pendingCount = swapsList.filter((s) => s.status === "Pending").length;
+
+    // Find top dept
+    let topDeptName = "-";
+    if (statsData.deptHeatmap.length > 0) {
+      const topDept = [...statsData.deptHeatmap].sort(
+        (a, b) => b.count - a.count,
+      )[0];
+      topDeptName = topDept.department_name;
+    }
+
+    return {
+      total: totalSwaps,
+      approved: approvedCount,
+      pending: pendingCount,
+      topDept: topDeptName,
+    };
+  }, [statsData, swapsList]);
+
   useEffect(() => {
     fetchStats();
     fetchSwaps();
-  }, []); // Initial load
+  }, []);
 
   useEffect(() => {
     fetchSwaps();
@@ -90,7 +131,6 @@ const Show_static_switch = () => {
   const handleVerify = async (id) => {
     try {
       await api.post(`/reports/swaps/${id}/verify`);
-      // Update local state to show verified
       setSwapsList((prev) =>
         prev.map((item) =>
           item.id === id
@@ -98,9 +138,9 @@ const Show_static_switch = () => {
             : item,
         ),
       );
-      alert("Swap acknowledged successfully.");
+      // Small customized toast could go here
     } catch (err) {
-      alert("Failed to verify swap.");
+      console.error("Failed to verify", err);
     }
   };
 
@@ -118,6 +158,25 @@ const Show_static_switch = () => {
     );
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { type: "spring", stiffness: 100 },
+    },
+  };
+
   return (
     <HRLayout>
       <div className="static-wrapper">
@@ -125,82 +184,185 @@ const Show_static_switch = () => {
           <div>
             <h1 className="page-header-title">Shift Swap Analytics</h1>
             <p className="page-subtitle">
-              Monitor and verify shift exchange activities.
+              Real-time insights on verify activities.
             </p>
           </div>
-          <div className="tab-switcher">
-            <button
-              className={`tab-btn ${activeTab === "stats" ? "active" : ""}`}
-              onClick={() => setActiveTab("stats")}
-            >
-              Statistics
-            </button>
-            <button
-              className={`tab-btn ${activeTab === "list" ? "active" : ""}`}
-              onClick={() => setActiveTab("list")}
-            >
-              Recent Swaps
-            </button>
+          <div className="header-actions">
+            <div className="tab-switcher-modern">
+              <button
+                className={`tab-btn-modern ${activeTab === "stats" ? "active" : ""}`}
+                onClick={() => setActiveTab("stats")}
+              >
+                <FaChartLine /> Dashboard
+              </button>
+              <button
+                className={`tab-btn-modern ${activeTab === "list" ? "active" : ""}`}
+                onClick={() => setActiveTab("list")}
+              >
+                <FaExchangeAlt /> Recent Swaps
+              </button>
+            </div>
           </div>
         </div>
 
-        <div className="content-area">
-          <AnimatePresence mode="wait">
-            {activeTab === "stats" ? (
-              <motion.div
-                key="stats"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                className="stats-grid"
-              >
-                {/* Top Row: Volume & Heatmap */}
-                <div className="stat-card large-card">
-                  <h3>
-                    <FaExchangeAlt /> Swap Volume Trend
-                  </h3>
+        {/* Summary Widgets - Always Visible or only on Dashboard? Let's keep distinct */}
+        <AnimatePresence mode="wait">
+          {activeTab === "stats" ? (
+            <motion.div
+              key="stats"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              exit={{ opacity: 0 }}
+              className="dashboard-container"
+            >
+              {/* Summary Row */}
+              <div className="summary-row">
+                <motion.div
+                  variants={itemVariants}
+                  className="summary-card card-blue"
+                >
+                  <div className="icon-wrapper">
+                    <FaExchangeAlt />
+                  </div>
+                  <div className="summary-info">
+                    <h3>Total Volume</h3>
+                    <p className="summary-value">{summaryMetrics.total}</p>
+                  </div>
+                </motion.div>
+                <motion.div
+                  variants={itemVariants}
+                  className="summary-card card-green"
+                >
+                  <div className="icon-wrapper">
+                    <FaCheckCircle />
+                  </div>
+                  <div className="summary-info">
+                    <h3>Approved</h3>
+                    <p className="summary-value">{summaryMetrics.approved}</p>
+                  </div>
+                </motion.div>
+                <motion.div
+                  variants={itemVariants}
+                  className="summary-card card-yellow"
+                >
+                  <div className="icon-wrapper">
+                    <FaHourglassHalf />
+                  </div>
+                  <div className="summary-info">
+                    <h3>Pending</h3>
+                    <p className="summary-value">{summaryMetrics.pending}</p>
+                  </div>
+                </motion.div>
+                <motion.div
+                  variants={itemVariants}
+                  className="summary-card card-purple"
+                >
+                  <div className="icon-wrapper">
+                    <FaTrophy />
+                  </div>
+                  <div className="summary-info">
+                    <h3>Top Dept</h3>
+                    <p className="summary-value small-text">
+                      {summaryMetrics.topDept}
+                    </p>
+                  </div>
+                </motion.div>
+              </div>
+
+              <div className="stats-grid-modern">
+                {/* Main Trend Chart */}
+                <motion.div
+                  variants={itemVariants}
+                  className="stat-card wide-card"
+                >
+                  <div className="card-header">
+                    <h3>
+                      <FaChartLine /> Application Trend
+                    </h3>
+                    <div className="card-badge">Monthly</div>
+                  </div>
                   <div className="chart-container">
                     <ResponsiveContainer width="100%" height={300}>
-                      <LineChart data={statsData.swapVolume}>
-                        <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                        <XAxis dataKey="month" stroke="#ccc" />
-                        <YAxis stroke="#ccc" />
+                      <AreaChart data={statsData.swapVolume}>
+                        <defs>
+                          <linearGradient
+                            id="colorCount"
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="5%"
+                              stopColor="#60A5FA"
+                              stopOpacity={0.4}
+                            />
+                            <stop
+                              offset="95%"
+                              stopColor="#60A5FA"
+                              stopOpacity={0}
+                            />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          stroke="rgba(255,255,255,0.05)"
+                          vertical={false}
+                        />
+                        <XAxis
+                          dataKey="month"
+                          stroke="#94A3B8"
+                          tick={{ fontSize: 12 }}
+                          tickLine={false}
+                          axisLine={false}
+                        />
+                        <YAxis
+                          stroke="#94A3B8"
+                          tick={{ fontSize: 12 }}
+                          tickLine={false}
+                          axisLine={false}
+                        />
                         <Tooltip
-                          contentStyle={{
-                            backgroundColor: "#333",
-                            border: "none",
+                          content={<CustomTooltip />}
+                          cursor={{
+                            stroke: "rgba(255,255,255,0.2)",
+                            strokeWidth: 1,
                           }}
                         />
-                        <Line
+                        <Area
                           type="monotone"
                           dataKey="count"
-                          stroke="#00C49F"
+                          stroke="#60A5FA"
                           strokeWidth={3}
-                          dot={{ r: 5 }}
+                          fillOpacity={1}
+                          fill="url(#colorCount)"
                         />
-                      </LineChart>
+                      </AreaChart>
                     </ResponsiveContainer>
                   </div>
-                </div>
+                </motion.div>
 
-                <div className="stat-card">
-                  <h3>
-                    <FaBuilding /> Department Heatmap
-                  </h3>
+                {/* Heatmap & Top Users */}
+                <motion.div variants={itemVariants} className="stat-card">
+                  <div className="card-header">
+                    <h3>
+                      <FaBuilding /> Department Share
+                    </h3>
+                  </div>
                   <div className="chart-container">
-                    <ResponsiveContainer width="100%" height={300}>
+                    <ResponsiveContainer width="100%" height={250}>
                       <PieChart>
                         <Pie
                           data={statsData.deptHeatmap}
                           cx="50%"
                           cy="50%"
                           innerRadius={60}
-                          outerRadius={80}
-                          fill="#8884d8"
+                          outerRadius={90}
                           paddingAngle={5}
                           dataKey="count"
                           nameKey="department_name"
-                          label
+                          stroke="none"
                         >
                           {statsData.deptHeatmap.map((entry, index) => (
                             <Cell
@@ -210,198 +372,234 @@ const Show_static_switch = () => {
                           ))}
                         </Pie>
                         <Tooltip />
-                        <Legend />
                       </PieChart>
                     </ResponsiveContainer>
-                  </div>
-                </div>
-
-                {/* Bottom Row: Top Swappers & Helpers */}
-                <div className="stat-card">
-                  <h3>
-                    <FaUserClock /> Top 5 Requestors
-                  </h3>
-                  <div className="chart-container">
-                    <ResponsiveContainer width="100%" height={250}>
-                      <BarChart layout="vertical" data={statsData.topSwappers}>
-                        <XAxis type="number" hide />
-                        <YAxis
-                          dataKey="name"
-                          type="category"
-                          width={100}
-                          stroke="#ccc"
-                          fontSize={12}
-                        />
-                        <Tooltip
-                          cursor={{ fill: "transparent" }}
-                          contentStyle={{ backgroundColor: "#333" }}
-                        />
-                        <Bar
-                          dataKey="count"
-                          fill="#FF8042"
-                          radius={[0, 10, 10, 0]}
-                          barSize={20}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-
-                <div className="stat-card">
-                  <h3>
-                    <FaUserClock /> Top 5 Helpers
-                  </h3>
-                  <div className="chart-container">
-                    <ResponsiveContainer width="100%" height={250}>
-                      <BarChart layout="vertical" data={statsData.topHelpers}>
-                        <XAxis type="number" hide />
-                        <YAxis
-                          dataKey="name"
-                          type="category"
-                          width={100}
-                          stroke="#ccc"
-                          fontSize={12}
-                        />
-                        <Tooltip
-                          cursor={{ fill: "transparent" }}
-                          contentStyle={{ backgroundColor: "#333" }}
-                        />
-                        <Bar
-                          dataKey="count"
-                          fill="#0088FE"
-                          radius={[0, 10, 10, 0]}
-                          barSize={20}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="list"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="list-view-container"
-              >
-                <div className="toolbar">
-                  <div className="filters">
-                    <div className="filter-group">
-                      <FaFilter />
-                      <select
-                        value={filters.range}
-                        onChange={(e) =>
-                          setFilters({ ...filters, range: e.target.value })
-                        }
-                      >
-                        <option value="today">Today</option>
-                        <option value="week">This Week</option>
-                        <option value="month">This Month</option>
-                        <option value="all">All Time</option>
-                      </select>
+                    <div className="chart-legend-custom">
+                      {statsData.deptHeatmap.slice(0, 3).map((entry, index) => (
+                        <div key={index} className="legend-item">
+                          <span
+                            className="dot"
+                            style={{
+                              background: COLORS[index % COLORS.length],
+                            }}
+                          ></span>
+                          <span>{entry.department_name}</span>
+                        </div>
+                      ))}
                     </div>
-                    {/* Add Department Filter if dept list is available, skipping for now to keep simple or can hardcode common ones */}
                   </div>
-                  <button className="export-btn" onClick={exportToExcel}>
-                    <FaFileExport /> Export Report
-                  </button>
-                </div>
+                </motion.div>
 
-                <div className="table-responsive">
-                  <table className="swap-table">
-                    <thead>
-                      <tr>
-                        <th>Date</th>
-                        <th>Requester</th>
-                        <th>Substitute</th>
-                        <th>Shift</th>
-                        <th>Department</th>
-                        <th>Reason</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {loading ? (
-                        <tr>
-                          <td colSpan="8" style={{ textAlign: "center" }}>
-                            Loading...
-                          </td>
-                        </tr>
-                      ) : swapsList.length === 0 ? (
-                        <tr>
-                          <td colSpan="8" style={{ textAlign: "center" }}>
-                            No records found.
-                          </td>
-                        </tr>
-                      ) : (
-                        swapsList.map((swap) => (
-                          <tr key={swap.id}>
-                            <td>
-                              {new Date(swap.shift_date).toLocaleDateString()}
-                            </td>
-                            <td>
-                              <div className="user-info">
-                                <span className="name">
-                                  {swap.leave_emp_first} {swap.leave_emp_last}
-                                </span>
-                              </div>
-                            </td>
-                            <td>
-                              <div className="user-info">
-                                <span className="name highlight">
-                                  {swap.delegate_emp_first}{" "}
-                                  {swap.delegate_emp_last}
-                                </span>
-                              </div>
-                            </td>
-                            <td>
-                              <span
-                                className={`badge shift-${swap.shift_type}`}
-                              >
-                                {swap.shift_type}
-                              </span>
-                            </td>
-                            <td>{swap.department_name || "-"}</td>
-                            <td className="reason-col" title={swap.reason}>
-                              {swap.reason || "N/A"}
-                            </td>
-                            <td>
-                              <span
-                                className={`status-badge ${
-                                  swap.status === "Approved"
-                                    ? "success"
-                                    : "pending"
-                                }`}
-                              >
-                                {swap.status}
-                              </span>
-                            </td>
-                            <td>
-                              {swap.hr_acknowledged ? (
-                                <span className="verified-text">
-                                  <FaCheckDouble /> Verified
-                                </span>
-                              ) : (
-                                <button
-                                  className="verify-btn"
-                                  onClick={() => handleVerify(swap.id)}
-                                >
-                                  Acknowledge
-                                </button>
-                              )}
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
+                <motion.div variants={itemVariants} className="stat-card">
+                  <div className="card-header">
+                    <h3>
+                      <FaUserClock /> Top Requesters
+                    </h3>
+                  </div>
+                  <div className="chart-container">
+                    <ResponsiveContainer width="100%" height={250}>
+                      <BarChart
+                        layout="vertical"
+                        data={statsData.topSwappers}
+                        barSize={15}
+                      >
+                        <XAxis type="number" hide />
+                        <YAxis
+                          dataKey="name"
+                          type="category"
+                          width={100}
+                          tick={{ fill: "#CBD5E1", fontSize: 12 }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <Tooltip
+                          cursor={{ fill: "rgba(255,255,255,0.05)" }}
+                          contentStyle={{
+                            backgroundColor: "#1e293b",
+                            borderColor: "#334155",
+                          }}
+                        />
+                        <Bar
+                          dataKey="count"
+                          fill="#F87171"
+                          radius={[0, 10, 10, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </motion.div>
+
+                <motion.div variants={itemVariants} className="stat-card">
+                  <div className="card-header">
+                    <h3>
+                      <FaCheckDouble /> Top Helpers
+                    </h3>
+                  </div>
+                  <div className="chart-container">
+                    <ResponsiveContainer width="100%" height={250}>
+                      <BarChart
+                        layout="vertical"
+                        data={statsData.topHelpers}
+                        barSize={15}
+                      >
+                        <XAxis type="number" hide />
+                        <YAxis
+                          dataKey="name"
+                          type="category"
+                          width={100}
+                          tick={{ fill: "#CBD5E1", fontSize: 12 }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <Tooltip
+                          cursor={{ fill: "rgba(255,255,255,0.05)" }}
+                          contentStyle={{
+                            backgroundColor: "#1e293b",
+                            borderColor: "#334155",
+                          }}
+                        />
+                        <Bar
+                          dataKey="count"
+                          fill="#34D399"
+                          radius={[0, 10, 10, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </motion.div>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="list"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="list-view-container"
+            >
+              <div className="toolbar">
+                <div className="filters">
+                  <div className="filter-group">
+                    <FaFilter />
+                    <select
+                      value={filters.range}
+                      onChange={(e) =>
+                        setFilters({ ...filters, range: e.target.value })
+                      }
+                    >
+                      <option value="today">Today</option>
+                      <option value="week">This Week</option>
+                      <option value="month">This Month</option>
+                      <option value="all">All Time</option>
+                    </select>
+                  </div>
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+                <button className="export-btn" onClick={exportToExcel}>
+                  <FaFileExport /> Export Report
+                </button>
+              </div>
+              {/* Table remains largely same but inside polished container */}
+              <div className="table-responsive">
+                <table className="swap-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Requester</th>
+                      <th>Substitute</th>
+                      <th>Shift</th>
+                      <th>Reason</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loading ? (
+                      <tr>
+                        <td colSpan="7" className="text-center">
+                          Loading...
+                        </td>
+                      </tr>
+                    ) : swapsList.length === 0 ? (
+                      <tr>
+                        <td colSpan="7" className="text-center">
+                          No swaps found.
+                        </td>
+                      </tr>
+                    ) : (
+                      swapsList.map((swap) => (
+                        <tr key={swap.id}>
+                          <td>
+                            {new Date(swap.shift_date).toLocaleDateString()}
+                          </td>
+                          <td>
+                            <div className="user-cell">
+                              <div className="user-initial">
+                                {swap.leave_emp_first[0]}
+                              </div>
+                              <div>
+                                {swap.leave_emp_first} {swap.leave_emp_last}
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <div className="user-cell">
+                              <div className="user-initial alt">
+                                {swap.delegate_emp_first[0]}
+                              </div>
+                              <div>
+                                {swap.delegate_emp_first}{" "}
+                                {swap.delegate_emp_last}
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <span
+                              className={`badge-shift shift-${swap.shift_type}`}
+                            >
+                              {swap.shift_type}
+                            </span>
+                          </td>
+                          <td
+                            style={{
+                              maxWidth: "200px",
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}
+                            title={swap.reason}
+                          >
+                            {swap.reason || "-"}
+                          </td>
+                          <td>
+                            <span
+                              className={`status-pill ${swap.status.toLowerCase()}`}
+                            >
+                              {swap.status}
+                            </span>
+                          </td>
+                          <td>
+                            {swap.hr_acknowledged ? (
+                              <span className="verified-text">
+                                <FaCheckDouble /> Verified
+                              </span>
+                            ) : (
+                              <button
+                                className="action-btn-verify"
+                                onClick={() => handleVerify(swap.id)}
+                              >
+                                Verify
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </HRLayout>
   );

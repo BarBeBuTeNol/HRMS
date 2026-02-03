@@ -25,6 +25,7 @@
   font-weight: 700;
   background: linear-gradient(90deg, #60a5fa, #c084fc);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   margin: 0 0 0.5rem 0;
 }
@@ -106,62 +107,116 @@
 }
 
 /* Filter Select Wrapper */
-.emp-filter-wrapper {
+/* Custom Department Filter */
+.custom-dept-filter {
   position: relative;
-  width: 220px;
+  width: 260px;
+  z-index: 50; /* Ensure dropdown is above other content */
 }
 
-.emp-filter-icon {
-  position: absolute;
-  left: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #94a3b8;
-  pointer-events: none;
-  z-index: 10;
-}
-
-.emp-filter-chevron {
-  position: absolute;
-  right: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #94a3b8;
-  pointer-events: none;
-  font-size: 0.8rem;
-  z-index: 10;
-}
-
-.dept-filter-select {
+.dept-trigger-btn {
   width: 100%;
   background: rgba(15, 23, 42, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   color: #f8fafc;
-  padding: 0.8rem 2.5rem 0.8rem 2.8rem; /* Space for left icon and right chevron */
-  border-radius: 10px;
-  font-size: 0.95rem;
-  outline: none;
   cursor: pointer;
-  appearance: none; /* Remove default arrow */
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  transition: all 0.3s;
+  transition: all 0.2s;
+  font-family: inherit;
+  font-size: 0.95rem;
 }
 
-.dept-filter-select:hover {
+.dept-trigger-btn:hover,
+.dept-trigger-btn.active {
+  background: rgba(30, 41, 59, 0.8);
   border-color: rgba(96, 165, 250, 0.5);
-  background: rgba(15, 23, 42, 0.8);
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
 }
 
-.dept-filter-select:focus {
-  border-color: #60a5fa;
-  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.15);
+.trigger-content {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  overflow: hidden;
 }
 
-.dept-filter-select option {
+.filter-icon {
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.selected-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+
+.chevron-icon {
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+/* Dropdown Menu */
+.dept-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 100%;
   background: #1e293b;
-  color: #f8fafc;
-  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.5),
+    0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  padding: 0.5rem;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+/* Scrollbar for dropdown */
+.dept-dropdown-menu::-webkit-scrollbar {
+  width: 6px;
+}
+.dept-dropdown-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+.dept-dropdown-menu::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 3px;
+}
+
+.dept-option {
+  padding: 0.7rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #cbd5e1;
+  font-size: 0.95rem;
+  transition: all 0.15s;
+}
+
+.dept-option:hover {
+  background: rgba(96, 165, 250, 0.1);
+  color: #fff;
+}
+
+.dept-option.selected {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.check-icon {
+  color: #60a5fa;
+  font-size: 0.8rem;
 }
 
 /* ================= GRID VIEW ================= */
@@ -370,6 +425,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
+  width: 100%;
 }
 
 .list-avatar {
@@ -547,7 +603,9 @@
   font-weight: 700;
   color: #fff;
   border: 4px solid rgba(30, 41, 59, 1);
-  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.5), 0 10px 20px rgba(0, 0, 0, 0.3);
+  box-shadow:
+    0 0 0 2px rgba(96, 165, 250, 0.5),
+    0 10px 20px rgba(0, 0, 0, 0.3);
   margin-bottom: 1rem;
 }
 
@@ -885,4 +943,148 @@
   background: #dc2626;
   transform: translateY(-2px);
   box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.4);
+}
+/* ================= RESPONSIVE DESIGN ================= */
+
+@media screen and (max-width: 768px) {
+  /* 1. Page Container & Header */
+  .emp-page-container {
+    padding: 1rem;
+  }
+
+  .emp-page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .emp-controls {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.8rem;
+  }
+
+  /* 2. Controls Stacking */
+  .filter-group,
+  .emp-filter-wrapper,
+  .emp-search-wrapper {
+    width: 100%;
+  }
+
+  .view-toggles {
+    justify-content: center; /* Center toggles */
+    width: 100%;
+  }
+
+  .toggle-btn {
+    flex: 1; /* Make buttons satisfy full width */
+  }
+
+  /* 3. Detail Modal Mobile */
+  .detail-modal {
+    width: 95%;
+    max-height: 90vh;
+  }
+
+  .detail-header {
+    padding: 1.5rem 1rem;
+  }
+
+  .detail-content {
+    padding: 1rem;
+  }
+
+  .tab-grid {
+    grid-template-columns: 1fr; /* Single column */
+  }
+
+  /* 4. List View (Table) to Cards Transformation */
+  .emp-list-container {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+
+  .emp-table,
+  .emp-table thead,
+  .emp-table tbody,
+  .emp-table th,
+  .emp-table td,
+  .emp-table tr {
+    display: block;
+  }
+
+  .emp-table thead {
+    display: none; /* Hide standard header */
+  }
+
+  .emp-table tbody tr {
+    background: #1e293b; /* Card background */
+    margin-bottom: 1rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  /* Force Override Zebra Striping on Mobile */
+  .emp-table tbody tr:nth-child(even) {
+    background-color: #1e293b !important;
+  }
+
+  .emp-table tbody tr:hover {
+    background: #334155 !important;
+  }
+
+  .emp-table td {
+    padding: 0.2rem 0;
+    border: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: right;
+    color: #cbd5e1;
+    font-size: 0.9rem;
+  }
+
+  /* Add labels via data-label or just structural styling */
+  /* Since we can't easily add data-labels without changing JSX heavily, 
+     we'll use nth-child to fake it or just rely on layout */
+
+  /* User info row (Avatar + Name) */
+  .emp-table td:first-child {
+    justify-content: flex-start;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0.8rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .list-user-name,
+  .emp-table td:first-child span {
+    color: #f8fafc; /* White text for dark card */
+    font-size: 1.1rem;
+  }
+
+  /* Actions Row */
+  .emp-table td:last-child {
+    justify-content: flex-end;
+    padding-top: 0.8rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: 0.5rem;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .emp-grid-container {
+    grid-template-columns: 1fr; /* Full width cards */
+  }
+
+  .emp-page-title {
+    font-size: 1.8rem;
+  }
 }

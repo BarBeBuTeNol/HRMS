@@ -1,0 +1,12 @@
+--- Checking Delegation Data Availability ---
+
+Checking for Head: Testhead Testhead (ID: 5, Dept: 4)
+  -> Employees in Department: 1
+     - Leon Sizet (ID: 8)
+  -> Shifts (last 3 months): 3
+     - [Sat Nov 08 2025 00:00:00 GMT+0700 (เวลาอินโดจีน)] Morning (Testhead)
+     - [Sun Nov 09 2025 00:00:00 GMT+0700 (เวลาอินโดจีน)] Morning (Testhead)
+     - [Mon Nov 10 2025 00:00:00 GMT+0700 (เวลาอินโดจีน)] Morning (Testhead)
+  -> Tasks: 2
+     - [Wed Feb 04 2026 00:00:00 GMT+0700 (เวลาอินโดจีน)] Project Kickoff (Leon)
+     - [Fri Jan 30 2026 00:00:00 GMT+0700 (เวลาอินโดจีน)] Test (Leon)

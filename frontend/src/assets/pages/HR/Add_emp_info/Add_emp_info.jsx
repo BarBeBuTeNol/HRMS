@@ -1,24 +1,38 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FaUser,
   FaBriefcase,
   FaMoneyBillWave,
   FaCalendarAlt,
-  FaCheckCircle,
   FaIdBadge,
   FaFileAlt,
+  FaCloudUploadAlt,
+  FaTrash,
+  FaFile,
 } from "react-icons/fa";
 import HRLayout from "../../../Component/HR/HRLayout";
 import PopupNotification from "../../../Component/popup_notifications/popup_notifications-hr/PopupHR";
+import PopupDoneHR from "../../../Component/poup_done/poup_done-hr/PopupDoneHR";
+import PopupErrorHR from "../../../Component/popup-error/popup-error-hr/PopupErrorHR";
 import EditEmpNav from "../../../Component/HR/EditEmpNav";
 import "./Add_emp_info.css";
 
 const AddEmpInfo = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { empPersonal, userId, isEditMode } = location.state || {};
+  const { userId: paramUserId } = useParams(); // Get ID from URL
+  const {
+    empPersonal,
+    userId: stateUserId,
+    isEditMode: stateEditMode,
+    imageUrl: stateImageUrl,
+  } = location.state || {};
+
+  // Prioritize Param ID -> State ID
+  const userId = paramUserId || stateUserId;
+  const isEditMode = !!paramUserId || stateEditMode;
 
   const [showIds, setShowIds] = useState({
     userId: userId || "",
@@ -27,15 +41,25 @@ const AddEmpInfo = () => {
 
   const [imageUrl, setImageUrl] = useState("");
   const [departmentId, setDepartmentId] = useState(null);
-  const [jobPositions, setJobPositions] = useState([]); // Store all positions
-  const [filteredPositions, setFilteredPositions] = useState([]); // Store positions for current department
+  const [jobPositions, setJobPositions] = useState([]);
+  const [filteredPositions, setFilteredPositions] = useState([]);
 
-  // Popup State
-  const [popup, setPopup] = useState({
+  // Popups State
+  const [notification, setNotification] = useState({
     isOpen: false,
     title: "",
     message: "",
     type: "info",
+  });
+  const [donePopup, setDonePopup] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+  });
+  const [errorPopup, setErrorPopup] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
   });
 
   const [form, setForm] = useState({
@@ -52,17 +76,18 @@ const AddEmpInfo = () => {
   });
 
   const [salaryDisplay, setSalaryDisplay] = useState("");
-
-  // Track original form data for dirty checking
+  // Separate file states
+  const [performanceFiles, setPerformanceFiles] = useState([]);
+  const [trainingFiles, setTrainingFiles] = useState([]);
   const [originalForm, setOriginalForm] = useState(null);
 
   useEffect(() => {
-    // If we have passed-in personal info, use it for image/codes
-    if (empPersonal?.imageUrl) {
+    if (stateImageUrl) {
+      setImageUrl(stateImageUrl);
+    } else if (empPersonal?.imageUrl) {
       setImageUrl(empPersonal.imageUrl);
     }
 
-    // Default start date
     const today = new Date();
     const yyyy = today.getFullYear();
     const mm = String(today.getMonth() + 1).padStart(2, "0");
@@ -74,26 +99,23 @@ const AddEmpInfo = () => {
       startDate: todayStr,
     }));
 
-    // Fetch user details to pre-fill if in edit mode (or just continuing flow with existing data)
     const fetchFullDetails = async () => {
       if (!userId) return;
       try {
         const res = await fetch(`/api/users/${userId}`);
         if (res.ok) {
           const data = await res.json();
-
-          // Set Department ID and IDs
           if (data.department_id) setDepartmentId(data.department_id);
-          // Ensure we set showIds from fetched data if navigating directly
           setShowIds((prev) => ({
             ...prev,
             userId: userId,
             empCode: data.emp_code || prev.empCode,
           }));
 
-          if (data.image_url) setImageUrl(data.image_url);
+          if (data.image_url || data.profile_image_url) {
+            setImageUrl(data.image_url || data.profile_image_url);
+          }
 
-          // Pre-fill form - Keys MUST match useState order for JSON.stringify comparison
           const loadedForm = {
             empId: data.emp_code ? String(data.emp_code) : "",
             status: data.employment_status
@@ -101,7 +123,12 @@ const AddEmpInfo = () => {
               : "",
             startTime: data.work_start_time ? String(data.work_start_time) : "",
             endTime: data.work_end_time ? String(data.work_end_time) : "",
-            jobPosition: data.job_position ? String(data.job_position) : "",
+            jobPosition:
+              data.job_position_id || data.position_id
+                ? String(data.job_position_id || data.position_id)
+                : data.job_position
+                  ? String(data.job_position)
+                  : "",
             startDate: data.hire_date
               ? new Date(data.hire_date).toISOString().split("T")[0]
               : todayStr,
@@ -114,11 +141,7 @@ const AddEmpInfo = () => {
           };
 
           if (data.emp_code || isEditMode) {
-            setForm((prev) => ({
-              ...prev,
-              ...loadedForm, // Merge all loaded fields
-            }));
-
+            setForm((prev) => ({ ...prev, ...loadedForm }));
             if (data.salary) {
               const formatted = String(data.salary).replace(
                 /\B(?=(\d{3})+(?!\d))/g,
@@ -126,8 +149,6 @@ const AddEmpInfo = () => {
               );
               setSalaryDisplay(formatted);
             }
-
-            // Set original form for dirty checking
             setOriginalForm(JSON.stringify(loadedForm));
           }
         }
@@ -139,9 +160,8 @@ const AddEmpInfo = () => {
     if (userId) {
       fetchFullDetails();
     }
-  }, [userId, isEditMode]); // Clean dependencies
+  }, [userId, isEditMode]);
 
-  // Fetch Job Positions
   useEffect(() => {
     const fetchPositions = async () => {
       try {
@@ -157,39 +177,73 @@ const AddEmpInfo = () => {
     fetchPositions();
   }, []);
 
-  // Filter positions when departmentId or jobPositions change
+  // Fix: Resolve Job Position ID if API returned a Name instead of ID
   useEffect(() => {
-    if (jobPositions.length > 0) {
-      if (departmentId) {
-        // Use loose equality to handle string/number mismatches
-        const filtered = jobPositions.filter(
-          (pos) => pos.department_id == departmentId,
+    if (form.jobPosition && jobPositions.length > 0) {
+      // Check if current value matches an ID directly
+      const isId = jobPositions.some(
+        (p) => String(p.id) === String(form.jobPosition),
+      );
+
+      if (!isId) {
+        // If not an ID, try to find by Name
+        const matched = jobPositions.find(
+          (p) =>
+            p.position_name.toLowerCase() === form.jobPosition.toLowerCase(),
         );
-        // If no positions found for this department, maybe show all or keep empty?
-        // Let's show all if filtered is empty to avoid "nothing to choose" if data is inconsistent
-        setFilteredPositions(filtered.length > 0 ? filtered : jobPositions);
+        if (matched) {
+          console.log(
+            `Mapped Job Position "${form.jobPosition}" to ID "${matched.id}"`,
+          );
+          setForm((prev) => ({ ...prev, jobPosition: String(matched.id) }));
+          // Also ensure department is set if missing
+          if (!departmentId) setDepartmentId(matched.department_id);
+        }
       } else {
-        // If no department assigned, show ALL positions
-        setFilteredPositions(jobPositions);
+        // If it IS an ID, make sure department is set correctly
+        const matched = jobPositions.find(
+          (p) => String(p.id) === String(form.jobPosition),
+        );
+        if (matched && !departmentId) {
+          setDepartmentId(matched.department_id);
+        }
       }
-    } else {
-      setFilteredPositions([]);
     }
-  }, [departmentId, jobPositions]);
+  }, [jobPositions, form.jobPosition, departmentId]);
+
+  useEffect(() => {
+    // Show ALL job positions, do not filter by department.
+    // The user should be able to select any position, which will then update the departmentId.
+    setFilteredPositions(jobPositions);
+  }, [jobPositions]);
+
+  // --- Validation Helpers ---
+  const validateText = (text) => {
+    // Allow Thai, English, Numbers, Whitespace
+    const regex = /^[a-zA-Z0-9\u0E00-\u0E7F\s]*$/;
+    return regex.test(text);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+
     if (name === "salary") {
       const raw = value.replace(/[^\d]/g, "");
+      if (raw.length > 10) return;
       const formatted = raw.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
       setSalaryDisplay(formatted);
       setForm((prev) => ({ ...prev, salary: raw }));
       return;
     }
 
+    if (["benefit", "performanceReview", "trainingInfo"].includes(name)) {
+      if (value.length > 255) return;
+      if (!validateText(value)) return; // Strictly block special chars
+      setForm((prev) => ({ ...prev, [name]: value }));
+      return;
+    }
+
     if (name === "jobPosition") {
-      // When job position changes, if departmentId is not set (or we want to enforce consistency),
-      // we can update the departmentId to match the position's department.
       const selectedPos = jobPositions.find((p) => p.id == value);
       if (selectedPos) {
         setDepartmentId(selectedPos.department_id);
@@ -199,8 +253,87 @@ const AddEmpInfo = () => {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  // --- File Upload Logic ---
+  const validateFile = (file) => {
+    const validTypes = [
+      "application/pdf",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "image/jpeg",
+      "image/jpg",
+      "image/png", // Added back png as valid based on previous code usually accepting images, but user said jpg/pdf/docx. I'll stick to user request.
+    ];
+    // Wait, user strictly said "pdf, docx, jpg". So I should exclude png?
+    // User request: "รับเเค่ pdf, docx, jpg"
+
+    const userAllowedTypes = [
+      "application/pdf",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "image/jpeg",
+      "image/jpg",
+    ];
+
+    const maxSize = 10 * 1024 * 1024; // 10MB
+
+    if (!userAllowedTypes.includes(file.type)) {
+      setNotification({
+        isOpen: true,
+        title: "Invalid File Type",
+        message: `File "${file.name}" is not supported. Use PDF, DOCX, or JPG.`,
+        type: "error",
+      });
+      return false;
+    }
+
+    if (file.size > maxSize) {
+      setNotification({
+        isOpen: true,
+        title: "File Too Large",
+        message: `File "${file.name}" exceeds 10MB limit.`,
+        type: "error",
+      });
+      return false;
+    }
+    return true;
+  };
+
+  const handleFileChange = (e, type) => {
+    const newFiles = Array.from(e.target.files);
+    const validFiles = newFiles.filter(validateFile);
+
+    if (type === "performance") {
+      if (performanceFiles.length + validFiles.length > 5) {
+        setNotification({
+          isOpen: true,
+          title: "Limit Exceeded",
+          message: "Max 5 files for Performance Review.",
+          type: "warning",
+        });
+        return;
+      }
+      setPerformanceFiles((prev) => [...prev, ...validFiles]);
+    } else if (type === "training") {
+      if (trainingFiles.length + validFiles.length > 5) {
+        setNotification({
+          isOpen: true,
+          title: "Limit Exceeded",
+          message: "Max 5 files for Training Info.",
+          type: "warning",
+        });
+        return;
+      }
+      setTrainingFiles((prev) => [...prev, ...validFiles]);
+    }
+  };
+
+  const removeFile = (index, type) => {
+    if (type === "performance") {
+      setPerformanceFiles((prev) => prev.filter((_, i) => i !== index));
+    } else {
+      setTrainingFiles((prev) => prev.filter((_, i) => i !== index));
+    }
+  };
+
   const handleBack = () => {
-    // In edit mode, back returns to Show_emp. In add mode, back goes to step 1.
     if (isEditMode) {
       navigate("/hr/show-emp");
     } else {
@@ -218,16 +351,20 @@ const AddEmpInfo = () => {
     form.endTime &&
     form.salary;
 
-  // Dirty check
   const isDirty = (() => {
     if (!originalForm) return false;
-    return JSON.stringify(form) !== originalForm;
+    const currentComp = { ...form };
+    return (
+      JSON.stringify(currentComp) !== originalForm ||
+      performanceFiles.length > 0 ||
+      trainingFiles.length > 0
+    );
   })();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isFormFilled) {
-      setPopup({
+      setNotification({
         isOpen: true,
         title: "Incomplete Form",
         message: "Please fill in all required fields.",
@@ -237,41 +374,47 @@ const AddEmpInfo = () => {
     }
 
     if (!departmentId) {
-      setPopup({
+      setErrorPopup({
         isOpen: true,
         title: "Missing Department",
         message:
-          "Could not retrieve department from user account. Please try again.",
-        type: "error",
+          "Could not retrieve department. Please select a valid position.",
       });
       return;
     }
 
     try {
-      const payload = {
-        userId: userId,
-        empCode: showIds.empCode,
-        departmentId: departmentId,
-        jobPosition: form.jobPosition,
-        employmentStatus: form.status,
-        workStartTime: form.startTime,
-        workEndTime: form.endTime,
-        hireDate: form.startDate,
-        salary: form.salary,
-        benefits: form.benefit,
-        performanceReview: form.performanceReview,
-        trainingInfo: form.trainingInfo,
-      };
+      const formData = new FormData();
+      formData.append("userId", userId);
+      formData.append("empCode", showIds.empCode);
+      formData.append("departmentId", departmentId);
+      formData.append("jobPosition", form.jobPosition);
+      formData.append("employmentStatus", form.status);
+      formData.append("workStartTime", form.startTime);
+      formData.append("workEndTime", form.endTime);
+      formData.append("hireDate", form.startDate);
+      formData.append("salary", form.salary);
+      formData.append("benefits", form.benefit);
+      formData.append("performanceReview", form.performanceReview);
+      formData.append("trainingInfo", form.trainingInfo);
+
+      performanceFiles.forEach((file) => {
+        formData.append("performanceFiles", file);
+      });
+
+      trainingFiles.forEach((file) => {
+        formData.append("trainingFiles", file);
+      });
 
       const res = await fetch("/api/employee-data/job", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: formData,
       });
 
       if (res.ok) {
-        // Update dirty check baseline
         setOriginalForm(JSON.stringify(form));
+        setPerformanceFiles([]);
+        setTrainingFiles([]);
 
         const empInfoList = JSON.parse(
           localStorage.getItem("emp_info_list") || "[]",
@@ -286,51 +429,44 @@ const AddEmpInfo = () => {
         empInfoList.push(newEmpInfo);
         localStorage.setItem("emp_info_list", JSON.stringify(empInfoList));
 
-        if (isEditMode) {
-          setPopup({
-            isOpen: true,
-            title: "Success",
-            message: "Job information saved successfully!",
-            type: "success",
-          });
-          // Stay on page
-        } else {
-          setPopup({
-            isOpen: true,
-            title: "Success",
-            message:
-              "Job information saved successfully! Proceeding to Education Information...",
-            type: "success",
-          });
-
-          setTimeout(() => {
-            navigate("/hr/add-emp-education", {
-              state: {
-                empId: showIds.empCode,
-                personalId: showIds.empCode, // Maintain consistency
-                empImage: imageUrl,
-                userId: userId,
-              },
-            });
-          }, 1500);
-        }
+        setDonePopup({
+          isOpen: true,
+          title: "Success",
+          message: isEditMode
+            ? "Job information updated!"
+            : "Job information saved! Proceeding...",
+        });
       } else {
         const err = await res.json();
-        setPopup({
+        setErrorPopup({
           isOpen: true,
           title: "Error",
-          message: "Error: " + err.message,
-          type: "error",
+          message: err.message || "Failed to save data.",
         });
       }
     } catch (error) {
       console.error("Error saving job info:", error);
-      setPopup({
+      setErrorPopup({
         isOpen: true,
         title: "Network Error",
         message: "Failed to connect to server.",
-        type: "error",
       });
+    }
+  };
+
+  const handleDoneClose = () => {
+    setDonePopup({ ...donePopup, isOpen: false });
+    if (!isEditMode) {
+      setTimeout(() => {
+        navigate("/hr/add-emp-education", {
+          state: {
+            empId: showIds.empCode,
+            personalId: showIds.empCode,
+            empImage: imageUrl,
+            userId: userId,
+          },
+        });
+      }, 500);
     }
   };
 
@@ -351,12 +487,25 @@ const AddEmpInfo = () => {
   return (
     <HRLayout>
       <PopupNotification
-        isOpen={popup.isOpen}
-        onClose={() => setPopup({ ...popup, isOpen: false })}
-        title={popup.title}
-        message={popup.message}
-        type={popup.type}
+        isOpen={notification.isOpen}
+        onClose={() => setNotification({ ...notification, isOpen: false })}
+        title={notification.title}
+        message={notification.message}
+        type={notification.type}
       />
+      <PopupDoneHR
+        isOpen={donePopup.isOpen}
+        onClose={handleDoneClose}
+        title={donePopup.title}
+        message={donePopup.message}
+      />
+      <PopupErrorHR
+        isOpen={errorPopup.isOpen}
+        onClose={() => setErrorPopup({ ...errorPopup, isOpen: false })}
+        title={errorPopup.title}
+        message={errorPopup.message}
+      />
+
       <div className="add-emp-info-page">
         {isEditMode ? (
           <EditEmpNav userId={userId} activeTab="job" />
@@ -380,6 +529,7 @@ const AddEmpInfo = () => {
           initial="hidden"
           animate="visible"
         >
+          {/* Left Sidebar */}
           <motion.div className="info-image-card" variants={itemVariants}>
             <div className="info-image-wrapper">
               {imageUrl ? (
@@ -403,6 +553,7 @@ const AddEmpInfo = () => {
             </div>
           </motion.div>
 
+          {/* Right Form Area */}
           <motion.div className="info-form-card" variants={itemVariants}>
             <form onSubmit={handleSubmit}>
               {/* Section 1: Role & Status */}
@@ -415,14 +566,12 @@ const AddEmpInfo = () => {
                   <div className="form-group span-1">
                     <label>Job Position</label>
                     <div className="input-group">
-                      <FaBriefcase className="input-icon" />
                       <select
                         name="jobPosition"
                         value={form.jobPosition}
                         onChange={handleChange}
                         required
-                        className="form-select" // Ensure styling
-                        style={{ paddingLeft: "2.5rem" }}
+                        className="form-control"
                       >
                         <option value="">-- Select Position --</option>
                         {filteredPositions.map((pos) => (
@@ -436,12 +585,12 @@ const AddEmpInfo = () => {
                   <div className="form-group span-1">
                     <label>Employment Status</label>
                     <div className="input-group">
-                      <FaIdBadge className="input-icon" />
                       <select
                         name="status"
                         value={form.status}
                         onChange={handleChange}
                         required
+                        className="form-control"
                       >
                         <option value="">-- Select Status --</option>
                         <option value="Full-time">Full-time</option>
@@ -464,7 +613,6 @@ const AddEmpInfo = () => {
                   <div className="form-group span-1">
                     <label>Start Date</label>
                     <div className="input-group">
-                      <FaCalendarAlt className="input-icon" />
                       <input
                         type="date"
                         name="startDate"
@@ -476,35 +624,33 @@ const AddEmpInfo = () => {
                   </div>
                   <div className="form-group span-1">
                     <label>Working Hours</label>
-                    <div
-                      className="input-group"
-                      style={{ display: "flex", gap: "0.5rem" }}
-                    >
+                    <div className="input-group" style={{ gap: "0.5rem" }}>
                       <input
                         type="time"
                         name="startTime"
                         value={form.startTime}
                         onChange={handleChange}
+                        onClick={(e) => e.target.showPicker()}
+                        onKeyDown={(e) => e.preventDefault()}
                         required
-                        style={{ paddingLeft: "1rem" }}
+                        style={{ cursor: "pointer" }}
                       />
-                      <span style={{ alignSelf: "center", color: "#94a3b8" }}>
-                        -
-                      </span>
+                      <span style={{ color: "#94a3b8" }}>-</span>
                       <input
                         type="time"
                         name="endTime"
                         value={form.endTime}
                         onChange={handleChange}
+                        onClick={(e) => e.target.showPicker()}
+                        onKeyDown={(e) => e.preventDefault()}
                         required
-                        style={{ paddingLeft: "1rem" }}
+                        style={{ cursor: "pointer" }}
                       />
                     </div>
                   </div>
                   <div className="form-group span-1">
                     <label>Salary (THB)</label>
                     <div className="input-group">
-                      <FaMoneyBillWave className="input-icon" />
                       <input
                         type="text"
                         name="salary"
@@ -512,8 +658,12 @@ const AddEmpInfo = () => {
                         onChange={handleChange}
                         required
                         placeholder="0.00"
+                        maxLength={13} // 10 digits + commas
                       />
                     </div>
+                    <span className="char-counter">
+                      Integer only (Max 10 digits)
+                    </span>
                   </div>
                   <div className="form-group span-1">
                     <label>Benefits</label>
@@ -523,11 +673,14 @@ const AddEmpInfo = () => {
                         value={form.benefit}
                         onChange={handleChange}
                         placeholder="e.g. Health Insurance"
-                        rows="1"
-                        className="form-textarea no-scroll"
-                        style={{ paddingTop: "0.8rem" }}
+                        rows="3"
                       />
                     </div>
+                    <span
+                      className={`char-counter ${form.benefit.length >= 250 ? "limit-near" : ""}`}
+                    >
+                      {form.benefit.length}/255
+                    </span>
                   </div>
                 </div>
               </div>
@@ -539,32 +692,163 @@ const AddEmpInfo = () => {
                   <span>Additional Details</span>
                 </div>
                 <div className="form-fields-grid">
-                  <div className="form-group span-1">
+                  {/* Performance Review */}
+                  <div className="form-group span-2">
                     <label>Performance Review</label>
                     <div className="input-group">
                       <textarea
                         name="performanceReview"
                         value={form.performanceReview}
                         onChange={handleChange}
-                        placeholder="Initial notes..."
+                        placeholder="Review notes..."
                         rows="3"
-                        className="form-textarea"
-                        style={{ paddingLeft: "1rem" }}
                       />
                     </div>
+                    <span className="char-counter">
+                      {form.performanceReview.length}/255
+                    </span>
+
+                    {/* Performance Files */}
+                    <div className="file-upload-wrapper">
+                      <label className="file-upload-label">
+                        Attachments (Performance) - Max 5
+                      </label>
+
+                      <div className="uploaded-files-list">
+                        <AnimatePresence>
+                          {performanceFiles.map((file, index) => (
+                            <motion.div
+                              key={`p-${index}`}
+                              className="file-item"
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: "auto" }}
+                              exit={{ opacity: 0, height: 0 }}
+                            >
+                              <div className="file-info">
+                                <FaFile className="file-icon" />
+                                <div className="file-details">
+                                  <span className="file-name">{file.name}</span>
+                                  <span className="file-size">
+                                    {(file.size / 1024).toFixed(1)} KB
+                                  </span>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                className="btn-remove-file"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removeFile(index, "performance");
+                                }}
+                              >
+                                <FaTrash />
+                              </button>
+                            </motion.div>
+                          ))}
+                        </AnimatePresence>
+                      </div>
+
+                      {performanceFiles.length < 5 && (
+                        <>
+                          <input
+                            type="file"
+                            id="perf-upload"
+                            multiple
+                            onChange={(e) => handleFileChange(e, "performance")}
+                            style={{ display: "none" }}
+                            accept=".pdf,.docx,.jpg,.jpeg"
+                          />
+                          <button
+                            type="button"
+                            className="btn-add-file"
+                            onClick={() =>
+                              document.getElementById("perf-upload").click()
+                            }
+                          >
+                            <FaCloudUploadAlt /> Add Performance File
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
-                  <div className="form-group span-1">
+
+                  {/* Training Info */}
+                  <div className="form-group span-2">
                     <label>Training Info</label>
                     <div className="input-group">
                       <textarea
                         name="trainingInfo"
                         value={form.trainingInfo}
                         onChange={handleChange}
-                        placeholder="Required training..."
+                        placeholder="Training notes..."
                         rows="3"
-                        className="form-textarea"
-                        style={{ paddingLeft: "1rem" }}
                       />
+                    </div>
+                    <span className="char-counter">
+                      {form.trainingInfo.length}/255
+                    </span>
+
+                    {/* Training Files */}
+                    <div className="file-upload-wrapper">
+                      <label className="file-upload-label">
+                        Attachments (Training) - Max 5
+                      </label>
+
+                      <div className="uploaded-files-list">
+                        <AnimatePresence>
+                          {trainingFiles.map((file, index) => (
+                            <motion.div
+                              key={`t-${index}`}
+                              className="file-item"
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: "auto" }}
+                              exit={{ opacity: 0, height: 0 }}
+                            >
+                              <div className="file-info">
+                                <FaFile className="file-icon" />
+                                <div className="file-details">
+                                  <span className="file-name">{file.name}</span>
+                                  <span className="file-size">
+                                    {(file.size / 1024).toFixed(1)} KB
+                                  </span>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                className="btn-remove-file"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removeFile(index, "training");
+                                }}
+                              >
+                                <FaTrash />
+                              </button>
+                            </motion.div>
+                          ))}
+                        </AnimatePresence>
+                      </div>
+
+                      {trainingFiles.length < 5 && (
+                        <>
+                          <input
+                            type="file"
+                            id="train-upload"
+                            multiple
+                            onChange={(e) => handleFileChange(e, "training")}
+                            style={{ display: "none" }}
+                            accept=".pdf,.docx,.jpg,.jpeg"
+                          />
+                          <button
+                            type="button"
+                            className="btn-add-file"
+                            onClick={() =>
+                              document.getElementById("train-upload").click()
+                            }
+                          >
+                            <FaCloudUploadAlt /> Add Training File
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -578,16 +862,6 @@ const AddEmpInfo = () => {
                   type="submit"
                   className="btn-save"
                   disabled={isEditMode ? !isDirty : !isFormFilled}
-                  style={{
-                    opacity:
-                      (isEditMode && !isDirty) || (!isEditMode && !isFormFilled)
-                        ? 0.5
-                        : 1,
-                    cursor:
-                      (isEditMode && !isDirty) || (!isEditMode && !isFormFilled)
-                        ? "not-allowed"
-                        : "pointer",
-                  }}
                 >
                   {isEditMode ? "Save Changes" : "Proceed to Step 3"}
                 </button>

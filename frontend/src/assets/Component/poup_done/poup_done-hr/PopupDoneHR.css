@@ -1,3 +1,5 @@
+/* PopupDoneHR.css */
+
 .popup-done-hr-overlay {
   position: fixed;
   top: 0;
@@ -5,122 +7,127 @@
   width: 100%;
   height: 100%;
   background: rgba(4, 47, 46, 0.6);
-  backdrop-filter: var(--hr-backdrop-blur, blur(20px));
+  backdrop-filter: blur(8px);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
-  animation: hrFadeIn 0.3s ease-out;
+  z-index: 10000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.popup-done-hr-overlay.open {
+  opacity: 1;
 }
 
 .popup-done-hr-container {
-  background: var(--hr-card-bg, rgba(6, 78, 59, 0.95));
-  border: 1px solid var(--hr-glass-border, rgba(45, 212, 191, 0.2));
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
-  border-radius: 20px;
+  background: rgba(6, 78, 59, 0.95);
+  border: 1px solid rgba(45, 212, 191, 0.3);
+  box-shadow: 0 20px 60px -10px rgba(0, 0, 0, 0.6);
+  border-radius: 28px;
   width: 90%;
-  max-width: 380px;
+  max-width: 400px;
   overflow: hidden;
   text-align: center;
-  animation: hrSlideUp 0.4s ease-out;
+  transform: scale(0.9);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.popup-done-hr-overlay.open .popup-done-hr-container {
+  transform: scale(1);
 }
 
 .popup-done-hr-content {
-  padding: 2.5rem 2rem 1.5rem;
+  padding: 3rem 2rem 2rem;
 }
 
 .popup-done-hr-icon-wrapper {
   position: relative;
-  width: 80px;
-  height: 80px;
+  width: 100px;
+  height: 100px;
   margin: 0 auto 1.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.popup-done-hr-ripple {
+.icon-circle-bg {
   position: absolute;
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  border: 2px solid var(--hr-accent-color, #2dd4bf);
-  opacity: 0.5;
-  animation: hrRipple 2s infinite;
+  background: rgba(20, 184, 166, 0.15);
+  border: 1px dashed rgba(45, 212, 191, 0.4);
+  animation: rotateCircle 10s linear infinite;
 }
 
 .popup-done-hr-icon {
-  width: 40px;
-  height: 40px;
-  color: var(--hr-accent-color, #2dd4bf);
+  width: 50px;
+  height: 50px;
+  color: #2dd4bf;
   z-index: 2;
+  filter: drop-shadow(0 0 10px rgba(45, 212, 191, 0.6));
+  animation: scaleUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
 .popup-done-hr-title {
-  color: var(--hr-text-primary, #ecfdf5);
-  font-family: var(--hr-font-family, "Outfit", sans-serif);
-  font-size: 1.5rem;
+  color: #ecfdf5;
+  font-family: "Outfit", sans-serif;
+  font-size: 1.75rem;
   font-weight: 700;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+  letter-spacing: -0.02em;
 }
 
 .popup-done-hr-message {
-  color: var(--hr-text-secondary, #a7f3d0);
-  font-family: var(--hr-font-family, "Outfit", sans-serif);
-  line-height: 1.5;
+  color: #a7f3d0;
+  font-family: "Inter", sans-serif;
+  font-size: 1.05rem;
+  line-height: 1.6;
   margin: 0;
 }
 
 .popup-done-hr-footer {
-  padding: 0 2rem 2rem;
+  padding: 0 2.5rem 2.5rem;
 }
 
 .popup-done-hr-button {
-  background: var(--hr-accent-color, #2dd4bf);
-  color: #042f2e; /* Dark teal for text */
+  width: 100%;
+  background: linear-gradient(135deg, #14b8a6, #0d9488);
+  color: #fff;
   border: none;
-  padding: 0.8rem 2.5rem;
-  border-radius: 30px; /* Pill shape */
-  font-family: var(--hr-font-family, "Outfit", sans-serif);
-  font-weight: 700;
+  padding: 1rem;
+  border-radius: 16px;
+  font-family: "Outfit", sans-serif;
+  font-weight: 600;
+  font-size: 1.1rem;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 15px rgba(45, 212, 191, 0.3);
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 20px -5px rgba(20, 184, 166, 0.4);
 }
 
 .popup-done-hr-button:hover {
-  background: var(--hr-accent-hover, #14b8a6);
-  transform: scale(1.05);
-  box-shadow: 0 6px 20px rgba(45, 212, 191, 0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 15px 25px -5px rgba(20, 184, 166, 0.5);
+  filter: brightness(1.1);
 }
 
-@keyframes hrFadeIn {
+@keyframes rotateCircle {
   from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes scaleUp {
+  from {
+    transform: scale(0);
     opacity: 0;
   }
   to {
-    opacity: 1;
-  }
-}
-
-@keyframes hrSlideUp {
-  from {
-    transform: translateY(30px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes hrRipple {
-  0% {
     transform: scale(1);
-    opacity: 0.5;
-  }
-  100% {
-    transform: scale(1.5);
-    opacity: 0;
+    opacity: 1;
   }
 }

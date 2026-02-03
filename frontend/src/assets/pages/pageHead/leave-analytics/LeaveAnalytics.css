@@ -33,6 +33,7 @@
   font-size: 2rem;
   font-weight: 700;
   background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -287,4 +288,83 @@
 .leave-analytics-content::-webkit-scrollbar-thumb {
   background: var(--head-text-muted);
   border-radius: 4px;
+}
+
+/* Response Design */
+@media screen and (max-width: 1024px) {
+  .leave-analytics-content {
+    margin-left: 80px; /* Collapsed sidebar width */
+    padding: 1.5rem;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .leave-analytics-content {
+    margin-left: 90px; /* 80px sidebar + 10px spacing */
+    padding: 1rem;
+    width: auto; /* Let it fill remaining space */
+    margin-bottom: 80px; 
+  }
+
+  .analytics-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .analytics-title {
+    font-size: 1.5rem;
+  }
+
+  /* Adjust Grid for narrower space */
+  .analytics-grid-top {
+    grid-template-columns: 1fr; 
+  }
+
+  /* Force stat cards to be more compact if needed */
+  .stat-card {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+
+  .stat-icon-container {
+    width: 48px;
+    height: 48px;
+    font-size: 1.2rem;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+  }
+
+  .charts-section {
+    grid-template-columns: 1fr; /* Stack charts */
+    gap: 1.5rem;
+  }
+  
+  .chart-container {
+    padding: 1rem;
+    min-height: auto;
+  }
+
+  .absentees-section, 
+  .summary-table-container {
+    padding: 1rem;
+  }
+
+  .absentees-list {
+    grid-template-columns: 1fr;
+  }
+
+  /* Optimize Table for Mobile */
+  .styled-table th, 
+  .styled-table td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .styled-table th {
+    white-space: nowrap;
+  }
 }

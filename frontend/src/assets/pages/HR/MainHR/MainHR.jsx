@@ -94,6 +94,35 @@ const MainHR = () => {
     return () => clearInterval(interval);
   }, [navigate]);
 
+  // Ensure current user is in the list with online status if logged in
+  const displayedUserList = React.useMemo(() => {
+    if (!currentUser) return userList;
+
+    const exists = userList.find(
+      (u) => u.id === currentUser.id || u.username === currentUser.username,
+    );
+    if (exists) {
+      // Return list but ensure current user is marked online if needed
+      return userList.map((u) =>
+        u.id === currentUser.id || u.username === currentUser.username
+          ? { ...u, status: "Online", last_login: new Date().toISOString() }
+          : u,
+      );
+    } else {
+      // Append current user
+      return [
+        {
+          id: currentUser.id || 9999,
+          username: currentUser.username,
+          role_name: currentUser.role || "HR",
+          status: "Online",
+          last_login: new Date().toISOString(),
+        },
+        ...userList,
+      ];
+    }
+  }, [userList, currentUser]);
+
   const handleLogout = () => {
     localStorage.removeItem("currentUser");
     localStorage.removeItem("userId");
@@ -120,8 +149,6 @@ const MainHR = () => {
   };
 
   const closeAnnouncement = () => setSelectedAnnouncement(null);
-
-  if (loading) return <LoadingHR />;
 
   if (!currentUser) return null;
 
@@ -153,197 +180,218 @@ const MainHR = () => {
 
   return (
     <HRLayout>
-      <div className="main-hr-container">
-        <header className="hr-header">
-          <div className="header-greeting">
-            <h1>Dashboard</h1>
-            <p>
-              Welcome back,{" "}
-              <span className="highlight-name">{currentUser.username}</span> 👋
-            </p>
-          </div>
-          <div className="header-actions">
-            <button
-              className="btn-icon"
-              onClick={() => setShowProfile(true)}
-              title="Profile"
-            >
-              <FaUserCircle size={24} />
-            </button>
-            <button
-              className="btn-icon logout"
-              onClick={handleLogout}
-              title="Logout"
-            >
-              <FaSignOutAlt size={22} />
-            </button>
-          </div>
-        </header>
-
-        {/* --- Stats Grid --- */}
-        <div className="stats-grid">
-          {statCards.map((card, idx) => (
-            <motion.div
-              key={idx}
-              className="stat-card-modern"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.1 }}
-              style={{ background: card.color, boxShadow: card.shadow }}
-            >
-              <div className="stat-icon-wrapper">{card.icon}</div>
-              <div className="stat-content">
-                <h3 style={{ color: card.textColor || "white" }}>
-                  {card.value}
-                </h3>
-                <p style={{ color: card.textColor || "rgba(255,255,255,0.9)" }}>
-                  {card.title}
+      <div
+        className="main-hr-container"
+        style={{ position: "relative", minHeight: "80vh" }}
+      >
+        {loading ? (
+          <LoadingHR className="contained" />
+        ) : (
+          <>
+            <header className="hr-header">
+              <div className="header-greeting">
+                <h1>Dashboard</h1>
+                <p>
+                  Welcome back,{" "}
+                  <span className="highlight-name">{currentUser.username}</span>{" "}
+                  👋
                 </p>
               </div>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* --- Main Content Split --- */}
-        <div className="content-grid">
-          {/* User Status List */}
-          <motion.div
-            className="panel user-status-panel"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <div className="panel-header">
-              <h2>User Status</h2>
-              <span className="live-badge">
-                {" "}
-                <span className="pulsing-dot"></span> Live Updates
-              </span>
-            </div>
-
-            <div className="user-list-scroll">
-              <table className="modern-table">
-                <thead>
-                  <tr>
-                    <th>User</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                    <th>Last Login</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {userList.map((u) => (
-                    <tr key={u.id}>
-                      <td>
-                        <div className="user-info-cell">
-                          <div
-                            className={`avatar-initials ${
-                              u.role_name === "Admin" || u.role_name === "CHRO"
-                                ? "admin-bg"
-                                : "emp-bg"
-                            }`}
-                          >
-                            {u.username.charAt(0).toUpperCase()}
-                          </div>
-                          <span>{u.username}</span>
-                        </div>
-                      </td>
-                      <td>
-                        <span className={`role-badge ${u.role_name}`}>
-                          {u.role_name}
-                        </span>
-                      </td>
-                      <td>
-                        <div
-                          className={`status-indicator ${
-                            u.status === "Online" ? "online" : "offline"
-                          }`}
-                        >
-                          <FaCircle size={10} />
-                          <span>{u.status}</span>
-                        </div>
-                      </td>
-                      <td className="text-secondary">
-                        {u.last_login ? dayjs(u.last_login).fromNow() : "Never"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </motion.div>
-
-          {/* Quick Actions / Announcements */}
-          <motion.div
-            className="right-column"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <div className="panel quick-actions-panel">
-              <h3>Quick Actions</h3>
-              <div className="quick-btn-group">
-                <button onClick={() => navigate("/hr/add-user")}>
-                  Create User
+              <div className="header-actions">
+                <button
+                  className="btn-icon"
+                  onClick={() => setShowProfile(true)}
+                  title="Profile"
+                >
+                  <FaUserCircle size={24} />
                 </button>
-
-                <button onClick={() => navigate("/hr/announcements")}>
-                  Post Announcement
+                <button
+                  className="btn-icon logout"
+                  onClick={handleLogout}
+                  title="Logout"
+                >
+                  <FaSignOutAlt size={22} />
                 </button>
               </div>
+            </header>
+
+            {/* --- Stats Grid --- */}
+            <div className="stats-grid">
+              {statCards.map((card, idx) => (
+                <motion.div
+                  key={idx}
+                  className="stat-card-modern"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.1 }}
+                  style={{ background: card.color, boxShadow: card.shadow }}
+                >
+                  <div className="stat-icon-wrapper">{card.icon}</div>
+                  <div className="stat-content">
+                    <h3 style={{ color: card.textColor || "white" }}>
+                      {card.value}
+                    </h3>
+                    <p
+                      style={{
+                        color: card.textColor || "rgba(255,255,255,0.9)",
+                      }}
+                    >
+                      {card.title}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
             </div>
 
-            <div className="panel announcement-mini">
-              <h3>Announcements</h3>
-              {announcements.filter((ann) => !ann.is_read).length === 0 ? (
-                <div className="empty-state">
-                  <p>No new announcements.</p>
+            {/* --- Main Content Split --- */}
+            <div className="content-grid">
+              {/* User Status List */}
+              <motion.div
+                className="panel user-status-panel"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <div className="panel-header">
+                  <h2>User Status</h2>
+                  <span className="live-badge">
+                    {" "}
+                    <span className="pulsing-dot"></span> Live Updates
+                  </span>
                 </div>
-              ) : (
-                <ul className="announcement-list">
-                  {announcements
-                    .filter((ann) => !ann.is_read)
-                    .map((ann) => (
-                      <li
-                        key={ann.id}
-                        onClick={() => handleViewAnnouncement(ann)}
-                        className={`ann-item ${
-                          ann.is_read ? "read" : "unread"
-                        } priority-${ann.priority?.toLowerCase() || "normal"}`}
-                      >
-                        <div className="ann-icon-wrapper">
-                          {ann.priority === "Urgent" ? (
-                            <span className="priority-dot urgent"></span>
-                          ) : ann.priority === "Important" ? (
-                            <span className="priority-dot important"></span>
-                          ) : null}
-                          <FaBullhorn />
-                        </div>
-                        <div className="ann-info">
-                          <div className="ann-header-row">
-                            <h4
-                              className={!ann.is_read ? "text-highlight" : ""}
-                            >
-                              {ann.title}
-                            </h4>
-                            {!ann.is_read && (
-                              <span className="new-badge">NEW</span>
-                            )}
-                          </div>
-                          <span className="ann-date">
-                            {dayjs(ann.created_at).fromNow()} •{" "}
-                            <span className={`priority-text ${ann.priority}`}>
-                              {ann.priority || "Normal"}
+
+                <div className="user-list-scroll">
+                  <table className="modern-table">
+                    <thead>
+                      <tr>
+                        <th>User</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Last Login</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {displayedUserList.map((u) => (
+                        <tr key={u.id || u.username}>
+                          <td>
+                            <div className="user-info-cell">
+                              <div
+                                className={`avatar-initials ${
+                                  u.role_name === "Admin" ||
+                                  u.role_name === "CHRO"
+                                    ? "admin-bg"
+                                    : "emp-bg"
+                                }`}
+                              >
+                                {u.username.charAt(0).toUpperCase()}
+                              </div>
+                              <span>{u.username}</span>
+                            </div>
+                          </td>
+                          <td>
+                            <span className={`role-badge ${u.role_name}`}>
+                              {u.role_name}
                             </span>
-                          </span>
-                        </div>
-                      </li>
-                    ))}
-                </ul>
-              )}
+                          </td>
+                          <td>
+                            <div
+                              className={`status-indicator ${
+                                u.status === "Online" ? "online" : "offline"
+                              }`}
+                            >
+                              <FaCircle size={10} />
+                              <span>{u.status}</span>
+                            </div>
+                          </td>
+                          <td className="text-secondary">
+                            {u.last_login
+                              ? dayjs(u.last_login).fromNow()
+                              : "Just now"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </motion.div>
+
+              {/* Quick Actions / Announcements */}
+              <motion.div
+                className="right-column"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                <div className="panel quick-actions-panel">
+                  <h3>Quick Actions</h3>
+                  <div className="quick-btn-group">
+                    <button onClick={() => navigate("/hr/add-user")}>
+                      Create User
+                    </button>
+
+                    <button onClick={() => navigate("/hr/announcements")}>
+                      Post Announcement
+                    </button>
+                  </div>
+                </div>
+
+                <div className="panel announcement-mini">
+                  <h3>Announcements</h3>
+                  {announcements.filter((ann) => !ann.is_read).length === 0 ? (
+                    <div className="empty-state">
+                      <p>No new announcements.</p>
+                    </div>
+                  ) : (
+                    <ul className="announcement-list">
+                      {announcements
+                        .filter((ann) => !ann.is_read)
+                        .map((ann) => (
+                          <li
+                            key={ann.id}
+                            onClick={() => handleViewAnnouncement(ann)}
+                            className={`ann-item ${
+                              ann.is_read ? "read" : "unread"
+                            } priority-${ann.priority?.toLowerCase() || "normal"}`}
+                          >
+                            <div className="ann-icon-wrapper">
+                              {ann.priority === "Urgent" ? (
+                                <span className="priority-dot urgent"></span>
+                              ) : ann.priority === "Important" ? (
+                                <span className="priority-dot important"></span>
+                              ) : null}
+                              <FaBullhorn />
+                            </div>
+                            <div className="ann-info">
+                              <div className="ann-header-row">
+                                <h4
+                                  className={
+                                    !ann.is_read ? "text-highlight" : ""
+                                  }
+                                >
+                                  {ann.title}
+                                </h4>
+                                {!ann.is_read && (
+                                  <span className="new-badge">NEW</span>
+                                )}
+                              </div>
+                              <span className="ann-date">
+                                {dayjs(ann.created_at).fromNow()} •{" "}
+                                <span
+                                  className={`priority-text ${ann.priority}`}
+                                >
+                                  {ann.priority || "Normal"}
+                                </span>
+                              </span>
+                            </div>
+                          </li>
+                        ))}
+                    </ul>
+                  )}
+                </div>
+              </motion.div>
             </div>
-          </motion.div>
-        </div>
+          </>
+        )}
       </div>
 
       <AnimatePresence>

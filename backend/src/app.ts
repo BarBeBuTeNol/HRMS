@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import pool from "./config/db";
 import { RowDataPacket } from "mysql2";
+import path from "path"; // Add path import
 import userRoutes from "./routes/userRoutes";
 import roleRoutes from "./routes/roleRoutes";
 import chroRoutes from "./routes/chroRoutes";
@@ -20,6 +21,9 @@ app.use(
   }),
 );
 app.use(express.json());
+
+// Serve static files from uploads directory
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 // test db
 app.get("/api/health", async (_req, res) => {

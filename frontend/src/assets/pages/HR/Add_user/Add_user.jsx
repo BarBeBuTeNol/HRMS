@@ -17,6 +17,7 @@ import {
 } from "react-icons/fa";
 import HRLayout from "../../../Component/HR/HRLayout";
 import PopupNotification from "../../../Component/popup_notifications/popup_notifications-hr/PopupHR";
+import PopupErrorHR from "../../../Component/popup-error/popup-error-hr/PopupErrorHR";
 import "./Add_user.css";
 
 const AddUser = () => {
@@ -44,6 +45,13 @@ const AddUser = () => {
     title: "",
     message: "",
     type: "info",
+  });
+
+  // Error Popup State
+  const [errorPopup, setErrorPopup] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
   });
 
   // Fetch next Employee ID
@@ -121,7 +129,23 @@ const AddUser = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
+    let newValue = value;
+
+    // 1. Username, First Name, Last Name: Max 255 chars, No special chars (Allow allow letters, numbers, Thai chars, spaces)
+    if (["username", "firstName", "lastName"].includes(name)) {
+      if (newValue.length > 255) return; // Block > 255
+      // Regex: Allow A-Z, a-z, 0-9, Thai chars (\u0E00-\u0E7F), whitespace
+      // Remove anything else
+      newValue = newValue.replace(/[^a-zA-Z0-9\u0E00-\u0E7F\s]/g, "");
+    }
+
+    // 2. Phone Number: Max 12 chars, Numbers only
+    if (name === "telephone") {
+      if (newValue.length > 12) return; // Block > 12
+      newValue = newValue.replace(/[^0-9]/g, ""); // Remove non-numeric
+    }
+
+    setForm({ ...form, [name]: newValue });
   };
 
   const handleRoleChange = (e) => {
@@ -150,11 +174,11 @@ const AddUser = () => {
     const missingFields = requiredFields.filter((field) => !form[field]);
 
     if (missingFields.length > 0) {
-      setPopup({
+      // 4. If data is incomplete, show Popup Error
+      setErrorPopup({
         isOpen: true,
         title: "Missing Information",
-        message: "Please fill in all required fields.",
-        type: "warning",
+        message: "Please fill in all required fields completely.",
       });
       return;
     }
@@ -201,20 +225,19 @@ const AddUser = () => {
           });
         }, 2000);
       } else {
-        setPopup({
+        // Error from backend
+        setErrorPopup({
           isOpen: true,
-          title: "Error",
-          message: "Error: " + data.message,
-          type: "error",
+          title: "Submission Error",
+          message: data.message || "Failed to create user.",
         });
       }
     } catch (err) {
       console.error("Network error:", err);
-      setPopup({
+      setErrorPopup({
         isOpen: true,
         title: "Network Error",
         message: "Network error. Please try again.",
-        type: "error",
       });
     }
   };
@@ -243,6 +266,13 @@ const AddUser = () => {
         message={popup.message}
         type={popup.type}
       />
+      <PopupErrorHR
+        isOpen={errorPopup.isOpen}
+        onClose={() => setErrorPopup({ ...errorPopup, isOpen: false })}
+        title={errorPopup.title}
+        message={errorPopup.message}
+      />
+
       <div className="add-user-page">
         <div className="add-user-container">
           <div className="add-user-header">
@@ -251,200 +281,235 @@ const AddUser = () => {
           </div>
 
           <form onSubmit={handleDone} className="add-user-form-grid" noValidate>
-            {/* Employee ID */}
-            <div className="form-group">
-              <label>
-                <FaIdCard className="label-icon" /> Employee ID
-              </label>
-              <div className="input-wrapper">
-                <input
-                  type="text"
-                  name="empId"
-                  value={form.empId}
-                  readOnly
-                  className="readonly"
-                />
+            {/* --- Account Details Section --- */}
+            <div className="form-section">
+              <h3>Account Details</h3>
+              <div className="section-grid">
+                {/* Employee ID */}
+                <div className="form-group">
+                  <label>Employee ID</label>
+                  <div className="input-group-styled readonly-group">
+                    <div className="icon-box">
+                      <FaIdCard />
+                    </div>
+                    <input
+                      type="text"
+                      name="empId"
+                      value={form.empId}
+                      readOnly
+                      className="readonly"
+                    />
+                  </div>
+                </div>
+
+                {/* Username */}
+                <div className="form-group">
+                  <label>Username</label>
+                  <div className="input-group-styled">
+                    <div className="icon-box">
+                      <FaUser />
+                    </div>
+                    <input
+                      type="text"
+                      name="username"
+                      placeholder="jdoe"
+                      value={form.username}
+                      onChange={handleChange}
+                      maxLength={255}
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Password */}
+                <div className="form-group">
+                  <label>Password</label>
+                  <div className="input-group-styled">
+                    <div className="icon-box">
+                      <FaLock />
+                    </div>
+                    <input
+                      type="password"
+                      name="password"
+                      placeholder="••••••••"
+                      value={form.password}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Email */}
+                <div className="form-group">
+                  <label>Email Address</label>
+                  <div className="input-group-styled">
+                    <div className="icon-box">
+                      <FaEnvelope />
+                    </div>
+                    <input
+                      type="email"
+                      name="email"
+                      placeholder="john.doe@company.com"
+                      value={form.email}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Username */}
-            <div className="form-group">
-              <label>
-                <FaUser className="label-icon" /> Username
-              </label>
-              <div className="input-wrapper">
-                <input
-                  type="text"
-                  name="username"
-                  placeholder="jdoe"
-                  value={form.username}
-                  onChange={handleChange}
-                  required
-                />
+            {/* --- Personal Information Section --- */}
+            <div className="form-section">
+              <h3>Personal Information</h3>
+              <div className="section-grid">
+                {/* Prefix */}
+                <div className="form-group">
+                  <label>Prefix</label>
+                  <div className="input-group-styled">
+                    <div className="icon-box">
+                      <FaUser />
+                    </div>
+                    <select
+                      name="prefix"
+                      value={form.prefix}
+                      onChange={handleChange}
+                      required
+                    >
+                      <option value="">Select</option>
+                      {prefixes.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.prefix_name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* First Name */}
+                <div className="form-group">
+                  <label>First Name</label>
+                  <div className="input-group-styled">
+                    <div className="icon-box">
+                      <FaUser />
+                    </div>
+                    <input
+                      type="text"
+                      name="firstName"
+                      placeholder="John"
+                      value={form.firstName}
+                      onChange={handleChange}
+                      maxLength={255}
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Last Name */}
+                <div className="form-group">
+                  <label>Last Name</label>
+                  <div className="input-group-styled">
+                    <div className="icon-box">
+                      <FaUser />
+                    </div>
+                    <input
+                      type="text"
+                      name="lastName"
+                      placeholder="Doe"
+                      value={form.lastName}
+                      onChange={handleChange}
+                      maxLength={255}
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Telephone */}
+                <div className="form-group">
+                  <label>Phone Number</label>
+                  <div className="input-group-styled">
+                    <div className="icon-box">
+                      <FaPhone />
+                    </div>
+                    <input
+                      type="tel"
+                      name="telephone"
+                      placeholder="0812345678"
+                      value={form.telephone}
+                      onChange={handleChange}
+                      maxLength={12}
+                      required
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Prefix */}
-            <div className="form-group">
-              <label>
-                <FaUser className="label-icon" /> Prefix
-              </label>
-              <div className="input-wrapper">
-                <select
-                  name="prefix"
-                  value={form.prefix}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">Select Prefix</option>
-                  {prefixes.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.prefix_name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
+            {/* --- Organization Section --- */}
+            <div className="form-section">
+              <h3>Organization & Role</h3>
+              <div className="section-grid">
+                {/* Department */}
+                <div className="form-group full-width">
+                  <label>Department</label>
+                  <div className="input-group-styled">
+                    <div className="icon-box">
+                      <FaBuilding />
+                    </div>
+                    <select
+                      name="department"
+                      value={form.department}
+                      onChange={handleChange}
+                      required
+                      className={
+                        form.department === "" ? "placeholder-style" : ""
+                      }
+                    >
+                      <option value="" disabled hidden>
+                        Select Department
+                      </option>
+                      {departments.map((d) => (
+                        <option key={d.id} value={d.id}>
+                          {d.department_name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
 
-            {/* First Name */}
-            <div className="form-group">
-              <label>
-                <FaUser className="label-icon" /> First Name
-              </label>
-              <div className="input-wrapper">
-                <input
-                  type="text"
-                  name="firstName"
-                  placeholder="John"
-                  value={form.firstName}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Last Name */}
-            <div className="form-group">
-              <label>
-                <FaUser className="label-icon" /> Last Name
-              </label>
-              <div className="input-wrapper">
-                <input
-                  type="text"
-                  name="lastName"
-                  placeholder="Doe"
-                  value={form.lastName}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Email */}
-            <div className="form-group">
-              <label>
-                <FaEnvelope className="label-icon" /> Email Address
-              </label>
-              <div className="input-wrapper">
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="john.doe@company.com"
-                  value={form.email}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Telephone */}
-            <div className="form-group">
-              <label>
-                <FaPhone className="label-icon" /> Phone Number
-              </label>
-              <div className="input-wrapper">
-                <input
-                  type="tel"
-                  name="telephone"
-                  placeholder="0812345678"
-                  value={form.telephone}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Password */}
-            <div className="form-group">
-              <label>
-                <FaLock className="label-icon" /> Password
-              </label>
-              <div className="input-wrapper">
-                <input
-                  type="password"
-                  name="password"
-                  placeholder="••••••••"
-                  value={form.password}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Department */}
-            <div className="form-group center-span">
-              <label>
-                <FaBuilding className="label-icon" /> Department
-              </label>
-              <div className="input-wrapper">
-                <select
-                  name="department"
-                  value={form.department}
-                  onChange={handleChange}
-                  required
-                  className={form.department === "" ? "placeholder-style" : ""}
-                >
-                  <option value="" disabled hidden>
-                    Select Department
-                  </option>
-                  {departments.map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {d.department_name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Role Selection */}
-            <div className="form-group full-width">
-              <div className="role-group-label-wrapper">
-                <FaBriefcase />
-                <span className="role-group-label">Assign Role</span>
-              </div>
-              <div className="role-options">
-                {roles.length > 0 ? (
-                  roles.map((r) => (
-                    <label key={r.id} className="role-card">
-                      <input
-                        type="radio"
-                        name="role"
-                        value={r.role_name}
-                        checked={form.role === r.role_name}
-                        onChange={handleRoleChange}
-                        required
-                      />
-                      <div className="role-card-content">
-                        <div className="role-icon">
-                          {getRoleIcon(r.role_name)}
-                        </div>
-                        <span className="role-name">{r.role_name}</span>
-                      </div>
-                    </label>
-                  ))
-                ) : (
-                  <p>Loading roles...</p>
-                )}
+                {/* Role Selection */}
+                <div className="form-group full-width">
+                  <div className="role-group-label-wrapper">
+                    <span className="role-label-icon">
+                      <FaBriefcase />
+                    </span>
+                    <span className="role-label-text">Assign Role</span>
+                  </div>
+                  <div className="role-options">
+                    {roles.length > 0 ? (
+                      roles.map((r) => (
+                        <label key={r.id} className="role-card">
+                          <input
+                            type="radio"
+                            name="role"
+                            value={r.role_name}
+                            checked={form.role === r.role_name}
+                            onChange={handleRoleChange}
+                            required
+                          />
+                          <div className="role-card-content">
+                            <div className="role-icon">
+                              {getRoleIcon(r.role_name)}
+                            </div>
+                            <span className="role-name">{r.role_name}</span>
+                          </div>
+                        </label>
+                      ))
+                    ) : (
+                      <p>Loading roles...</p>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
 

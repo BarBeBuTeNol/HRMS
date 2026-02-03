@@ -1,25 +1,36 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import "./PopupErrorHR.css";
-import { XOctagon } from "lucide-react";
+import { FaExclamationTriangle } from "react-icons/fa";
 
 const PopupErrorHR = ({ isOpen, onClose, message, title = "System Error" }) => {
-  if (!isOpen) return null;
+  const [shouldRender, setShouldRender] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setShouldRender(true);
+    } else {
+      const timer = setTimeout(() => setShouldRender(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
+  if (!shouldRender) return null;
 
   return (
-    <div className="popup-error-hr-overlay">
+    <div className={`popup-error-hr-overlay ${isOpen ? "open" : ""}`}>
       <div className="popup-error-hr-container">
-        <div className="popup-error-hr-header">
-          <div className="popup-error-hr-icon-bg">
-            <XOctagon className="popup-error-hr-icon" />
+        <div className="error-header-pattern"></div>
+        <div className="popup-error-hr-content">
+          <div className="popup-error-hr-icon-wrapper">
+            <div className="error-icon-bg"></div>
+            <FaExclamationTriangle className="popup-error-hr-icon" />
           </div>
-        </div>
-        <div className="popup-error-hr-body">
           <h2 className="popup-error-hr-title">{title}</h2>
           <p className="popup-error-hr-message">{message}</p>
         </div>
         <div className="popup-error-hr-footer">
           <button className="popup-error-hr-button" onClick={onClose}>
-            Close Window
+            Close
           </button>
         </div>
       </div>

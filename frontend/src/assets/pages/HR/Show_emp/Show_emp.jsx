@@ -21,13 +21,12 @@ import {
   FaClock,
   FaCheckCircle,
   FaMoneyBillWave,
-  FaFilter,
-  FaChevronDown,
 } from "react-icons/fa";
 import HRLayout from "../../../Component/HR/HRLayout";
 import PopupNotification from "../../../Component/popup_notifications/popup_notifications-hr/PopupHR";
 import LogService from "../../../../services/LogService";
 import "./Show_emp.css";
+import DepartmentFilter from "./DepartmentFilter";
 
 const Show_emp = () => {
   const navigate = useNavigate();
@@ -447,24 +446,11 @@ const Show_emp = () => {
             </p>
           </div>
           <div className="emp-controls">
-            <div className="filter-group">
-              <div className="emp-filter-wrapper">
-                <FaFilter className="emp-filter-icon" />
-                <select
-                  className="dept-filter-select"
-                  value={selectedDept}
-                  onChange={(e) => setSelectedDept(e.target.value)}
-                >
-                  <option value="">All Departments</option>
-                  {departments.map((dept) => (
-                    <option key={dept.id} value={dept.department_name}>
-                      {dept.department_name}
-                    </option>
-                  ))}
-                </select>
-                <FaChevronDown className="emp-filter-chevron" />
-              </div>
-            </div>
+            <DepartmentFilter
+              departments={departments}
+              selectedDept={selectedDept}
+              onSelect={setSelectedDept}
+            />
             <div className="view-toggles">
               <button
                 className={`toggle-btn ${viewMode === "grid" ? "active" : ""}`}
@@ -526,7 +512,18 @@ const Show_emp = () => {
                   >
                     <div className="emp-card-header">
                       <div className="emp-avatar-large">
-                        {emp.first_name ? (
+                        {emp.profile_image_url ? (
+                          <img
+                            src={emp.profile_image_url}
+                            alt="Profile"
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              borderRadius: "50%",
+                              objectFit: "cover",
+                            }}
+                          />
+                        ) : emp.first_name ? (
                           emp.first_name[0].toUpperCase()
                         ) : (
                           <FaUserTie />
@@ -537,7 +534,7 @@ const Show_emp = () => {
                           className="action-btn edit"
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate("/hr/add-emp-personal", {
+                            navigate(`/hr/edit-emp-personal/${emp.id}`, {
                               state: {
                                 userId: emp.id,
                                 empId: emp.emp_code,
@@ -593,7 +590,18 @@ const Show_emp = () => {
                         <td>
                           <div className="list-user-info">
                             <div className="list-avatar">
-                              {emp.first_name ? (
+                              {emp.profile_image_url ? (
+                                <img
+                                  src={emp.profile_image_url}
+                                  alt="Profile"
+                                  style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    borderRadius: "50%",
+                                    objectFit: "cover",
+                                  }}
+                                />
+                              ) : emp.first_name ? (
                                 emp.first_name[0].toUpperCase()
                               ) : (
                                 <FaUserTie />
@@ -621,7 +629,7 @@ const Show_emp = () => {
                               className="action-btn-small edit"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                navigate("/hr/add-emp-personal", {
+                                navigate(`/hr/edit-emp-personal/${emp.id}`, {
                                   state: {
                                     userId: emp.id,
                                     empId: emp.emp_code,
@@ -670,7 +678,18 @@ const Show_emp = () => {
                 <div className="detail-header">
                   <div className="detail-profile-summary">
                     <div className="detail-avatar">
-                      {selectedEmp.image_url ? (
+                      {selectedEmp.profile_image_url ? (
+                        <img
+                          src={selectedEmp.profile_image_url}
+                          alt="avatar"
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            borderRadius: "50%",
+                            objectFit: "cover",
+                          }}
+                        />
+                      ) : selectedEmp.image_url ? (
                         <img src={selectedEmp.image_url} alt="avatar" />
                       ) : (
                         selectedEmp.first_name?.[0]
@@ -724,10 +743,11 @@ const Show_emp = () => {
                   <button
                     className="btn-edit-full"
                     onClick={() => {
-                      let path = "/hr/add-emp-personal";
-                      if (empTab === "employee") path = "/hr/add-emp-info";
+                      let path = `/hr/edit-emp-personal/${selectedEmp.id}`;
+                      if (empTab === "employee")
+                        path = `/hr/edit-emp-info/${selectedEmp.id}`;
                       if (empTab === "education")
-                        path = "/hr/add-emp-education";
+                        path = `/hr/edit-emp-education/${selectedEmp.id}`;
 
                       navigate(path, {
                         state: {
@@ -739,6 +759,12 @@ const Show_emp = () => {
                           firstName: selectedEmp.first_name,
                           lastName: selectedEmp.last_name,
                           email: selectedEmp.email,
+                          imageUrl:
+                            selectedEmp.profile_image_url ||
+                            selectedEmp.image_url,
+                          empImage:
+                            selectedEmp.profile_image_url ||
+                            selectedEmp.image_url,
                         },
                       });
                     }}

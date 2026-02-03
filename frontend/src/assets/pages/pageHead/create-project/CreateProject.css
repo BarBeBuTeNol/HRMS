@@ -1,0 +1,662 @@
+/* Create Project Page Scoped CSS */
+@import "../../../theam/head_theam/HeadTheme.css";
+
+.create-project-container {
+  /* Local Scoped Variables */
+  --cp-bg-glass: rgba(15, 23, 42, 0.6);
+  --cp-border: rgba(255, 255, 255, 0.1);
+  --cp-input-bg: rgba(255, 255, 255, 0.05);
+  --cp-input-focus: rgba(197, 160, 89, 0.2);
+  --cp-timeline-track: rgba(255, 255, 255, 0.1);
+  --cp-timeline-fill: var(--head-accent-color);
+  
+  /* Main Container */
+  display: flex;
+  height: 100vh;
+  min-height: 100vh;
+  background: var(--head-bg-gradient);
+  color: var(--head-text-primary);
+  font-family: var(--head-font-family);
+  overflow: hidden; /* No Global Scroll */
+  position: relative;
+}
+
+/* Content Area - Split Layout */
+.cp-content-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+  height: 100vh;
+  box-sizing: border-box;
+  margin-left: 260px; /* Default Expanded */
+  transition: margin-left 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.cp-content-grid.expanded { margin-left: 260px; }
+.cp-content-grid.collapsed { margin-left: 80px; }
+
+/* Top Row: Form & Team - Equal Width */
+.cp-top-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Equal width 50% 50% */
+  gap: 1rem;
+  flex: 1; /* Takes available remaining height, sharing with bottom if needed, but here we want it to be sizeable */
+  min-height: 0; /* Allow shrinking */
+  height: 60%; /* Approximate split */
+}
+
+/* Bottom Row: Timeline - Full Width */
+.cp-bottom-row {
+  flex: 0 0 auto;
+  height: 35%; /* Remaining space */
+  display: flex;
+  flex-direction: column;
+}
+
+.cp-card-form, .cp-card-team, .cp-card-timeline {
+  height: 100%;
+}
+
+/* Common Card Style */
+.cp-card {
+  background: var(--head-card-bg);
+  backdrop-filter: var(--head-backdrop-blur);
+  border: 1px solid var(--cp-border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: var(--head-shadow);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s;
+}
+
+.cp-card:hover {
+  border-color: rgba(197, 160, 89, 0.3);
+}
+
+
+/* Remove old section styles if any remain */
+.cp-form-section, .cp-viz-section {
+  display: contents; /* Ensure they don't block grid/flex */
+}
+
+.cp-header {
+  margin-bottom: 0.5rem;
+  position: relative; /* Ensure header stays on top */
+  z-index: 10;
+}
+
+.cp-header h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--head-accent-color);
+  text-shadow: 0 0 10px rgba(197, 160, 89, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.cp-header p {
+  color: var(--head-text-secondary);
+  font-size: 0.9rem;
+  margin-left: 2.5rem;
+}
+
+/* Scrollable Form Container inside the Card */
+.cp-form-container {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+/* Form Grid System for Compact Layout */
+.cp-form-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1rem;
+}
+
+.cp-form-group {
+  margin-bottom: 1rem;
+}
+
+.cp-form-group.full-width {
+  grid-column: span 2;
+}
+
+.cp-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem; /* Space between icon and text */
+  font-size: 0.85rem;
+  color: var(--head-text-secondary);
+  margin-bottom: 0.4rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+/* Beautiful Icon Style */
+.cp-label svg {
+  color: var(--head-accent-color);
+  font-size: 1rem;
+  filter: drop-shadow(0 0 5px rgba(197, 160, 89, 0.4)); /* Glow effect */
+}
+
+/* Side-by-Side Dual Group (Desktop) */
+.cp-dual-group {
+  display: flex;
+  gap: 1rem;
+}
+
+.cp-dual-item {
+  flex: 1;
+}
+
+.cp-input,
+.cp-select,
+.cp-textarea {
+  width: 100%;
+  background: var(--cp-input-bg);
+  border: 1px solid var(--cp-border);
+  border-radius: 8px;
+  padding: 0.7rem 1rem;
+  color: #fff;
+  font-family: var(--head-font-family);
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+.cp-input:focus,
+.cp-select:focus,
+.cp-textarea:focus {
+  outline: none;
+  border-color: var(--head-accent-color);
+  background: var(--cp-input-focus);
+  box-shadow: 0 0 10px rgba(197, 160, 89, 0.1);
+}
+
+/* Fix Date Picker Icon in Dark Mode */
+.cp-input[type="date"] {
+  color-scheme: dark;
+  position: relative;
+}
+
+.cp-input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.8;
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
+  transition: opacity 0.2s;
+}
+
+.cp-input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+.cp-textarea {
+  resize: none;
+  height: 80px;
+}
+
+/* Priority & Actions */
+.cp-priority-options {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.cp-priority-btn {
+  flex: 1;
+  padding: 0.6rem;
+  border-radius: 6px;
+  border: 1px solid var(--cp-border);
+  background: transparent;
+  color: var(--head-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.cp-priority-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.cp-priority-btn.selected {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.cp-priority-btn[data-priority="Low"].selected { background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #10b981; }
+.cp-priority-btn[data-priority="Medium"].selected { background: rgba(59, 130, 246, 0.2); border-color: #3b82f6; color: #3b82f6; }
+.cp-priority-btn[data-priority="High"].selected { background: rgba(245, 158, 11, 0.2); border-color: #f59e0b; color: #f59e0b; }
+.cp-priority-btn[data-priority="Urgent"].selected { background: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #ef4444; }
+
+
+/* File Upload Compact */
+.cp-file-upload {
+  border: 2px dashed var(--cp-border);
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.02);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  transition: all 0.3s;
+}
+
+.cp-file-upload:hover {
+  border-color: var(--head-accent-color);
+  background: rgba(197, 160, 89, 0.05);
+}
+
+/* Right Column: Visualization */
+.cp-viz-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  height: 100%;
+}
+
+.cp-team-list {
+  flex: 1;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); /* Larger Grid */
+  gap: 1rem;
+  padding-right: 0.5rem;
+  padding-top: 0.5rem; 
+  padding-bottom: 0.5rem;
+}
+
+.cp-team-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05); /* Subtle border */
+  border-radius: 16px; /* More rounded */
+  padding: 1.2rem; /* More padding */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  position: relative;
+  min-height: auto; 
+  height: fit-content; /* Fill height */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.cp-team-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.cp-team-card.selected {
+  border-color: var(--head-accent-color);
+  background: rgba(197, 160, 89, 0.15); /* Stronger selection bg */
+  box-shadow: 0 0 15px rgba(197, 160, 89, 0.2);
+}
+
+.cp-check-icon {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  color: var(--head-accent-color);
+  font-size: 1rem;
+  background: rgba(0,0,0,0.4);
+  border-radius: 50%;
+  padding: 4px;
+}
+
+.cp-avatar-lg {
+  width: 50px; /* Larger Avatar */
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--head-accent-color), #b89350); /* Gradient Avatar */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 0.8rem;
+  font-size: 1.2rem;
+  border: 2px solid rgba(255,255,255,0.2);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.cp-member-name { 
+  font-weight: 700; 
+  font-size: 0.95rem; /* Larger Name */
+  color: #fff; 
+  margin-bottom: 0.2rem; 
+  white-space: nowrap; 
+  overflow: hidden; 
+  text-overflow: ellipsis; 
+  max-width: 100%; 
+}
+
+.cp-member-role { 
+  font-size: 0.75rem; /* Larger Role */
+  color: var(--head-text-secondary); 
+  margin-bottom: 0.8rem; 
+  white-space: nowrap; 
+  overflow: hidden; 
+  text-overflow: ellipsis; 
+  max-width: 100%; 
+}
+
+.cp-load-indicator {
+  width: 100%;
+  height: 4px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+/* Timeline Preview Mini */
+.cp-timeline-mini {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.cp-timeline-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.cp-timeline-name {
+  width: 200px;
+  color: var(--head-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: relative;
+  cursor: default;
+  padding-left: 1rem; /* Match header padding */
+  box-sizing: border-box; /* Ensure padding doesn't affect total width */
+  flex-shrink: 0;
+}
+
+.cp-timeline-name:hover::after {
+  content: attr(data-title);
+  position: absolute;
+  left: 0;
+  bottom: 100%;
+  background: rgba(15, 23, 42, 0.95);
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+  z-index: 100;
+  pointer-events: none;
+  border: 1px solid var(--cp-border);
+}
+
+.cp-timeline-bar-wrapper {
+  flex: 1;
+  height: 6px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 3px;
+  margin-left: 0.5rem;
+  position: relative;
+}
+
+/* Footer Actions */
+.cp-footer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--cp-border);
+}
+
+.cp-btn {
+  padding: 0.8rem 2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.cp-btn-cancel {
+  background: transparent;
+  color: var(--head-text-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cp-btn-cancel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateX(-100%);
+  transition: transform 0.3s;
+  z-index: 0;
+}
+
+.cp-btn-cancel:hover {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.cp-btn-cancel:hover::before {
+  transform: translateX(0);
+}
+
+.cp-btn-submit {
+  background: linear-gradient(135deg, var(--head-accent-color), #b89350);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(197, 160, 89, 0.3);
+}
+
+.cp-btn-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(197, 160, 89, 0.5);
+  filter: brightness(1.1);
+}
+
+.cp-btn-submit:active {
+  transform: translateY(1px);
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Mobile */
+@media (max-width: 1024px) {
+  .cp-content-grid {
+    /* Restore margin to respect sidebar */
+    width: auto; 
+    height: auto;
+    min-height: 100vh;
+    padding: 1rem;
+    overflow-y: visible;
+  }
+
+  /* Override fixed heights for scrolling */
+  .create-project-container {
+    height: auto;
+    overflow-y: auto;
+  }
+
+  .cp-top-row {
+    grid-template-columns: 1fr; /* Stack vertically */
+    height: auto;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .cp-card-form, .cp-card-team {
+    height: auto;
+    min-height: 500px; /* Ensure enough space */
+  }
+
+  .cp-bottom-row {
+    height: auto;
+    flex: none;
+  }
+  
+  .cp-card-timeline {
+    height: auto;
+    min-height: 400px;
+    margin-bottom: 2rem;
+  }
+
+  .cp-form-grid {
+    grid-template-columns: 1fr; /* Stack form fields */
+  }
+  
+  .cp-form-group.full-width {
+    grid-column: span 1;
+  }
+
+  /* Adjust timeline for small screens */
+  .cp-timeline-mini {
+    overflow-x: auto; /* Allow horizontal scroll for timeline */
+    padding-bottom: 1rem;
+  }
+  
+  /* Ensure header text wraps if needed */
+  .cp-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .cp-header p {
+    margin-left: 0;
+    margin-top: 0.5rem;
+  }
+
+  /* Hide Sidebar Toggle on Mobile */
+  .head-sidebar .head-toggle-btn {
+    display: none !important;
+  }
+  
+  /* Compact content to fit with 80px Sidebar */
+  .cp-content-grid {
+    margin-left: 0 !important;
+    padding: 0.8rem; /* Reduced padding */
+    width: 100%;
+    /* On mobile sidebar is 80px fixed if we force it collapsed. 
+       But .create-project-container is flex row.
+       Actually, CreateProject.jsx structure is:
+       <div class="create-project-container">
+          <HeadSidebar />
+          <main class="cp-content-grid ...">
+       
+       HeadSidebar is fixed. cp-content-grid has margin-left.
+       Since we collapsed sidebar to 80px, margin-left should be 80px.
+    */
+    margin-left: 80px !important;
+    width: calc(100% - 80px) !important;
+  }
+
+  .cp-card {
+    padding: 1rem; /* Compact card padding */
+  }
+
+  /* Dual Group Stacking */
+  .cp-dual-group {
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+  
+  .cp-dual-item {
+    width: 100%;
+  }
+
+  /* Footer Actions - Stack Vertically */
+  .cp-footer-actions {
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+  
+  .cp-btn {
+    width: 100%; /* Full width buttons */
+    justify-content: center;
+  }
+
+  /* Priority Options Wrapping */
+  .cp-priority-options {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .cp-priority-btn {
+    flex: 1 1 45%; 
+    padding: 0.5rem; /* Smaller padding */
+  }
+
+  /* Timeline Mobile Fix - Horizontal Scroll */
+  .cp-card-timeline {
+    overflow: hidden; /* Prevent card expansion */
+  }
+
+  .cp-timeline-mini {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 1rem;
+    scrollbar-width: thin;
+  }
+  
+  /* Force fixed width on inner rows to trigger scroll */
+  .cp-timeline-header-row,
+  .cp-timeline-row {
+    min-width: 600px; /* Minimum width to fit content */
+  }
+  
+  /* Improve Timeline Titles on Mobile */
+  .cp-header h3 {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 0.5rem !important;
+  }
+}
+
+/* Very small screens - adjustments if needed */
+@media (max-width: 480px) {
+  .cp-content-grid {
+    padding: 0.5rem;
+  }
+  .cp-card {
+    padding: 0.8rem;
+  }
+  
+  /* Even larger scroll area if needed for very small screens */
+  .cp-timeline-header-row,
+  .cp-timeline-row {
+     min-width: 550px;
+  }
+}

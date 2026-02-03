@@ -31,6 +31,7 @@ import DataApproval from "./assets/pages/pageHead/data-appoval/DataApproval";
 import ShiftRequestHead from "./assets/pages/pageHead/shift-request/ShiftRequestHead";
 import DepartmentNewsHead from "./assets/pages/pageHead/department-new/DepartmentNewsHead";
 import TeamPerformanceHead from "./assets/pages/pageHead/team-performance/TeamPerformanceHead";
+import CreateProject from "./assets/pages/pageHead/create-project/CreateProject";
 
 // =========================================
 //                  HR PAGES
@@ -104,14 +105,24 @@ function App() {
       <Route path="/head/data-approvals" element={<DataApproval />} />
       <Route path="/head/shift-replacements" element={<ShiftRequestHead />} />
       <Route path="/head/team-performance" element={<TeamPerformanceHead />} />
+      <Route path="/head/create-project" element={<CreateProject />} />
       {/* ========================================= */}
       {/*               HR ROUTES                */}
       {/* ========================================= */}
       <Route path="/hr/dashboard" element={<MainHR />} />
       <Route path="/hr/add-user" element={<Add_user />} />
       <Route path="/hr/add-emp-personal" element={<Add_emp_personal />} />
+      <Route
+        path="/hr/edit-emp-personal/:userId"
+        element={<Add_emp_personal />}
+      />
       <Route path="/hr/add-emp-info" element={<Add_emp_info />} />
+      <Route path="/hr/edit-emp-info/:userId" element={<Add_emp_info />} />
       <Route path="/hr/add-emp-education" element={<AddEmpEducation />} />
+      <Route
+        path="/hr/edit-emp-education/:userId"
+        element={<AddEmpEducation />}
+      />
       <Route path="/hr/show-emp" element={<Show_emp />} />
       <Route path="/hr/show-leave" element={<Show_leave />} />
       <Route path="/hr/show-static-switch" element={<Show_static_switch />} />

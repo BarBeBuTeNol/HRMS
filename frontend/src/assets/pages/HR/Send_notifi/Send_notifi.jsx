@@ -141,8 +141,10 @@ const Send_notifi = () => {
                   <div className="audience-icon" style={{ color: "#3b82f6" }}>
                     <FaGlobeAsia />
                   </div>
-                  <div className="audience-title">All Company</div>
-                  <div className="audience-desc">Broadcast to everyone</div>
+                  <div className="audience-info">
+                    <div className="audience-title">All Company</div>
+                    <div className="audience-desc">Broadcast to everyone</div>
+                  </div>
                   {audience === "all" && (
                     <motion.div
                       layoutId="active-check"
@@ -163,8 +165,10 @@ const Send_notifi = () => {
                   <div className="audience-icon" style={{ color: "#ec4899" }}>
                     <FaBuilding />
                   </div>
-                  <div className="audience-title">Department</div>
-                  <div className="audience-desc">Specific team only</div>
+                  <div className="audience-info">
+                    <div className="audience-title">Department</div>
+                    <div className="audience-desc">Specific team only</div>
+                  </div>
                   {audience === "department" && (
                     <motion.div
                       layoutId="active-check"

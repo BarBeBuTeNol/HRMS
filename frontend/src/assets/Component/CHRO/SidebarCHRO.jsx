@@ -133,7 +133,26 @@ const SidebarCHRO = ({ isOpen, toggleSidebar }) => {
           {/* User Profile Footer */}
           <div className="chro-sidebar-footer">
             <div className="chro-user-profile">
-              <div className="chro-avatar">C</div>
+              <div className="chro-avatar">
+                {JSON.parse(localStorage.getItem("currentUser") || "{}")
+                  .profile_image_url ? (
+                  <img
+                    src={
+                      JSON.parse(localStorage.getItem("currentUser") || "{}")
+                        .profile_image_url
+                    }
+                    alt="Profile"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                    }}
+                  />
+                ) : (
+                  "C"
+                )}
+              </div>
               {isOpen && (
                 <div className="chro-user-info">
                   <div className="chro-user-name">User</div>

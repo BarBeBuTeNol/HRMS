@@ -19,12 +19,13 @@ import {
   FaPenSquare,
   FaChartLine,
   FaBullhorn,
+  FaProjectDiagram,
 } from "react-icons/fa";
 import "./HeadSidebar.css";
 import LoadingHead from "../loading/loading-head/LoadingHead";
 
 const HeadSidebar = ({ unreadCount = 0, onToggle }) => {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(() => window.innerWidth > 1024);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -34,6 +35,19 @@ const HeadSidebar = ({ unreadCount = 0, onToggle }) => {
   }, []);
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth <= 1024) {
+        setOpen(false);
+      } else {
+        setOpen(true);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const handleToggle = () => {
     setOpen(!open);
@@ -47,6 +61,7 @@ const HeadSidebar = ({ unreadCount = 0, onToggle }) => {
     currentUser.username || currentUser.name || "Head Manager";
   const displayRole = "Head of Department";
   const displayAvatar =
+    currentUser.profile_image_url ||
     currentUser.avatar ||
     `https://ui-avatars.com/api/?name=${displayName}&background=c5a059&color=fff&size=128`;
 
@@ -91,6 +106,12 @@ const HeadSidebar = ({ unreadCount = 0, onToggle }) => {
           path: "/head/delegate-shift",
           icon: <FaExchangeAlt />,
           label: "Delegate Shift",
+        },
+        // สร้างโปรเจกต์ใหม่ (Create Project) (New)
+        {
+          path: "/head/create-project",
+          icon: <FaProjectDiagram />,
+          label: "Create Project",
         },
       ],
     },

@@ -20,17 +20,19 @@ class EmployeeDataRepository {
       emergencyContactPhone,
       relationToEmergencyContact,
       personalId,
+      profile_image_url, // Extract image URL
     } = data;
 
     await pool.query(
       `INSERT INTO user_detail 
-          (user_id, gender, birthdate, address, marital_status, nationality, religion, blood_type, emergency_contact_name, emergency_contact_phone, relation_to_emergency_contact, personal_id, created_at, updated_at) 
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+          (user_id, gender, birthdate, address, marital_status, nationality, religion, blood_type, emergency_contact_name, emergency_contact_phone, relation_to_emergency_contact, personal_id, profile_image_url, created_at, updated_at) 
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
           ON DUPLICATE KEY UPDATE
           gender=VALUES(gender), birthdate=VALUES(birthdate), address=VALUES(address), marital_status=VALUES(marital_status), 
           nationality=VALUES(nationality), religion=VALUES(religion), blood_type=VALUES(blood_type), 
           emergency_contact_name=VALUES(emergency_contact_name), emergency_contact_phone=VALUES(emergency_contact_phone), 
-          relation_to_emergency_contact=VALUES(relation_to_emergency_contact), personal_id=VALUES(personal_id), updated_at=NOW()`,
+          relation_to_emergency_contact=VALUES(relation_to_emergency_contact), personal_id=VALUES(personal_id), 
+          profile_image_url=COALESCE(VALUES(profile_image_url), profile_image_url), updated_at=NOW()`,
       [
         userId,
         gender || null,
@@ -44,6 +46,7 @@ class EmployeeDataRepository {
         emergencyContactPhone || null,
         relationToEmergencyContact || null,
         personalId || null,
+        profile_image_url || null, // Bind image URL
       ],
     );
   }
@@ -137,6 +140,32 @@ class EmployeeDataRepository {
         program || null,
         previousExperience || null,
         skills || null,
+      ],
+    );
+  }
+
+  async saveAttachment(data: any) {
+    const {
+      refId,
+      refType,
+      fileName,
+      filePath,
+      fileExtension,
+      fileSize,
+      uploadedBy,
+    } = data;
+    await pool.query(
+      `INSERT INTO attachments 
+      (ref_id, ref_type, file_name, file_path, file_extension, file_size, uploaded_by, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
+      [
+        refId,
+        refType,
+        fileName,
+        filePath,
+        fileExtension,
+        fileSize,
+        uploadedBy || null,
       ],
     );
   }

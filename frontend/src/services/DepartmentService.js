@@ -21,6 +21,24 @@ const DepartmentService = {
       throw error;
     }
   },
+
+  updateDepartment: async (id, data) => {
+    try {
+      const response = await api.put(`/departments/${id}`, data);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  deleteDepartment: async (id) => {
+    try {
+      const response = await api.delete(`/departments/${id}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 
 export default DepartmentService;

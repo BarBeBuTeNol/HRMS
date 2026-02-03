@@ -14,9 +14,9 @@ class TeamPerformanceRepository {
         // Task Status Counts
         const [taskStats] = await pool.query<RowDataPacket[]>(
             `SELECT 
-                SUM(CASE WHEN status = 'Completed' THEN 1 ELSE 0 END) as completed,
-                SUM(CASE WHEN status = 'In Progress' THEN 1 ELSE 0 END) as in_progress,
-                SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END) as pending,
+                SUM(CASE WHEN ta.status = 'Completed' THEN 1 ELSE 0 END) as completed,
+                SUM(CASE WHEN ta.status = 'In Progress' THEN 1 ELSE 0 END) as in_progress,
+                SUM(CASE WHEN ta.status = 'Pending' THEN 1 ELSE 0 END) as pending,
                 COUNT(*) as total_tasks
              FROM task_assignments ta
              JOIN users u ON ta.user_id = u.id
@@ -44,9 +44,12 @@ class TeamPerformanceRepository {
         
         const query = `
             SELECT 
-                u.id, u.first_name, u.last_name, u.image,
+                u.id, u.first_name, u.last_name, 
+                u.email, u.phone, 
+                ud.profile_image_url as image,
                 jp.position_name,
                 ei.performance_review, ei.training_info,
+                ei.hire_date as join_date,
                 
                 -- Task Metrics
                 (SELECT COUNT(*) FROM task_assignments ta WHERE ta.user_id = u.id) as total_assigned,
@@ -68,13 +71,26 @@ class TeamPerformanceRepository {
                  (SELECT COUNT(*) FROM task_assignments ta 
                   WHERE ta.user_id = u.id 
                   AND ta.deadline < NOW() 
-                  AND (ta.status != 'Completed' OR (ta.status = 'Completed' AND ta.updated_at > ta.deadline))) as total_overdue
+                  AND (ta.status != 'Completed' OR (ta.status = 'Completed' AND ta.updated_at > ta.deadline))) as total_overdue,
+
+                 -- Extended Profile Data
+                 d.department_name as department_name,
+                 ei.employment_status,
+                 (
+                    SELECT GROUP_CONCAT(task_name SEPARATOR ', ')
+                    FROM (
+                        SELECT task_name FROM task_assignments 
+                        WHERE user_id = u.id AND status = 'Completed' 
+                        ORDER BY updated_at DESC LIMIT 3
+                    ) as recent_tasks
+                 ) as recent_projects
 
             FROM users u
             LEFT JOIN emp_info ei ON u.id = ei.user_id AND ei.id = (SELECT MAX(id) FROM emp_info WHERE user_id = u.id)
             LEFT JOIN job_positions jp ON ei.position_id = jp.id
-            WHERE u.department_id = ? AND u.role_id != 1 -- Exclude Admin if any, keep Head? usually exclude self or include? User asked for "subordinates" (luk nong), so usually exclude Head.
-            -- Assuming Head role_id is distinct or we filter by id != headId
+            LEFT JOIN user_detail ud ON u.id = ud.user_id
+            LEFT JOIN departments d ON u.department_id = d.id
+            WHERE u.department_id = ? AND u.role_id != 1
             AND u.id != ?
             ORDER BY u.first_name ASC
         `;

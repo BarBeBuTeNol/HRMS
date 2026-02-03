@@ -63,6 +63,60 @@ export const getUserById = async (req: Request, res: Response) => {
   }
 };
 
+// GET /api/users/:id/profile
+export const getUserProfile = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const user: any = await userRepository.findById(id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Map flat structure to nested structure expected by HeadProfilePage
+    const profileData = {
+      full_name:
+        `${user.prefix_name || ""} ${user.first_name || ""} ${user.last_name || ""}`.trim(),
+      role_name: user.role_name,
+      email: user.email,
+      phone: user.phone,
+      nationality: user.nationality,
+      bloodType: user.blood_type,
+      maritalStatus: user.marital_status,
+      birthday: user.birth_date, // Mapped from birth_date to birthday
+      address: user.address,
+      religion: user.religion,
+      emergencyContact: {
+        name: user.emergency_contact_name,
+        phone: user.emergency_contact_phone,
+        relation: user.relation_to_emergency_contact,
+      },
+      work: {
+        empCode: user.emp_code,
+        department: user.department_name,
+        jobTitle: user.job_position, // Mapped from job_position to jobTitle
+        startOption: user.work_start_time,
+        endOption: user.work_end_time,
+        hireDate: user.hire_date,
+        status: user.employment_status,
+      },
+      education: {
+        institution: user.institution,
+        level: user.education_level,
+        program: user.program,
+        skills: user.skills, // Comma separated string
+      },
+      // If profile_pic is needed and stored in profile_image_url
+      profile_pic: user.profile_image_url,
+    };
+
+    res.json(profileData);
+  } catch (err: any) {
+    console.error("Get Profile Error:", err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
 // POST /api/users
 export const createUser = async (req: Request, res: Response) => {
   try {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import api from "../../../../services/api";
 import {
   PieChart,
@@ -6,7 +7,6 @@ import {
   Cell,
   ResponsiveContainer,
   Tooltip as RechartsTooltip,
-  Legend,
 } from "recharts";
 import {
   User,
@@ -15,8 +15,23 @@ import {
   AlertCircle,
   Award,
   BookOpen,
+  Search,
+  Users,
+  Briefcase,
+  TrendingUp,
+  Filter,
+  BarChart2,
+  ChevronRight,
+  MoreHorizontal,
+  RefreshCw,
+  Zap,
+  X,
+  Mail,
+  Phone,
+  Calendar
 } from "lucide-react";
-import HeadSidebar from "../../../Component/Head/HeadSidebar"; // Adjust path if needed usually ../../../Component/Head/HeadSidebar
+import { motion, AnimatePresence } from "framer-motion";
+import HeadSidebar from "../../../Component/Head/HeadSidebar";
 import "./TeamPerformanceHead.css";
 
 const TeamPerformanceHead = () => {
@@ -24,20 +39,27 @@ const TeamPerformanceHead = () => {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  
+  // Interactive Filters
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterPosition, setFilterPosition] = useState("All");
 
-  // COLORS for Charts
-  const COLORS = ["#10b981", "#3b82f6", "#f59e0b"]; // Completed, In Progress, Pending
+  // Modal State
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [modalType, setModalType] = useState(null); // 'profile', 'assign', 'details'
 
+  // Head Theme Colors
+  const COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444"]; 
+  
   useEffect(() => {
     fetchData();
   }, []);
 
   const fetchData = async () => {
     try {
-      const userStr =
-        localStorage.getItem("user") || localStorage.getItem("currentUser");
+      const userStr = localStorage.getItem("user") || localStorage.getItem("currentUser");
       const user = userStr ? JSON.parse(userStr) : null;
-      const headId = user?.id || user?.userId; // Handle potential different ID keys
+      const headId = user?.id || user?.userId;
 
       if (!headId) {
         console.error("User not found in localStorage");
@@ -45,18 +67,14 @@ const TeamPerformanceHead = () => {
         return;
       }
 
-      // Fetch Overview
-      const overviewRes = await api.get(
-        `/head/team-performance-overview/${headId}`,
-      );
+      // Parallel fetching for speed
+      const [overviewRes, membersRes] = await Promise.all([
+        api.get(`/head/team-performance-overview/${headId}`),
+        api.get(`/head/team-performance-members/${headId}`)
+      ]);
+
       setOverview(overviewRes.data.stats);
-
-      // Fetch Members
-      const membersRes = await api.get(
-        `/head/team-performance-members/${headId}`,
-      );
       setMembers(membersRes.data);
-
       setLoading(false);
     } catch (error) {
       console.error("Error fetching performance data:", error);
@@ -64,7 +82,7 @@ const TeamPerformanceHead = () => {
     }
   };
 
-  // Prepare data for Pie Chart
+  // Process Chart Data
   const pieData = overview
     ? [
         { name: "Completed", value: parseInt(overview.completed || 0) },
@@ -78,343 +96,608 @@ const TeamPerformanceHead = () => {
     return Math.round((onTime / completed) * 100);
   };
 
+  // Filter Members
+  const filteredMembers = members.filter((member) => {
+    const matchesName = (member.first_name + " " + member.last_name)
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const matchesPos = filterPosition === "All" || member.position_name === filterPosition;
+    return matchesName && matchesPos;
+  });
+
+  const uniquePositions = ["All", ...new Set(members.map(m => m.position_name).filter(Boolean))];
+
+  // Find Top Performer
+  const topPerformer = members.length > 0 
+    ? members.reduce((prev, current) => (prev.total_completed > current.total_completed) ? prev : current)
+    : null;
+
+  const openModal = (member, type) => {
+    setSelectedMember(member);
+    setModalType(type);
+  };
+
+  const closeModal = () => {
+    setSelectedMember(null);
+    setModalType(null);
+  };
+
   if (loading) {
     return (
-      <div className="flex bg-[#0f172a] min-h-screen text-white items-center justify-center">
-        Loading...
+      <div className="loading-container">
+        <motion.div 
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="spinner"
+        ></motion.div>
       </div>
     );
   }
 
   return (
-    <div className="flex">
+    <div className={`team-performance-container ${isSidebarOpen ? "" : "sidebar-collapsed"}`}>
       <HeadSidebar onToggle={setIsSidebarOpen} />
-      <div
-        className={`flex-1 team-performance-container ${
-          isSidebarOpen ? "" : "sidebar-collapsed"
-        }`}
+      
+      {/* 1. Header & Title */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="page-header"
       >
-        <div className="page-header">
-          <h1 className="page-title">Team Performance</h1>
-          <p className="page-subtitle">
-            Overview of team efficiency, task progress, and individual metrics.
-          </p>
-        </div>
-
-        <div className="dashboard-grid">
-          {/* Overall Progress Chart */}
-          <div className="glass-card overall-progress-card">
-            <h3 className="card-title">
-              <CheckCircle className="text-emerald-400" size={20} /> Overall
-              Task Progress
-            </h3>
-            <div className="w-full h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    paddingAngle={5}
-                    dataKey="value"
-                    label
-                  >
-                    {pieData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <RechartsTooltip
-                    contentStyle={{
-                      backgroundColor: "#1e293b",
-                      border: "none",
-                      borderRadius: "8px",
-                      color: "#fff",
-                    }}
-                  />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="stats-summary w-full mt-4">
-              <div className="stat-item">
-                <div className="stat-value text-emerald-400">
-                  {overview?.completed}
-                </div>
-                <div className="stat-label">Completed</div>
-              </div>
-              <div className="stat-item">
-                <div className="stat-value text-blue-400">
-                  {overview?.in_progress}
-                </div>
-                <div className="stat-label">In Progress</div>
-              </div>
-              <div className="stat-item">
-                <div className="stat-value text-amber-400">
-                  {overview?.pending}
-                </div>
-                <div className="stat-label">Pending</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Attendance Impact & Quick Stats */}
-          <div className="glass-card flex flex-col justify-between">
+        <div className="header-flex-wrapper flex justify-between items-end">
             <div>
-              <h3 className="card-title">
-                <AlertCircle className="text-red-400" size={20} /> Attendance
-                Impact
-              </h3>
-              <p className="text-gray-400 text-sm mb-4">
-                Correlation between leaves and work impact. High leave rates may
-                require workload redistribution.
-              </p>
-              <div className="attendance-impact">
-                {members.slice(0, 4).map((m, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-slate-800/50 p-3 rounded-lg flex justify-between items-center mb-2"
-                  >
-                    <div className="flex items-center gap-2">
-                      {m.image ? (
-                        <img
-                          src={`http://localhost:3000${m.image}`}
-                          className="w-8 h-8 rounded-full object-cover border border-amber-500/30"
-                          alt={m.first_name}
-                        />
-                      ) : (
-                        <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-amber-400 border border-amber-500/30">
-                          {m.first_name.charAt(0)}
-                        </div>
-                      )}
-                      <div>
-                        <div className="text-sm font-semibold text-white">
-                          {m.first_name}
-                        </div>
-                        <div className="text-xs text-gray-500 flex gap-2">
-                          <span>
-                            Leaves:{" "}
-                            <span className="text-white">
-                              {m.approved_leaves}
-                            </span>
-                          </span>
-                          <span>
-                            Overdue:{" "}
-                            <span
-                              className={
-                                m.total_overdue > 0
-                                  ? "text-red-400"
-                                  : "text-white"
-                              }
-                            >
-                              {m.total_overdue}
-                            </span>
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      {m.approved_leaves > 0 && m.total_overdue > 0 ? (
-                        <span className="text-xs text-red-500 font-bold bg-red-500/10 px-2 py-1 rounded">
-                          High Impact
-                        </span>
-                      ) : m.total_overdue > 0 ? (
-                        <span className="text-xs text-orange-400 font-bold">
-                          Needs Support
-                        </span>
-                      ) : (
-                        <span className="text-xs text-green-400 font-bold">
-                          Stable
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}{" "}
-              </div>
+                <h1 className="page-title">Team <span>Performance</span></h1>
+                <p className="page-subtitle">Real-time command center for team productivity and wellness</p>
             </div>
-
-            <div className="mt-6 pt-6 border-t border-slate-700/50">
-              <h3 className="card-title text-sm mb-2">
-                <Award className="text-yellow-400" size={16} /> Top Performers
-                (Training Completed)
-              </h3>
-              <div className="flex gap-2 flex-wrap">
-                {members
-                  .filter((m) => m.training_info)
-                  .slice(0, 5)
-                  .map((m, i) => (
-                    <span
-                      key={i}
-                      className="px-2 py-1 bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 rounded text-xs"
-                    >
-                      {m.first_name}
-                    </span>
-                  ))}
-                {members.filter((m) => m.training_info).length === 0 && (
-                  <span className="text-xs text-gray-500">
-                    No training data recorded yet.
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
+            <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={fetchData}
+                className="refresh-btn"
+            >
+                <RefreshCw size={18} /> Refresh
+            </motion.button>
         </div>
+      </motion.div>
 
-        {/* Individual Metrics Table */}
-        <div className="glass-card members-section">
-          <h3 className="card-title">
-            <User className="text-blue-400" size={20} /> Individual Member
-            Metrics
-          </h3>
-          <div className="members-table-container">
-            <table className="members-table">
-              <thead>
-                <tr>
-                  <th>Employee</th>
-                  <th>Job Position</th>
-                  <th>Tasks (C/T)</th>
-                  <th>Avg Progress</th>
-                  <th>On-time Delivery</th>
-                  <th>Review & Training</th>
-                </tr>
-              </thead>
-              <tbody>
-                {members.map((member) => {
-                  const onTimeRate = calculateOnTimeRate(
-                    member.total_completed,
-                    member.on_time_completed,
-                  );
-                  const avgProgress = member.avg_progress
-                    ? Math.round(member.avg_progress)
-                    : 0;
-
-                  return (
-                    <tr key={member.id}>
-                      <td>
-                        <div className="member-info">
-                          {member.image ? (
-                            <img
-                              src={`http://localhost:3000${member.image}`}
-                              alt={member.first_name}
-                              className="member-avatar"
-                              onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.src = "https://via.placeholder.com/40";
-                              }}
-                            />
-                          ) : (
-                            <div className="member-avatar flex items-center justify-center bg-slate-700 text-amber-400 font-bold border-2 border-amber-500">
-                              {member.first_name.charAt(0)}
-                            </div>
-                          )}
-                          <div>
-                            <div className="member-name">
-                              {member.first_name} {member.last_name}
-                            </div>
-                            <div className="member-role text-xs text-gray-400">
-                              {member.emp_code}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="text-gray-300">
-                        {member.position_name || "N/A"}
-                      </td>
-                      <td>
-                        <div className="flex flex-col">
-                          <span className="text-white font-medium">
-                            {member.total_completed} / {member.total_assigned}
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            Completed / Total
-                          </span>
-                        </div>
-                      </td>
-                      <td style={{ width: "20%" }}>
-                        <div className="flex items-center gap-2">
-                          <div className="progress-bar-container">
-                            <div
-                              className="progress-bar-fill"
-                              style={{ width: `${avgProgress}%` }}
-                            ></div>
-                          </div>
-                          <span className="text-sm font-bold text-amber-400">
-                            {avgProgress}%
-                          </span>
-                        </div>
-                      </td>
-                      <td>
-                        <div
-                          className={`text-sm font-bold ${
-                            onTimeRate >= 80
-                              ? "text-green-400"
-                              : onTimeRate >= 50
-                                ? "text-yellow-400"
-                                : "text-red-400"
-                          }`}
-                        >
-                          {onTimeRate}%
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          Based on deadlines
-                        </div>
-                      </td>
-                      <td>
-                        <div className="flex flex-col gap-1">
-                          {member.performance_review ? (
-                            <div className="text-xs text-gray-300 flex items-start gap-1">
-                              <Award
-                                size={12}
-                                className="text-purple-400 mt-0.5"
-                              />
-                              <span
-                                className="truncate max-w-[150px]"
-                                title={member.performance_review}
-                              >
-                                {member.performance_review}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-xs text-gray-600">
-                              - No Review -
-                            </span>
-                          )}
-
-                          {member.training_info ? (
-                            <div className="text-xs text-gray-300 flex items-start gap-1">
-                              <BookOpen
-                                size={12}
-                                className="text-blue-400 mt-0.5"
-                              />
-                              <span
-                                className="truncate max-w-[150px]"
-                                title={member.training_info}
-                              >
-                                {member.training_info}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-xs text-gray-600">
-                              - No Training -
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
+      {/* 2. Hero Stats Cards */}
+      <div className="hero-stats-grid">
+        <StatCard 
+          icon={<CheckCircle size={24} />} 
+          label="Tasks Completed" 
+          value={overview?.completed || 0} 
+          trend="positive"
+          delay={0.1}
+        />
+        <StatCard 
+          icon={<Briefcase size={24} />} 
+          label="In Progress" 
+          value={overview?.in_progress || 0} 
+          trend="neutral"
+          delay={0.2}
+        />
+        <StatCard 
+          icon={<Clock size={24} />} 
+          label="Pending Review" 
+          value={overview?.pending || 0} 
+          trend={parseInt(overview?.pending) > 5 ? "negative" : "positive"}
+          delay={0.3}
+        />
+        <StatCard 
+          icon={<Zap size={24} />} 
+          label="Efficiency Rate" 
+          value={`${overview?.efficiency || 0}%`} 
+          trend="positive"
+          delay={0.4}
+        />
       </div>
+
+      {/* 3. Main Dashboard Grid */}
+      <div className="dashboard-main-grid">
+        
+        {/* Left: Overall Progress Chart */}
+        <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+            className="glass-panel chart-panel"
+        >
+          <div className="panel-header">
+            <h3 className="panel-title">
+              <BarChart2 size={22} />
+              Workload Distribution
+            </h3>
+            <button className="text-gray-400 hover:text-white transition-colors">
+                <MoreHorizontal size={20} />
+            </button>
+          </div>
+          
+          <div className="chart-container">
+             <div className="chart-content-wrapper">
+                 <div className="chart-wrapper-inner">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                        <Pie
+                            data={pieData}
+                            innerRadius={70}
+                            outerRadius={90}
+                            paddingAngle={5}
+                            dataKey="value"
+                            stroke="none"
+                        >
+                            {pieData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                        </Pie>
+                        <RechartsTooltip 
+                            contentStyle={{ 
+                            backgroundColor: 'rgba(15, 23, 42, 0.95)', 
+                            border: '1px solid rgba(197, 160, 89, 0.3)', 
+                            borderRadius: '12px',
+                            color: '#fff',
+                            boxShadow: '0 8px 16px rgba(0,0,0,0.5)'
+                            }} 
+                            itemStyle={{ color: '#fff' }}
+                        />
+                        </PieChart>
+                    </ResponsiveContainer>
+                    {/* Centered Total */}
+                    <div className="chart-center-text">
+                        <span className="total-number">
+                            {pieData.reduce((acc, curr) => acc + curr.value, 0)}
+                        </span>
+                        <span className="total-label">Total Tasks</span>
+                    </div>
+                 </div>
+
+                 {/* Improved Legend */}
+                 <div className="chart-legend">
+                    {pieData.map((entry, index) => (
+                      <motion.div 
+                        key={index} 
+                        className="legend-item"
+                        whileHover={{ x: 5, backgroundColor: "rgba(255,255,255,0.08)" }}
+                      >
+                        <div className="legend-indicator" style={{ background: COLORS[index % COLORS.length] }}></div>
+                        <div className="flex flex-col">
+                            <span className="legend-value">{entry.value}</span>
+                            <span className="legend-name">{entry.name}</span>
+                        </div>
+                      </motion.div>
+                    ))}
+                 </div>
+             </div>
+          </div>
+        </motion.div>
+
+        {/* Right: Attention / Risk Radar */}
+        <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+            className="glass-panel"
+        >
+          <div className="panel-header">
+            <h3 className="panel-title text-red-400">
+              <AlertCircle size={22} className="text-red-400" />
+              Attention Required
+            </h3>
+            <span className="risk-badge">
+                Live Monitor
+            </span>
+          </div>
+          
+          <div className="attendance-list">
+             {members.filter(m => m.total_overdue > 0 || m.days_absent > 1).length === 0 ? (
+               <div className="empty-state">
+                 <div className="empty-icon-wrapper">
+                    <CheckCircle size={32} className="text-emerald-500"/>
+                 </div>
+                 <p>Excellent! No immediate risks detected.</p>
+               </div>
+             ) : (
+                <AnimatePresence>
+                {members
+                    .filter(m => m.total_overdue > 0 || m.approved_leaves > 0)
+                    .slice(0, 5)
+                    .map((m, idx) => {
+                    const riskLevel = m.total_overdue > 2 ? 'critical' : 'warning';
+                    return (
+                        <motion.div 
+                            key={m.id}
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className={`attendance-item ${riskLevel}`}
+                        >
+                            <div className="flex items-center gap-3">
+                                <Avatar m={m} />
+                                <div>
+                                    <div className="font-semibold text-white text-sm">{m.first_name} {m.last_name}</div>
+                                    <div className="text-xs text-gray-400">
+                                        {m.total_overdue} Overdue • {m.approved_leaves || 0} Leaves
+                                    </div>
+                                </div>
+                            </div>
+                            {riskLevel === 'critical' ? (
+                                <button className="action-btn-sm critical" onClick={() => openModal(m, 'assign')}>Remind</button>
+                            ) : (
+                                <button className="action-btn-sm warning" onClick={() => openModal(m, 'details')}>View</button>
+                            )}
+                        </motion.div>
+                    );
+                    })}
+                </AnimatePresence>
+             )}
+          </div>
+        </motion.div>
+      </div>
+
+      {/* 4. Top Performer Highlight */}
+      {topPerformer && (
+         <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="top-performer-banner"
+            onClick={() => openModal(topPerformer, 'details')}
+            style={{ cursor: 'pointer' }}
+         >
+            <div className="trophy-section">
+                <div className="trophy-icon"><Award size={32} /></div>
+                <div>
+                     <h3>Top Performer of the Month</h3>
+                     <p>Outstanding contribution to team goals</p>
+                </div>
+            </div>
+            <div className="performer-details">
+                 <Avatar m={topPerformer} large />
+                 <div>
+                      <h4>{topPerformer.first_name} {topPerformer.last_name}</h4>
+                      <span className="text-amber-300 font-bold">{topPerformer.total_completed} Tasks Completed</span>
+                 </div>
+            </div>
+         </motion.div>
+      )}
+
+      {/* 5. Members Grid */}
+      <div className="glass-panel" style={{ minHeight: 'auto', marginTop: '2rem' }}>
+        <div className="panel-header">
+           <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                <h3 className="panel-title">
+                    <Users size={22} />
+                    Team Roster
+                </h3>
+                <span className="text-sm text-gray-400 ml-2">({filteredMembers.length} Members)</span>
+           </div>
+           
+           <div className="members-filter-bar">
+              <div className="search-wrapper fancy-input">
+                 <Search className="search-icon" size={16} />
+                 <input 
+                   type="text" 
+                   placeholder="Search members..." 
+                   className="search-input"
+                   value={searchTerm}
+                   onChange={(e) => setSearchTerm(e.target.value)}
+                 />
+                 <div className="input-glow"></div>
+              </div>
+              <div className="relative fancy-select-wrapper">
+                 <Filter className="filter-icon" size={16}/>
+                 <select 
+                   className="filter-select pl-9"
+                   value={filterPosition}
+                   onChange={(e) => setFilterPosition(e.target.value)}
+                 >
+                   {uniquePositions.map(pos => (
+                     <option key={pos} value={pos}>{pos}</option>
+                   ))}
+                 </select>
+              </div>
+           </div>
+        </div>
+
+        <motion.div layout className="members-grid-view">
+          <AnimatePresence>
+            {filteredMembers.map(member => {
+                const onTimeRate = calculateOnTimeRate(member.total_completed, member.on_time_completed);
+                const avgProgress = member.avg_progress ? Math.round(member.avg_progress) : 0;
+                
+                return (
+                <motion.div 
+                    layout
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    key={member.id} 
+                    className="member-card group"
+                >
+                    <div className="member-header">
+                        <Avatar m={member} large />
+                        <div className="member-info">
+                            <h4>{member.first_name} {member.last_name}</h4>
+                            <span className="member-role">{member.position_name || 'Member'}</span>
+                        </div>
+                    </div>
+                    
+                    <div className="member-stats">
+                        <div className="stat-row">
+                            <span>Tasks</span>
+                            <span className="font-mono">{member.total_completed} <span className="text-gray-500 text-xs">/ {member.total_assigned}</span></span>
+                        </div>
+                        <div className="w-full bg-gray-700 h-1.5 rounded-full mb-3 overflow-hidden">
+                            <div className="bg-gradient-to-r from-amber-500 to-yellow-300 h-full rounded-full" style={{ width: `${avgProgress}%` }}></div>
+                        </div>
+
+                        <div className="stat-row">
+                            <span>On-Time</span>
+                            <span className={`font-bold ${onTimeRate >= 80 ? 'text-emerald-400' : 'text-amber-400'}`}>{onTimeRate}%</span>
+                        </div>
+                    </div>
+
+                    <div className="member-actions">
+                        <motion.button 
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            className="action-btn-icon" 
+                            title="View Profile"
+                            onClick={() => openModal(member, 'profile')}
+                        >
+                            <User size={18} />
+                        </motion.button>
+                        <motion.button 
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            className="action-btn-icon" 
+                            title="Assign Task"
+                            onClick={() => openModal(member, 'assign')}
+                        >
+                            <Briefcase size={18} />
+                        </motion.button>
+                        <motion.button 
+                           whileHover={{ scale: 1.1 }}
+                           whileTap={{ scale: 0.9 }}
+                           className="action-btn-icon text-white bg-amber-500/20" 
+                           title="Details"
+                           onClick={() => openModal(member, 'details')}
+                        >
+                            <ChevronRight size={18} />
+                        </motion.button>
+                    </div>
+                </motion.div>
+                );
+            })}
+          </AnimatePresence>
+        </motion.div>
+      </div>
+
+      {/* Modal Render */}
+      <MemberActionModal 
+        isOpen={!!selectedMember} 
+        onClose={closeModal} 
+        data={selectedMember} 
+        type={modalType} 
+      />
+
     </div>
   );
 };
+
+// Reusable Avatar Component with Error Handling
+// Reusable Avatar Component with Error Handling
+function Avatar({ m, large = false }) {
+    const [imgError, setImgError] = useState(false);
+    
+    const imgSrc = m.image 
+        ? (m.image.startsWith('http') ? m.image : `http://localhost:3000${m.image}`)
+        : null;
+
+    const wrapperClass = large ? "member-avatar-lg-wrapper" : "avatar-wrapper";
+    const placeholderClass = large ? "member-avatar-lg-placeholder" : "avatar-placeholder";
+
+    return (
+        <div className={wrapperClass}>
+            {m.image && !imgError ? (
+                <img 
+                    src={imgSrc} 
+                    alt={m.first_name} 
+                    className={large ? "member-avatar-lg" : "avatar-img"}
+                    onError={() => setImgError(true)}
+                />
+            ) : (
+                <div className={placeholderClass}>
+                    {m.first_name ? m.first_name[0].toUpperCase() : 'U'}
+                </div>
+            )}
+        </div>
+    );
+}
+
+// Sub-component for clean code
+function StatCard({ icon, label, value, trend, delay }) {
+  return (
+    <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay }}
+        className="hero-stat-card"
+    >
+        <div className="stat-header">
+        <div className="stat-icon-wrapper">{icon}</div>
+        <div className={`stat-trend ${trend}`}>
+            <TrendingUp size={14} />
+        </div>
+        </div>
+        <div className="stat-content">
+        <h2>{value}</h2>
+        <p>{label}</p>
+        </div>
+    </motion.div>
+  );
+}
+
+// --- Modal Component ---
+// Helper for date formatting
+const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-GB', {
+        day: 'numeric', month: 'short', year: 'numeric'
+    });
+};
+
+function MemberActionModal({ isOpen, onClose, data, type }) {
+    // State for Priority (Assignment)
+    const [priority, setPriority] = useState('Medium');
+
+    useEffect(() => {
+        if (isOpen) {
+            setPriority('Medium');
+        }
+    }, [isOpen]);
+
+    if (!isOpen || !data) return null;
+
+    const renderContent = () => {
+        switch(type) {
+            case 'profile':
+
+                return (
+                    <div className="modal-content-body">
+                         <div className="modal-profile-header">
+                             <Avatar m={data} large />
+                             <div className="text-center mt-3">
+                                <h3 className="text-xl font-bold text-white">{data.first_name} {data.last_name}</h3>
+                                <div className="flex flex-col items-center gap-1 mt-1">
+                                    <span className="text-amber-400 font-medium">{data.position_name}</span>
+                                    <span className="text-gray-400 text-xs">{data.department_name || 'Department N/A'}</span>
+                                    <span className={`px-2 py-0.5 rounded text-xs font-semibold mt-1 
+                                        ${!data.employment_status || data.employment_status === 'Active' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-700 text-gray-400'}`}>
+                                        {data.employment_status || 'Active'}
+                                    </span>
+                                </div>
+                             </div>
+                         </div>
+                         <div className="modal-info-grid">
+                            <div className="info-item">
+                                <Mail size={16} className="text-gray-400" />
+                                <span>{data.email || 'No Email'}</span>
+                            </div>
+                             <div className="info-item">
+                                <Phone size={16} className="text-gray-400" />
+                                <span>{data.phone || 'No Phone'}</span>
+                            </div>
+                             <div className="info-item">
+                                <Calendar size={16} className="text-gray-400" />
+                                <span>Joined: {formatDate(data.join_date)}</span>
+                            </div>
+                         </div>
+                    </div>
+                );
+            case 'assign':
+                return (
+                    <div className="modal-content-body">
+                        <div className="flex items-center gap-4 mb-6 border-b border-gray-700 pb-4">
+                            <Avatar m={data} />
+                            <div>
+                                <h4 className="text-lg font-bold text-white">Assign to {data.first_name}</h4>
+                                <p className="text-xs text-amber-400">{data.position_name}</p>
+                            </div>
+                        </div>
+                        
+                        <h3 className="section-title"><Briefcase size={18}/> New Task Details</h3>
+                        <div className="form-group">
+                            <label>Task Title</label>
+                            <input type="text" className="modal-input" placeholder="e.g. Update Documentation" />
+                        </div>
+                        <div className="form-group">
+                            <label>Priority</label>
+                            <div className="priority-select">
+                                <span 
+                                    className={`p-badge p-low ${priority === 'Low' ? 'active' : ''}`}
+                                    onClick={() => setPriority('Low')}
+                                >
+                                    Low
+                                </span>
+                                <span 
+                                    className={`p-badge p-med ${priority === 'Medium' ? 'active' : ''}`}
+                                    onClick={() => setPriority('Medium')}
+                                >
+                                    Medium
+                                </span>
+                                <span 
+                                    className={`p-badge p-high ${priority === 'High' ? 'active' : ''}`}
+                                    onClick={() => setPriority('High')}
+                                >
+                                    High
+                                </span>
+                            </div>
+                        </div>
+                        <div className="form-group">
+                            <label>Due Date</label>
+                            <input type="date" className="modal-input" />
+                        </div>
+                         <div className="mt-6">
+                            <button className="modal-btn-primary w-full">Confirm Assignment</button>
+                         </div>
+                    </div>
+                );
+            case 'details':
+                return (
+                    <div className="modal-content-body">
+                        <div className="flex items-center gap-4 mb-6">
+                            <Avatar m={data} />
+                            <div>
+                                <h4 className="text-lg font-bold text-white">Performance Stats</h4>
+                                <p className="text-xs text-gray-400">Current Month</p>
+                            </div>
+                        </div>
+                        <div className="stats-grid-mini">
+                            <div className="stat-mini">
+                                <span className="lbl">Completed</span>
+                                <span className="val text-emerald-400">{data.total_completed}</span>
+                            </div>
+                             <div className="stat-mini">
+                                <span className="lbl">On-Time</span>
+                                <span className="val text-amber-400">{data.on_time_completed}</span>
+                            </div>
+                             <div className="stat-mini">
+                                <span className="lbl">Overdue</span>
+                                <span className="val text-red-400">{data.total_overdue}</span>
+                            </div>
+                             <div className="stat-mini">
+                                <span className="lbl">Efficiency</span>
+                                <span className="val text-blue-400">
+                                   {data.total_completed ? Math.round((data.on_time_completed / data.total_completed) * 100) : 0}%
+                                </span>
+                            </div>
+                        </div>
+                         <div className="mt-6">
+                            <button className="modal-btn-secondary w-full" onClick={onClose}>Close Details</button>
+                         </div>
+                    </div>
+                );
+            default:
+                return null;
+        }
+    };
+
+    return createPortal(
+        <div className="modal-overlay" onClick={onClose} style={{ zIndex: 99999, display: 'flex', opacity: 1, visibility: 'visible' }}>
+            <div 
+                className="modal-container"
+                onClick={(e) => e.stopPropagation()}
+                style={{ opacity: 1, transform: 'none', zIndex: 100000 }}
+            >
+                <button className="modal-close-btn" onClick={onClose}>
+                    <X size={20} />
+                </button>
+                {renderContent()}
+            </div>
+        </div>,
+        document.body
+    );
+}
+
+
 
 export default TeamPerformanceHead;

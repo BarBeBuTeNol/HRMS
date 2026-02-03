@@ -7,6 +7,7 @@ import {
   Plus,
   Calendar as CalendarIcon,
   X,
+  Trash2,
 } from "lucide-react";
 import dayjs from "dayjs";
 import api from "../../../services/api";
@@ -37,7 +38,7 @@ const ExclusiveCalendarContent = () => {
     setUserRole(user.role_name || user.role);
   }, []);
 
-  const canCreateEvent = ["HR", "CHRO", "Admin"].includes(userRole);
+  const canCreateEvent = ["HR", "CHRO", "Admin", "Head"].includes(userRole);
 
   // Fetch Events
   useEffect(() => {
@@ -87,9 +88,19 @@ const ExclusiveCalendarContent = () => {
   };
 
   const handleDayClick = (item) => {
-    // Open view modal if it's a holiday or weekend or has events
+    // If user can create event and clicks on an empty day (or any day), pre-fill date and open Add Modal if intended
+    // OR keep existing logic for weekends/events -> View Modal
+
+    // Improved Logic:
+    // 1. If existing events or weekend -> Open View Modal (User can add from there too)
+    // 2. If empty day AND canCreateEvent -> Open Add Modal directly
+
     if (item.isWeekend || item.events.length > 0) {
       setViewedDay(item);
+    } else if (canCreateEvent) {
+      // Empty day, direct add
+      setNewEvent((prev) => ({ ...prev, date: item.date }));
+      setIsAddModalOpen(true);
     }
   };
 
@@ -108,6 +119,41 @@ const ExclusiveCalendarContent = () => {
     } catch (error) {
       console.error("Failed to add event", error);
       alert("Failed to add event");
+    }
+  };
+
+  /* Delete Confirmation State */
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState(null);
+
+  const handleDeleteEvent = (eventId, e) => {
+    e.stopPropagation();
+    setEventToDelete(eventId);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteEvent = async () => {
+    if (!eventToDelete) return;
+
+    try {
+      await api.delete(`/calendar/${eventToDelete}`);
+
+      const updatedEvents = events.filter((evt) => evt.id !== eventToDelete);
+      setEvents(updatedEvents);
+
+      if (viewedDay) {
+        setViewedDay({
+          ...viewedDay,
+          events: updatedEvents.filter(
+            (e) => dayjs(e.date).format("YYYY-MM-DD") === viewedDay.date,
+          ),
+        });
+      }
+      setShowDeleteModal(false);
+      setEventToDelete(null);
+    } catch (error) {
+      console.error("Failed to delete event", error);
+      alert("Failed to delete event");
     }
   };
 
@@ -147,42 +193,12 @@ const ExclusiveCalendarContent = () => {
         style={{ position: "relative", zIndex: 2 }}
       >
         <div className="exclusive-calendar-title">
-          <div
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))",
-              padding: "12px",
-              borderRadius: "16px",
-              border: "1px solid rgba(255,255,255,0.1)",
-              boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.1)",
-            }}
-          >
+          <div className="calendar-icon-wrapper">
             <CalendarIcon size={36} className="text-indigo-400" />
           </div>
           <div>
-            <span
-              style={{
-                display: "block",
-                fontSize: "1rem",
-                color: "#a5b4fc",
-                textTransform: "uppercase",
-                letterSpacing: "3px",
-                marginBottom: "-5px",
-                fontWeight: "700",
-              }}
-            >
-              Company
-            </span>
-            <span
-              style={{
-                background: "linear-gradient(to right, #ffffff, #c7d2fe)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                fontSize: "2.5rem",
-              }}
-            >
-              {currentDate.format("MMMM YYYY")}
-            </span>
+            <span>Company</span>
+            <span>{currentDate.format("MMMM YYYY")}</span>
           </div>
         </div>
 
@@ -310,7 +326,7 @@ const ExclusiveCalendarContent = () => {
               style={{
                 transitionDelay: `${item.day * 10}ms`,
                 cursor:
-                  item.isWeekend || item.events.length > 0
+                  item.isWeekend || item.events.length > 0 || canCreateEvent
                     ? "pointer"
                     : "default",
               }} /* Stagger animation */
@@ -444,6 +460,16 @@ const ExclusiveCalendarContent = () => {
                           )}
                           <span className="event-tag">{evt.type}</span>
                         </div>
+
+                        {canCreateEvent && (
+                          <button
+                            className="delete-event-btn"
+                            onClick={(e) => handleDeleteEvent(evt.id, e)}
+                            title="Delete Event"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        )}
                       </motion.div>
                     ))}
                   </div>
@@ -453,30 +479,34 @@ const ExclusiveCalendarContent = () => {
                       <CalendarIcon size={32} />
                     </div>
                     <p>No events scheduled for this day.</p>
-                    {canCreateEvent && (
-                      <button
-                        className="quick-add-btn"
-                        onClick={() => {
-                          setNewEvent((prev) => ({
-                            ...prev,
-                            date: viewedDay.date,
-                          }));
-                          setViewedDay(null);
-                          setIsAddModalOpen(true);
-                        }}
-                      >
-                        <Plus size={14} /> Add Event
-                      </button>
-                    )}
                   </div>
                 ) : null}
+
+                {/* Always show Add Event button here if permission exists */}
+                {canCreateEvent && (
+                  <motion.button
+                    className="quick-add-btn full-width"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                      setNewEvent((prev) => ({
+                        ...prev,
+                        date: viewedDay.date,
+                      }));
+                      setViewedDay(null);
+                      setIsAddModalOpen(true);
+                    }}
+                  >
+                    <Plus size={18} /> Add New Event
+                  </motion.button>
+                )}
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Add Event Modal */}
+      {/* Add Event Modal (Premium Redesign) */}
       <AnimatePresence>
         {isAddModalOpen && (
           <motion.div
@@ -484,154 +514,169 @@ const ExclusiveCalendarContent = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            onClick={() => setIsAddModalOpen(false)}
           >
             <motion.div
-              className="exclusive-calendar-modal"
-              initial={{ scale: 0.8, opacity: 0, y: 50 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.8, opacity: 0, y: 50 }}
-              style={{
-                background: "rgba(30, 30, 46, 0.95)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
-              }}
+              className="exclusive-calendar-modal premium-modal add-event-modal"
+              initial={{ scale: 0.9, opacity: 0, y: 50, rotateX: 5 }}
+              animate={{ scale: 1, opacity: 1, y: 0, rotateX: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 50, rotateX: 5 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
-                  Add Event
-                </h3>
+              {/* Decorative Header */}
+              <div className="add-event-header">
+                <div className="header-orb"></div>
+                <h2>New Event</h2>
+                <p>Create a scheduler entry for the company.</p>
                 <button
                   onClick={() => setIsAddModalOpen(false)}
-                  style={{
-                    background: "transparent",
-                    border: "none",
-                    color: "rgba(255,255,255,0.5)",
-                    cursor: "pointer",
-                  }}
+                  className="premium-close-absolute"
                 >
                   <X size={24} />
                 </button>
               </div>
-              <form onSubmit={handleAddEventSubmit}>
-                <div style={{ marginBottom: "15px" }}>
-                  <label
-                    style={{
-                      display: "block",
-                      color: "rgba(255,255,255,0.6)",
-                      marginBottom: "5px",
-                      fontSize: "0.9rem",
-                    }}
-                  >
-                    Event Title
-                  </label>
-                  <input
-                    className="exclusive-calendar-input"
-                    type="text"
-                    value={newEvent.title}
-                    onChange={(e) =>
-                      setNewEvent({ ...newEvent, title: e.target.value })
-                    }
-                    required
-                    style={{ fontSize: "1rem" }}
-                  />
-                </div>
 
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: "15px",
-                    marginBottom: "15px",
-                  }}
-                >
-                  <div>
-                    <label
-                      style={{
-                        display: "block",
-                        color: "rgba(255,255,255,0.6)",
-                        marginBottom: "5px",
-                        fontSize: "0.9rem",
-                      }}
-                    >
-                      Date
-                    </label>
-                    <input
-                      className="exclusive-calendar-input"
-                      type="date"
-                      value={newEvent.date}
-                      onChange={(e) =>
-                        setNewEvent({ ...newEvent, date: e.target.value })
-                      }
-                      required
-                    />
+              <div className="add-event-body">
+                <form onSubmit={handleAddEventSubmit} className="premium-form">
+                  <div className="form-group">
+                    <div className="flex justify-between items-baseline mb-1">
+                      <label>Event Title</label>
+                      <span className="text-xs text-gray-400 font-mono">
+                        {newEvent.title.length}/255
+                      </span>
+                    </div>
+                    <div className="input-wrapper">
+                      <input
+                        type="text"
+                        placeholder="e.g. Annual Company Party"
+                        value={newEvent.title}
+                        maxLength={255}
+                        onChange={(e) =>
+                          setNewEvent({ ...newEvent, title: e.target.value })
+                        }
+                        required
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label
-                      style={{
-                        display: "block",
-                        color: "rgba(255,255,255,0.6)",
-                        marginBottom: "5px",
-                        fontSize: "0.9rem",
-                      }}
-                    >
-                      Type
-                    </label>
-                    <select
-                      className="exclusive-calendar-input"
-                      value={newEvent.type}
-                      onChange={(e) =>
-                        setNewEvent({ ...newEvent, type: e.target.value })
-                      }
-                    >
-                      <option value="holiday">Holiday</option>
-                      <option value="event">Event</option>
-                      <option value="meeting">Meeting</option>
-                    </select>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Date</label>
+                      <div className="input-wrapper">
+                        <input
+                          type="date"
+                          min={dayjs().format("YYYY-MM-DD")}
+                          value={newEvent.date}
+                          onChange={(e) =>
+                            setNewEvent({ ...newEvent, date: e.target.value })
+                          }
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="form-group">
+                      <label>Type</label>
+                      <div className="custom-select-wrapper">
+                        <select
+                          value={newEvent.type}
+                          onChange={(e) =>
+                            setNewEvent({ ...newEvent, type: e.target.value })
+                          }
+                        >
+                          <option value="holiday">Holiday</option>
+                          <option value="event">Event</option>
+                          <option value="meeting">Meeting</option>
+                        </select>
+                        <div
+                          className={`select-indicator ${newEvent.type}`}
+                        ></div>
+                      </div>
+                    </div>
                   </div>
-                </div>
 
-                <div style={{ marginBottom: "20px" }}>
-                  <label
-                    style={{
-                      display: "block",
-                      color: "rgba(255,255,255,0.6)",
-                      marginBottom: "5px",
-                      fontSize: "0.9rem",
-                    }}
-                  >
-                    Description
-                  </label>
-                  <textarea
-                    className="exclusive-calendar-input"
-                    placeholder="Optional details..."
-                    value={newEvent.description}
-                    onChange={(e) =>
-                      setNewEvent({ ...newEvent, description: e.target.value })
-                    }
-                    style={{ minHeight: "80px", resize: "none" }}
-                  />
-                </div>
+                  <div className="form-group">
+                    <div className="flex justify-between items-baseline mb-1">
+                      <label>Description</label>
+                      <span className="text-xs text-gray-400 font-mono">
+                        {newEvent.description.length}/255
+                      </span>
+                    </div>
+                    <div className="input-wrapper">
+                      <textarea
+                        placeholder="Add details about this event..."
+                        value={newEvent.description}
+                        maxLength={255}
+                        onChange={(e) =>
+                          setNewEvent({
+                            ...newEvent,
+                            description: e.target.value,
+                          })
+                        }
+                        style={{ minHeight: "100px", resize: "none" }}
+                      />
+                    </div>
+                  </div>
 
-                <div className="exclusive-calendar-actions">
-                  <button
-                    type="button"
-                    className="exclusive-calendar-btn"
-                    onClick={() => setIsAddModalOpen(false)}
-                    style={{ padding: "10px 20px" }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="exclusive-calendar-btn primary"
-                    style={{ padding: "10px 30px" }}
-                  >
-                    Save
-                  </button>
-                </div>
-              </form>
+                  <div className="form-actions">
+                    <button
+                      type="button"
+                      className="cancel-btn"
+                      onClick={() => setIsAddModalOpen(false)}
+                    >
+                      Cancel
+                    </button>
+                    <motion.button
+                      type="submit"
+                      className="save-btn"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      Create Event
+                    </motion.button>
+                  </div>
+                </form>
+              </div>
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {showDeleteModal && (
+          <div
+            className="exclusive-calendar-modal-overlay"
+            onClick={() => setShowDeleteModal(false)}
+          >
+            <motion.div
+              className="confirm-modal-content"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="confirm-title">Delete Event?</h3>
+              <p className="confirm-text">
+                Are you sure you want to delete this event? This action cannot
+                be undone.
+              </p>
+              <div className="confirm-actions">
+                <button
+                  className="btn-cancel"
+                  onClick={() => setShowDeleteModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn-delete-confirm"
+                  onClick={confirmDeleteEvent}
+                >
+                  Delete
+                </button>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>
@@ -641,6 +686,7 @@ const ExclusiveCalendarContent = () => {
 // --- Main Wrapper Page ---
 const ExclusiveCalendar = () => {
   const [userRole, setUserRole] = useState(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 1024);
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
@@ -650,10 +696,43 @@ const ExclusiveCalendar = () => {
   if (!userRole)
     return <div className="p-10 text-white">Loading Calendar...</div>;
 
+  if (userRole === "Head") {
+    return (
+      <div
+        className={`calendar-layout-head ${
+          isSidebarOpen ? "" : "sidebar-collapsed"
+        }`}
+      >
+        <HeadSidebar onToggle={setIsSidebarOpen} />
+        <div className="calendar-content-area">
+          <ExclusiveCalendarContent />
+        </div>
+      </div>
+    );
+  }
+
+  if (userRole === "Employee") {
+    return (
+      <div
+        className={`calendar-layout-emp ${
+          isSidebarOpen ? "" : "sidebar-collapsed"
+        }`}
+      >
+        <EmployeeSidebar onToggle={setIsSidebarOpen} />
+        <div className="calendar-content-area">
+          <ExclusiveCalendarContent />
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback for HR/CHRO if their layouts are used but we want consistent class names
   if (userRole === "HR") {
     return (
       <HRLayout>
-        <ExclusiveCalendarContent />
+        <div className="calendar-layout-hr">
+          <ExclusiveCalendarContent />
+        </div>
       </HRLayout>
     );
   }
@@ -661,31 +740,16 @@ const ExclusiveCalendar = () => {
   if (userRole === "CHRO" || userRole === "Admin") {
     return (
       <CHROLayout>
-        <ExclusiveCalendarContent />
+        <div className="calendar-layout-chro">
+          <ExclusiveCalendarContent />
+        </div>
       </CHROLayout>
     );
   }
 
-  if (userRole === "Head") {
-    return (
-      <div className="layout-container">
-        <div className="sidebar">
-          <HeadSidebar />
-        </div>
-        <div className="content-area" style={{ padding: 0 }}>
-          <ExclusiveCalendarContent />
-        </div>
-      </div>
-    );
-  }
-
-  // Default: Employee
   return (
-    <div className="layout-container">
-      <EmployeeSidebar />
-      <div className="content-area" style={{ padding: 0 }}>
-        <ExclusiveCalendarContent />
-      </div>
+    <div className="calendar-layout-default">
+      <ExclusiveCalendarContent />
     </div>
   );
 };

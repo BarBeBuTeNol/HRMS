@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react";
 import api from "../../../../services/api";
 import Swal from "sweetalert2";
-import HeadSidebar from "../../../Component/Head/HeadSidebar"; // Adjust path if needed
+import HeadSidebar from "../../../Component/Head/HeadSidebar";
 import "./ShiftRequestHead.css";
+import { FaExchangeAlt, FaClipboardList, FaClock, FaExclamationCircle, FaSearch } from "react-icons/fa";
 
 const ShiftRequestHead = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("all"); // 'all', 'shift', 'task'
+  const [searchTerm, setSearchTerm] = useState("");
   const [selectedRequest, setSelectedRequest] = useState(null); // For workload check
   const [workloadData, setWorkloadData] = useState(null);
   const [showWorkloadModal, setShowWorkloadModal] = useState(false);
@@ -29,6 +32,35 @@ const ShiftRequestHead = () => {
       setLoading(false);
     }
   };
+
+  // Derived State for Stats
+  const stats = {
+    total: requests.length,
+    shiftSwaps: requests.filter(r => !r.task_id).length,
+    taskSwaps: requests.filter(r => r.task_id).length,
+    urgent: requests.filter(r => {
+        const date = r.work_date || r.deadline;
+        const diff = new Date(date) - new Date();
+        return diff < 86400000 * 2; // Less than 2 days
+    }).length
+  };
+
+  // Filtering Logic
+  const filteredRequests = requests.filter(req => {
+      const matchesType = filter === "all" 
+        ? true 
+        : filter === "task" 
+            ? req.task_id 
+            : !req.task_id;
+      
+      const searchLower = searchTerm.toLowerCase();
+      const matchesSearch = 
+        req.original_first_name?.toLowerCase().includes(searchLower) ||
+        req.replacement_first_name?.toLowerCase().includes(searchLower) ||
+        req.reason?.toLowerCase().includes(searchLower);
+
+      return matchesType && matchesSearch;
+  });
 
   const handleApprove = async (id) => {
     const result = await Swal.fire({
@@ -130,21 +162,82 @@ const ShiftRequestHead = () => {
     <div className="flex">
       <HeadSidebar />
       <div className="flex-1 shift-request-container bg-slate-900">
-        <div className="page-header">
-          <h1 className="page-title">Shift & Task Requests</h1>
-          <p className="page-subtitle">
-            Manage replacement requests and ensure workforce consistency
-          </p>
+        <header className="shift-req-header">
+            <div className="shift-req-title-group">
+                <div className="shift-req-title-text">
+                    <h1 className="shift-req-title">Request Command Center</h1>
+                    <p className="shift-req-subtitle">Manage workforce changes & approvals</p>
+                </div>
+            </div>
+            
+            {/* Stats Overview */}
+            <div className="header-stats">
+                <div className="stat-card total">
+                    <div className="stat-icon"><FaClipboardList /></div>
+                    <div className="stat-info">
+                        <span className="stat-value">{stats.total}</span>
+                        <span className="stat-label">Pending</span>
+                    </div>
+                </div>
+                <div className="stat-card warning">
+                    <div className="stat-icon"><FaExclamationCircle /></div>
+                    <div className="stat-info">
+                        <span className="stat-value">{stats.urgent}</span>
+                        <span className="stat-label">Urgent</span>
+                    </div>
+                </div>
+                 <div className="stat-card shift">
+                    <div className="stat-icon"><FaClock /></div>
+                    <div className="stat-info">
+                        <span className="stat-value">{stats.shiftSwaps}</span>
+                        <span className="stat-label">Shift Swaps</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        {/* Controls Bar */}
+        <div className="controls-bar">
+            <div className="filter-tabs">
+                <button 
+                    className={`filter-tab ${filter === 'all' ? 'active' : ''}`}
+                    onClick={() => setFilter('all')}
+                >
+                    All Requests
+                </button>
+                 <button 
+                    className={`filter-tab ${filter === 'shift' ? 'active' : ''}`}
+                    onClick={() => setFilter('shift')}
+                >
+                    Shift Swaps
+                </button>
+                 <button 
+                    className={`filter-tab ${filter === 'task' ? 'active' : ''}`}
+                    onClick={() => setFilter('task')}
+                >
+                    Task Swaps
+                </button>
+            </div>
+            <div className="search-wrapper">
+                <FaSearch className="search-icon"/>
+                <input 
+                    type="text" 
+                    placeholder="Search by name..." 
+                    className="search-input"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+            </div>
         </div>
 
         {loading ? (
           <div className="text-white text-center mt-10">Loading...</div>
         ) : (
           <div className="requests-grid">
-            {requests.length === 0 ? (
-              <div className="empty-state">No pending requests found.</div>
+            {filteredRequests.length === 0 ? (
+              <div className="empty-state">No requests match your filters.</div>
             ) : (
-              requests.map((req) => (
+              filteredRequests.map((req) => (
                 <div key={req.id} className="request-card">
                   <div className="card-header">
                     <span

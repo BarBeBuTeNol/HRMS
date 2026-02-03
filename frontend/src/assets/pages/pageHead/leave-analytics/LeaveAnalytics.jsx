@@ -189,7 +189,7 @@ const LeaveAnalytics = () => {
             </div>
             <div className="stat-info">
               <div className="stat-label">Top Absentee</div>
-              <div className="stat-value" style={{ fontSize: "1.8rem" }}>
+              <div className="stat-value">
                 {topAbsentees.length > 0
                   ? topAbsentees[0].name.split(" ")[0]
                   : "-"}

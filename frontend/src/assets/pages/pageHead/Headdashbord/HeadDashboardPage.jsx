@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import api from "../../../../services/api";
 import HeadSidebar from "../../../Component/Head/HeadSidebar";
 import {
@@ -10,10 +11,138 @@ import {
 } from "react-icons/fa";
 import "./HeadDashboardPage.css";
 import LoadingHead from "../../../Component/loading/loading-head/LoadingHead";
+import PopupDoneHead from "../../../Component/poup_done/poup_done-head/PopupDoneHead";
+import PopupErrorHead from "../../../Component/popup-error/popup-error-head/PopupErrorHead";
+import PopupHead from "../../../Component/popup_notifications/popup_notifications-head/PopupHead";
+import LogService from "../../../../services/LogService";
+import { XCircle } from "lucide-react";
 
 const HeadDashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true); // Sidebar State
+
+  // Popup & Modal State
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+  const [selectedLeave, setSelectedLeave] = useState(null);
+  const [rejectReason, setRejectReason] = useState("");
+
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [showErrorPopup, setShowErrorPopup] = useState(false);
+  const [popupMessage, setPopupMessage] = useState("");
+
+  // Notification Popup specific for Approve
+  const [notificationPopup, setNotificationPopup] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "success",
+  });
+
+  const handleApproveClick = async (leave) => {
+    try {
+      const userId = localStorage.getItem("userId");
+      const userName = "Head"; // Or fetch user name from context/store if available
+
+      // 1. Log Action
+      await LogService.createLog({
+        user_id: userId,
+        action: "Approve Leave",
+        description: `Approved leave request for ${leave.first_name} ${leave.last_name}`,
+        ip_address: "127.0.0.1", // Ideally fetched from service
+        severity: "Info",
+      });
+
+      // 2. Call API
+      await api.put(`/leave-requests/${leave.id}/status`, {
+        status: "approved",
+      });
+
+      // 3. Update Local State
+      setData((prev) => ({
+        ...prev,
+        actions: {
+          ...prev.actions,
+          pendingLeaves: prev.actions.pendingLeaves.filter(
+            (l) => l.id !== leave.id,
+          ),
+        },
+      }));
+
+      // 4. Show Notification Popup (PopupHead)
+      setNotificationPopup({
+        isOpen: true,
+        title: "Approved",
+        message: `Leave request for ${leave.first_name} has been approved.`,
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Approve error:", error);
+      setNotificationPopup({
+        isOpen: true,
+        title: "Error",
+        message: "Failed to approve leave request.",
+        type: "error",
+      });
+    }
+  };
+
+  const handleRejectClick = (leave) => {
+    setSelectedLeave(leave);
+    setRejectReason("");
+    setIsRejectModalOpen(true);
+  };
+
+  const closeRejectModal = () => {
+    setIsRejectModalOpen(false);
+    setSelectedLeave(null);
+    setRejectReason("");
+  };
+
+  const handleConfirmReject = async () => {
+    if (!rejectReason.trim()) {
+      alert("Please provide a reason for rejection.");
+      return;
+    }
+
+    try {
+      const userId = localStorage.getItem("userId");
+
+      // 1. Log Action
+      await LogService.createLog({
+        user_id: userId,
+        action: "Reject Leave",
+        description: `Rejected leave request for ${selectedLeave.first_name} ${selectedLeave.last_name}. Reason: ${rejectReason}`,
+        ip_address: "127.0.0.1",
+        severity: "Warning",
+      });
+
+      // 2. Call API
+      await api.put(`/leave-requests/${selectedLeave.id}/status`, {
+        status: "rejected",
+        rejection_reason: rejectReason,
+      });
+
+      // Update local state to remove the item (optimistic update)
+      setData((prev) => ({
+        ...prev,
+        actions: {
+          ...prev.actions,
+          pendingLeaves: prev.actions.pendingLeaves.filter(
+            (l) => l.id !== selectedLeave.id,
+          ),
+        },
+      }));
+
+      closeRejectModal();
+      setPopupMessage("Leave request rejected successfully.");
+      setShowSuccessPopup(true);
+    } catch (error) {
+      console.error("Reject error:", error);
+      setPopupMessage("Failed to reject leave request.");
+      setShowErrorPopup(true);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -48,8 +177,10 @@ const HeadDashboard = () => {
 
   return (
     <div className="head-dashboard-container">
-      <HeadSidebar />
-      <main className="head-dashboard-content">
+      <HeadSidebar onToggle={setIsSidebarOpen} />
+      <main
+        className={`head-dashboard-content ${isSidebarOpen ? "expanded" : "collapsed"}`}
+      >
         <header className="dashboard-header">
           <h1>Dashboard Overview</h1>
         </header>
@@ -105,25 +236,38 @@ const HeadDashboard = () => {
             <div className="user-list">
               {attendance.working.length > 0 ? (
                 attendance.working.map((user) => (
-                  <div key={user.id} className="user-item">
-                    <img
-                      src={
-                        user.profile_pic ||
-                        "https://ui-avatars.com/api/?name=" + user.first_name
-                      }
-                      alt=""
-                      className="user-avatar"
-                    />
-                    <div className="user-details">
-                      <div className="user-name">
-                        {user.first_name} {user.last_name}
-                      </div>
-                      <div className="user-meta" style={{ color: "#94a3b8" }}>
-                        {user.shift} ({user.start_time?.slice(0, 5)} -{" "}
-                        {user.end_time?.slice(0, 5)})
+                  <div key={user.id} className="user-item working-today-card">
+                    <div className="user-info-left">
+                      <img
+                        src={
+                          user.profile_pic ||
+                          "https://ui-avatars.com/api/?name=" + user.first_name
+                        }
+                        alt=""
+                        className="user-avatar"
+                      />
+                      <div className="user-details">
+                        <div className="user-name">
+                          {user.first_name} {user.last_name}
+                        </div>
+                        <div className="user-role">{user.role || "Employee"}</div>
                       </div>
                     </div>
-                    <span className="badge shift">On Shift</span>
+                    
+                    <div className="user-status-right">
+                      <div className="shift-info">
+                        <span className="shift-name">{user.shift}</span>
+                        {user.start_time && user.end_time && (
+                          <span className="shift-time">
+                            {user.start_time.slice(0, 5)} - {user.end_time.slice(0, 5)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="status-badge on-shift">
+                        <div className="pulse-dot"></div>
+                        On Shift
+                      </div>
+                    </div>
                   </div>
                 ))
               ) : (
@@ -177,61 +321,75 @@ const HeadDashboard = () => {
               <FaFileInvoice /> Pending Leave Approvals
             </div>
             {actions.pendingLeaves.length > 0 ? (
-              <table className="action-table">
-                <thead>
-                  <tr>
-                    <th>Employee</th>
-                    <th>Type</th>
-                    <th>Dates</th>
-                    <th>Reason</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {actions.pendingLeaves.map((leave) => (
-                    <tr key={leave.id}>
-                      <td
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "10px",
-                        }}
-                      >
-                        <img
-                          src={
-                            leave.profile_pic ||
-                            "https://ui-avatars.com/api/?name=" +
-                              leave.first_name
-                          }
-                          alt=""
-                          style={{ width: 30, height: 30, borderRadius: "50%" }}
-                        />
-                        {leave.first_name} {leave.last_name}
-                      </td>
-                      <td>{leave.leave_type}</td>
-                      <td>
-                        {new Date(leave.start_date).toLocaleDateString()} -{" "}
-                        {new Date(leave.end_date).toLocaleDateString()}
-                      </td>
-                      <td>{leave.reason}</td>
-                      <td>
-                        <button
-                          className="btn-action btn-approve"
-                          onClick={() => alert("Feature coming soon")}
-                        >
-                          Approve
-                        </button>
-                        <button
-                          className="btn-action btn-reject"
-                          onClick={() => alert("Feature coming soon")}
-                        >
-                          Reject
-                        </button>
-                      </td>
+              <div className="action-table-container">
+                <table className="action-table">
+                  <thead>
+                    <tr>
+                      <th>Employee</th>
+                      <th>Type</th>
+                      <th>Dates</th>
+                      <th>Reason</th>
+                      <th>Action</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {actions.pendingLeaves.map((leave) => (
+                      <tr key={leave.id}>
+                        <td>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "10px",
+                            }}
+                          >
+                            <img
+                              src={
+                                leave.profile_pic ||
+                                "https://ui-avatars.com/api/?name=" +
+                                  leave.first_name
+                              }
+                              alt=""
+                              style={{
+                                width: 30,
+                                height: 30,
+                                borderRadius: "50%",
+                              }}
+                            />
+                            {leave.first_name} {leave.last_name}
+                          </div>
+                        </td>
+                        <td>
+                          <span className="badge leave">
+                            {leave.leave_type}
+                          </span>
+                        </td>
+                        <td>
+                          {new Date(leave.start_date).toLocaleDateString()} -{" "}
+                          {new Date(leave.end_date).toLocaleDateString()}
+                        </td>
+                        <td>{leave.reason}</td>
+                        <td>
+                          <div className="action-buttons">
+                            <button
+                              className="btn-action btn-approve"
+                              onClick={() => handleApproveClick(leave)}
+                            >
+                              Approve
+                            </button>
+                            <button
+                              className="btn-action btn-reject"
+                              onClick={() => handleRejectClick(leave)}
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             ) : (
               <p
                 style={{ color: "var(--head-text-secondary)", padding: "1rem" }}
@@ -308,6 +466,74 @@ const HeadDashboard = () => {
           </div>
         </div>
       </main>
+      {/* Reject Modal */}
+      {/* Reject Modal */}
+      {isRejectModalOpen &&
+        createPortal(
+          <div className="head-reject-modal-overlay" onClick={closeRejectModal}>
+            <div
+              className="head-reject-modal-content"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="head-reject-modal-header">
+                <h2>
+                  <XCircle size={24} /> Reject Request
+                </h2>
+              </div>
+              <div className="head-reject-modal-body">
+                <label>Reason for Rejection:</label>
+                <textarea
+                  className="head-reject-modal-textarea"
+                  placeholder="Please explain why this request is being rejected..."
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                ></textarea>
+              </div>
+              <div className="head-reject-modal-footer">
+                <button
+                  className="btn-action btn-cancel"
+                  onClick={closeRejectModal}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn-action btn-confirm-reject"
+                  onClick={handleConfirmReject}
+                >
+                  Confirm Reject
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
+
+      {/* Popups */}
+      <PopupDoneHead
+        isOpen={showSuccessPopup}
+        onClose={() => setShowSuccessPopup(false)}
+        title="Success"
+        message={popupMessage}
+      />
+      <PopupErrorHead
+        isOpen={showErrorPopup}
+        onClose={() => setShowErrorPopup(false)}
+        title="Error"
+        message={popupMessage}
+      />
+
+      {/* Notification Popup for Approve */}
+      <PopupHead
+        isOpen={notificationPopup.isOpen}
+        onClose={() =>
+          setNotificationPopup((prev) => ({ ...prev, isOpen: false }))
+        }
+        title={notificationPopup.title}
+        message={notificationPopup.message}
+        type={notificationPopup.type}
+        autoClose={true}
+        duration={3000}
+      />
     </div>
   );
 };

@@ -75,89 +75,155 @@ const LeaveApproval = () => {
     }
   };
 
+  // Calculate Stats
+  const pendingCount = requests.filter((r) => r.status === "pending").length;
+  const urgentCount = requests.filter((r) => {
+    const diffTime = new Date(r.startDate) - new Date();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays <= 3 && diffDays >= 0;
+  }).length;
+
+  // Gimmick: Time-based greeting
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good Morning";
+    if (hour < 18) return "Good Afternoon";
+    return "Good Evening";
+  };
+
+  const [filterTerm, setFilterTerm] = useState("");
+  const [filterType, setFilterType] = useState("All");
+
+  const filteredRequests = requests.filter((req) => {
+    const matchesName =
+      req.employeeName.toLowerCase().includes(filterTerm.toLowerCase()) ||
+      req.last_name.toLowerCase().includes(filterTerm.toLowerCase());
+    const matchesType = filterType === "All" || req.leaveType === filterType;
+    return matchesName && matchesType;
+  });
+
   return (
     <div className="leave-approval-container">
       <HeadSidebar />
       <main className="leave-approval-content">
-        <header className="page-header">
-          <h1>
-            <FaUserTie /> Leave Approvals
-          </h1>
-          <p className="subtitle">Review and manage team leave requests</p>
+        <header className="page-header-premium">
+            {/* Top Row: Title & Greeting */}
+            <div className="header-top-row">
+                <div className="header-title-group">
+                     <h1>
+                        <div className="header-icon-wrapper">
+                            <FaUserTie className="header-icon" /> 
+                        </div>
+                        Leave Dashboard
+                    </h1>
+                    <p className="greeting-text">{getGreeting()}, ready to manage your team?</p>
+                </div>
+                
+                {/* Right: Stats Cards */}
+                <div className="header-stats-group">
+                     <div className="stat-card-glass">
+                        <span className="stat-label">Pending</span>
+                        <span className="stat-value">{pendingCount}</span>
+                     </div>
+                      <div className="stat-card-glass urgent">
+                        <span className="stat-label">Urgent</span>
+                        <span className="stat-value">{urgentCount}</span>
+                     </div>
+                </div>
+            </div>
+
+            {/* Bottom Row: Filters */}
+            <div className="filters-container">
+                <input 
+                    type="text" 
+                    placeholder="Search by employee name..." 
+                    className="search-input-glass"
+                    value={filterTerm}
+                    onChange={(e) => setFilterTerm(e.target.value)}
+                />
+                <select 
+                    className="select-input-glass"
+                    value={filterType}
+                    onChange={(e) => setFilterType(e.target.value)}
+                >
+                    <option value="All">All Leave Types</option>
+                    <option value="Sick Leave">Sick Leave</option>
+                    <option value="Personal Leave">Personal Leave</option>
+                    <option value="Vacation">Vacation</option>
+                </select>
+            </div>
         </header>
 
         {loading ? (
-          <div className="loading-state">Loading requests...</div>
-        ) : requests.length === 0 ? (
-          <div className="empty-state">
-            <FaCheck className="icon-empty" />
+          <div className="loading-state">
+             <div className="spinner"></div>
+             <span>Syncing requests...</span>
+          </div>
+        ) : filteredRequests.length === 0 ? (
+          <div className="empty-glass-state">
+            <FaCheck className="empty-icon" />
             <h3>All Caught Up!</h3>
-            <p>There are no pending leave requests at the moment.</p>
+            <p>No pending leaves matching your current filters.</p>
           </div>
         ) : (
-          <div className="requests-grid">
-            {requests.map((req) => (
-              <div key={req.id} className="request-card">
-                {/* Header: Employee Info */}
-                <div className="card-header">
-                  <div className="employee-info">
-                    <div className="avatar">{req.employeeName.charAt(0)}</div>
-                    <div>
-                      <h3>
-                        {req.employeeName} {req.last_name}
-                      </h3>
-                      <span className="position">
-                        {req.emp_code} • {req.position_name}
-                      </span>
+          <div className="requests-grid-modern">
+            {filteredRequests.map((req) => (
+              <div key={req.id} className="request-card-modern">
+                <div className="card-content-wrapper">
+                    {/* Header */}
+                    <div className="req-header">
+                        <div className="user-profile">
+                            <div className="profile-pic">{req.employeeName.charAt(0)}</div>
+                            <div className="user-details">
+                                <h3>{req.employeeName} {req.last_name}</h3>
+                                <span className="user-role">{req.position_name}</span>
+                            </div>
+                        </div>
+                        <span className="leave-tag">{req.leaveType}</span>
                     </div>
-                  </div>
-                  <div className="leave-badge">{req.leaveType}</div>
+
+                    {/* Dates */}
+                    <div className="date-badge-row">
+                        <FaCalendarAlt />
+                        <span className="date-text">
+                            {new Date(req.startDate).toLocaleDateString()} - {new Date(req.endDate).toLocaleDateString()}
+                        </span>
+                    </div>
+
+                    {/* Reason */}
+                    <div className="reason-container">
+                        <p className="reason-text">"{req.reason}"</p>
+                    </div>
+
+                    {/* Conflict Status */}
+                    <div className={`status-indicator ${req.conflictCount > 0 ? 'conflict' : 'safe'}`}>
+                        {req.conflictCount > 0 ? (
+                            <>
+                                <FaExclamationTriangle />
+                                <span><strong>{req.conflictCount}</strong> conflict(s) detected</span>
+                            </>
+                        ) : (
+                            <>
+                                <FaCheck />
+                                <span>Clear schedule (No conflicts)</span>
+                            </>
+                        )}
+                    </div>
                 </div>
 
-                {/* Body: Details */}
-                <div className="card-body">
-                  <div className="detail-row">
-                    <FaCalendarAlt className="icon" />
-                    <span>
-                      {new Date(req.startDate).toLocaleDateString()} -{" "}
-                      {new Date(req.endDate).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <div className="reason-box">
-                    <p className="reason-label">Reason:</p>
-                    <p>"{req.reason}"</p>
-                  </div>
-
-                  {/* Conflict Warning */}
-                  {req.conflictCount > 0 ? (
-                    <div className="conflict-alert warning">
-                      <FaExclamationTriangle />
-                      <span>
-                        Conflict Warning: <strong>{req.conflictCount}</strong>{" "}
-                        other(s) on leave during this period.
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="conflict-alert success">
-                      <FaCheck />
-                      <span>No conflicts with other approved leaves.</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Footer: Actions */}
-                <div className="card-actions">
+                {/* Footer Buttons */}
+                <div className="action-footer">
                   <button
-                    className="btn-reject"
+                    className="action-btn reject"
                     onClick={() => openRejectModal(req)}
                   >
-                    Reject
+                    <FaTimes /> Reject
                   </button>
                   <button
-                    className="btn-approve"
+                    className="action-btn approve"
                     onClick={() => handleApprove(req.id)}
                   >
-                    Approve
+                    <FaCheck /> Approve
                   </button>
                 </div>
               </div>
@@ -167,28 +233,28 @@ const LeaveApproval = () => {
 
         {/* Rejection Modal */}
         {showRejectModal && (
-          <div className="modal-overlay">
-            <div className="modal-content">
-              <h2>Reject Request</h2>
-              <p>
-                Please provide a reason for rejecting{" "}
-                <strong>{selectedRequest?.employeeName}</strong>'s request.
+          <div className="modal-glass-overlay">
+            <div className="modal-glass-content">
+              <h2>Confirm Rejection</h2>
+              <p style={{ color: 'var(--la-text-sub)', marginBottom: '1rem' }}>
+                Please provide a reason for rejecting <strong>{selectedRequest?.employeeName}</strong>'s request.
               </p>
               <textarea
+                className="modal-textarea"
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
-                placeholder="Enter rejection reason..."
+                placeholder="Reason is required..."
                 rows={4}
               />
-              <div className="modal-actions">
+              <div className="modal-glass-actions">
                 <button
-                  className="btn-cancel"
+                  className="btn-glass-cancel"
                   onClick={() => setShowRejectModal(false)}
                 >
                   Cancel
                 </button>
-                <button className="btn-confirm-reject" onClick={handleReject}>
-                  Confirm Reject
+                <button className="btn-glass-confirm" onClick={handleReject}>
+                  Reject Request
                 </button>
               </div>
             </div>

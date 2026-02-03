@@ -1,0 +1,281 @@
+/* Modal Overlay */
+.insight-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.85); /* Dark Blur */
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+}
+
+/* Modal Content */
+.insight-modal-content {
+  background: linear-gradient(145deg, #1e293b, #0f172a);
+  width: 100%;
+  max-width: 600px; /* Comfortable width */
+  max-height: 85vh;
+  border-radius: 20px;
+  border: 1px solid rgba(197, 160, 89, 0.3);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: "Outfit", sans-serif;
+  color: #e2e8f0;
+}
+
+/* Header */
+.insight-header {
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.insight-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.insight-avatar-wrapper {
+  position: relative;
+}
+.insight-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #c5a059;
+}
+.insight-title-group h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #fff;
+}
+.insight-subtitle {
+  font-size: 0.85rem;
+  color: #c5a059;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+.insight-close-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: color 0.2s;
+  padding: 5px;
+}
+.insight-close-btn:hover {
+  color: #fff;
+}
+
+/* Tabs */
+.insight-tabs {
+  display: flex;
+  padding: 0 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.2);
+}
+.tab-btn {
+  flex: 1;
+  padding: 1rem;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.3s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+.tab-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.02);
+}
+.tab-btn.active {
+  color: #fff;
+  background: linear-gradient(135deg, #c5a059, #a08040);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  box-shadow: 0 -2px 10px rgba(197, 160, 89, 0.2);
+}
+
+/* Body */
+.insight-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.insight-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #c5a059;
+}
+.spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid rgba(197, 160, 89, 0.3);
+  border-top-color: #c5a059;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Section Styles */
+.insight-section {
+  margin-bottom: 1.5rem;
+  animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.insight-section h3 {
+  font-size: 0.95rem;
+  color: #fff;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-left: 3px solid #c5a059;
+  padding-left: 0.75rem;
+}
+
+/* Info Grid */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.info-item {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.75rem;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.info-item .label {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+.info-item .value {
+  font-size: 0.95rem;
+  color: #fff;
+  font-weight: 500;
+}
+
+/* Skills Tags */
+.skills-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.skill-tag {
+  background: rgba(197, 160, 89, 0.15);
+  color: #c5a059;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  border: 1px solid rgba(197, 160, 89, 0.2);
+}
+.no-data {
+  color: #64748b;
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+/* Text Description */
+.text-desc {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 1rem;
+  border-radius: 8px;
+  color: #cbd5e1;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Info Item with Icon */
+.info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+.info-item-icon {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.8rem;
+  border-radius: 10px;
+}
+.icon-box {
+  width: 40px;
+  height: 40px;
+  background: rgba(197, 160, 89, 0.1);
+  color: #c5a059;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}
+.text-box {
+  display: flex;
+  flex-direction: column;
+}
+.text-box .label {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+.text-box .value {
+  font-size: 0.95rem;
+  color: #fff;
+}
+
+/* Scrollbar */
+.insight-body::-webkit-scrollbar {
+  width: 6px;
+}
+.insight-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+.insight-body::-webkit-scrollbar-track {
+  background: transparent;
+}
