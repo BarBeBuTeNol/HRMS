@@ -103,18 +103,18 @@ const EditEmployeeCHRO = () => {
       try {
         // Fetch dropdowns
         const [deptRes, roleRes, genderRes, userRes] = await Promise.all([
-          fetch("/api/departments"),
-          fetch("/api/roles"),
-          fetch("/api/employee-data/genders"),
-          fetch(`/api/users/${userId}`),
+          api.get("/departments"),
+          api.get("/roles"),
+          api.get("/employee-data/genders"),
+          api.get(`/users/${userId}`),
         ]);
 
-        if (deptRes.ok) setDepartments(await deptRes.json());
-        if (roleRes.ok) setRoles(await roleRes.json());
-        if (genderRes.ok) setGenders(await genderRes.json());
+        if (deptRes.data) setDepartments(deptRes.data);
+        if (roleRes.data) setRoles(roleRes.data);
+        if (genderRes.data) setGenders(genderRes.data);
 
-        if (userRes.ok) {
-          const data = await userRes.json();
+        if (userRes.data) {
+          const data = userRes.data;
 
           const mappedData = {
             empId: data.emp_code || "",
@@ -310,31 +310,26 @@ const EditEmployeeCHRO = () => {
       formDataPayload.append("targetUserId", formData.userId);
       formDataPayload.append("changes", JSON.stringify(changes));
       formDataPayload.append("reason", reason);
-      formDataPayload.append("evidence", file);
-
-      const res = await fetch("/api/change-requests", {
-        method: "POST",
-        body: formDataPayload,
-        // No Content-Type header, let browser set boundary
-      });
-
-      if (res.ok) {
-        setPopup({
-          isOpen: true,
-          title: "Request Submitted",
-          message: "Your change request has been sent for approval.",
-          type: "success",
-        });
-        setTimeout(() => navigate(-1), 2000);
-      } else {
-        const errData = await res.json();
-        throw new Error(errData.message || "Failed to submit request");
+      if (file) {
+        formDataPayload.append("evidence", file);
       }
+
+      await api.post("/change-requests", formDataPayload);
+
+      setPopup({
+        isOpen: true,
+        title: "Request Submitted",
+        message: "Your change request has been sent for approval.",
+        type: "success",
+      });
+      setTimeout(() => navigate(-1), 2000);
     } catch (err) {
+      const msg =
+        err.response?.data?.message || err.message || "Failed to submit request";
       setPopup({
         isOpen: true,
         title: "Submission Error",
-        message: err.message,
+        message: msg,
         type: "error",
       });
       setSaving(false);
