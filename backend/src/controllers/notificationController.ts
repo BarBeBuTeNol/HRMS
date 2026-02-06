@@ -15,8 +15,11 @@ export const getNotifications = async (req: Request, res: Response) => {
 // mark ว่าอ่านแล้ว
 export const markAsRead = async (req: Request, res: Response) => {
   const { id } = req.params;
+  const ip = req.ip || req.socket.remoteAddress || '0.0.0.0'; // basic IP capture
+
   try {
-    await notificationRepository.markAsRead(id);
+    // ใช้ method ใหม่ที่มีการบันทึก Log
+    await notificationRepository.markAsReadWithLog(id, ip as string);
     res.json({ message: 'อ่านแล้ว' });
   } catch (err: any) {
     res.status(500).json({ message: err.message });

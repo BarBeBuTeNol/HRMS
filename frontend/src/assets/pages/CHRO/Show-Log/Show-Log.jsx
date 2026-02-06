@@ -288,6 +288,7 @@ const ShowLog = () => {
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
+                  onClick={(e) => e.target.showPicker()} // Make entire input clickable
                 />
                 <span
                   style={{ margin: "0 0.5rem", color: "var(--sl-text-muted)" }}
@@ -298,6 +299,7 @@ const ShowLog = () => {
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
+                  onClick={(e) => e.target.showPicker()} // Make entire input clickable
                 />
               </div>
             </div>

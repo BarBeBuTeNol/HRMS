@@ -54,8 +54,9 @@
 /* Tablet (Portrait) & Mobile Styles */
 @media (max-width: 1023px) {
   .chro-layout-container {
-    margin-left: 0 !important; /* Sidebar becomes overlay or hidden */
-    padding: 20px; /* Reduced padding */
+    margin-left: 0 !important; /* Sidebar becomes block level above content */
+    padding: 20px; 
+    /* No padding-top needed as Sidebar is relative and takes space */
   }
 
   /* Prevent body scroll when sidebar is open? (handled in sidebar preferably) */

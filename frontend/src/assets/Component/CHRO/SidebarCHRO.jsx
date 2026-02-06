@@ -13,6 +13,7 @@ import {
   FaChevronRight,
   FaUserTie,
   FaFileSignature,
+  FaCalendarAlt,
 } from "react-icons/fa";
 import "./SidebarCHRO.css";
 
@@ -57,9 +58,9 @@ const SidebarCHRO = ({ isOpen, toggleSidebar }) => {
       icon: <FaCogs />,
     },
     {
-      path: "/calendar",
+      path: "/chro/calendar",
       label: "Company Calendar",
-      icon: <FaChartPie />, // Reusing icon or importing new one if needed, but keeping simple
+      icon: <FaCalendarAlt />, 
     },
   ];
 

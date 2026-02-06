@@ -60,11 +60,12 @@ import AnnouncementsCHRO from "./assets/pages/CHRO/announcements/AnnouncementsCH
 import EmployeeDirectoryCHRO from "./assets/pages/CHRO/emp_directory/EmployeeDirectoryCHRO";
 import EditEmployeeCHRO from "./assets/pages/CHRO/emp_directory/EditEmployeeCHRO";
 import LeaveRequestCHRO from "./assets/pages/CHRO/leave_request/LeaveRequestCHRO";
+import CalendarCHRO from "./assets/Component/calendar/calendar-chro/CalendarCHRO";
 
 // =========================================
 //               COMMON COMPONENTS
 // =========================================
-import ExclusiveCalendar from "./assets/Component/calendar/Calendar";
+
 
 function App() {
   return (
@@ -144,10 +145,10 @@ function App() {
       />
       <Route path="/chro/edit-employee" element={<EditEmployeeCHRO />} />
       <Route path="/chro/leave-request" element={<LeaveRequestCHRO />} />
+      <Route path="/chro/calendar" element={<CalendarCHRO />} />
       {/* ========================================= */}
       {/*             COMMON ROUTES              */}
       {/* ========================================= */}
-      <Route path="/calendar" element={<ExclusiveCalendar />} />
     </Routes>
   );
 }

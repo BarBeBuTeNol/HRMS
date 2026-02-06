@@ -15,33 +15,49 @@ import {
   FaPlane,
   FaUser,
   FaPray,
-  FaTimes, // Close icon
+  FaUmbrellaBeach,
+  FaBriefcaseMedical,
+  FaUserClock,
 } from "react-icons/fa";
 import EmployeeSidebar from "../../../Component/Employee/EmployeeSidebar";
 import "./RequestLeavePage.css";
+import PopupDoneEmp from "../../../Component/poup_done/poup_done-emp/PopupDoneEmp";
+import PopupErrorEmp from "../../../Component/popup-error/popup-error-emp/PopupErrorEmp";
+import PopupSentDataEmp from "../../../Component/popup-sent-data/popup-sent-data-emp/PopupSentDataEmp";
+import PopupEmp from "../../../Component/popup_notifications/popup_notifications-emp/PopupEmp";
 
 // Animation Variants
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.1 },
+    transition: { staggerChildren: 0.1, delayChildren: 0.2 },
   },
 };
 
 const itemVariants = {
   hidden: { y: 20, opacity: 0 },
-  visible: { y: 0, opacity: 1 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: { type: "spring", stiffness: 100, damping: 12 },
+  },
+};
+
+const cardHoverVariants = {
+  hover: { y: -5, boxShadow: "0 15px 30px rgba(0,0,0,0.2)" },
 };
 
 const RequestLeavePage = () => {
   const [userId, setUserId] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [leaveTypesList, setLeaveTypesList] = useState([]);
+  const [balances, setBalances] = useState([]);
 
   // Form State
   const [formData, setFormData] = useState({
-    leaveType: "ลากิจ/ลาป่วย", // Default generic value as user removed choice
+    leaveType: "", // Will be set after fetch
     startDate: "",
     endDate: "",
     reason: "",
@@ -51,21 +67,66 @@ const RequestLeavePage = () => {
   const [checkingSchedule, setCheckingSchedule] = useState(false);
   const [scheduleConflict, setScheduleConflict] = useState(null);
 
+  // Popup State
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [showErrorPopup, setShowErrorPopup] = useState(false);
+  const [showWarningPopup, setShowWarningPopup] = useState(false); // For validation
+  const [showSendingPopup, setShowSendingPopup] = useState(false); // For sending state
+  const [popupMessage, setPopupMessage] = useState("");
+  const [popupTitle, setPopupTitle] = useState("");
+
+
+
+  // Mock Balances (Removed)
+  // const leaveBalances = [...];
+
   useEffect(() => {
     // Get user_id
     const token = localStorage.getItem("token");
     if (token) {
-      const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-      if (storedUser.id) {
-        setUserId(storedUser.id);
-        fetchHistory(storedUser.id);
+      // 1. Try getting explicit userId
+      const storedUserId = localStorage.getItem("userId");
+      // 2. Try getting from currentUser object
+      const storedUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+      
+      const distinctId = storedUserId || storedUser.id;
+
+      if (distinctId) {
+        setUserId(distinctId);
+        fetchHistory(distinctId);
+        fetchLeaveTypes();
+        fetchBalances(distinctId);
       } else {
-        setLoading(false); // Stop loading if no user ID
+        setLoading(false);
       }
     } else {
-      setLoading(false); // Stop loading if no token
+      setLoading(false);
     }
   }, []);
+
+  const fetchLeaveTypes = async () => {
+    try {
+        const res = await api.get("/leave-requests/types");
+        if(res.data && res.data.length > 0) {
+            setLeaveTypesList(res.data);
+            // Set default to first option
+            setFormData(prev => ({...prev, leaveType: res.data[0].name}));
+        }
+    } catch (err) {
+        console.error("Error fetching leave types:", err);
+    }
+  };
+
+  const fetchBalances = async (uid) => {
+    try {
+        const res = await api.get(`/leave-requests/summary/${uid}`);
+        setBalances(res.data);
+    } catch (err) {
+        console.error("Error fetching balances:", err);
+        // Fallback to empty or error state
+        setBalances([]);
+    }
+  };
 
   const fetchHistory = async (uid) => {
     try {
@@ -118,34 +179,53 @@ const RequestLeavePage = () => {
       !formData.endDate ||
       !formData.reason
     ) {
-      alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+      setPopupTitle("Incomplete Data");
+      setPopupMessage("Please fill in all required fields.");
+      setShowWarningPopup(true); // Use Warning Popup
+      return;
+    }
+
+    // Map frontend values to Database ENUM values
+    // No longer needed as we use direct DB values
+    const dbLeaveType = formData.leaveType || "Other";
+
+    if (!userId) {
+      setPopupTitle("Authentication Error");
+      setPopupMessage("⚠️ User data not found. Please login again.");
+      setShowErrorPopup(true);
       return;
     }
 
     setSubmitting(true);
+    setShowSendingPopup(true); // Open Sending Popup
     try {
       await api.post("/leave-requests", {
         user_id: userId,
-        leave_type: formData.leaveType,
+        leave_type: dbLeaveType,
         start_date: formData.startDate,
         end_date: formData.endDate,
         reason: formData.reason,
       });
 
-      alert("✔️ ส่งคำขอลาเรียบร้อยแล้ว!");
-      // Reset form (keep default type or reset to sick)
+      setShowSendingPopup(false); // Close Sending
+      setPopupTitle("Success");
+      setPopupMessage("✔️ Leave request submitted successfully!");
+      setShowSuccessPopup(true);
+
       setFormData({
-        leaveType: "sick",
+        leaveType: leaveTypesList.length > 0 ? leaveTypesList[0].name : "",
         startDate: "",
         endDate: "",
         reason: "",
       });
       fetchHistory(userId);
+      fetchBalances(userId); // Refresh balances
     } catch (err) {
       console.error("Error submitting leave request:", err);
-      alert(
-        "❌ ส่งคำขอไม่สำเร็จ: " + (err.response?.data?.message || err.message),
-      );
+      setShowSendingPopup(false); // Close Sending
+      setPopupTitle("Submission Failed");
+      setPopupMessage("❌ Submission failed: " + (err.response?.data?.message || err.message));
+      setShowErrorPopup(true);
     } finally {
       setSubmitting(false);
     }
@@ -153,22 +233,15 @@ const RequestLeavePage = () => {
 
   // Helpers
   const getLeaveTypeInfo = (type) => {
-    switch (type) {
-      case "sick":
-        return { label: "ลาป่วย", icon: <FaFileMedical />, class: "card-sick" };
-      case "personal":
-        return { label: "ลากิจ", icon: <FaUser />, class: "card-personal" };
-      case "vacation":
-        return {
-          label: "ลาพักร้อน",
-          icon: <FaPlane />,
-          class: "card-vacation",
-        };
-      case "ordination":
-        return { label: "ลาบวช", icon: <FaPray />, class: "card-ordination" };
-      default:
-        return { label: type, icon: <FaCalendarAlt />, class: "" };
-    }
+    // Basic mapping for known types, default for others
+    const lowerType = type.toLowerCase();
+    if (lowerType.includes("sick")) return { label: "Sick Leave", icon: <FaBriefcaseMedical />, class: "badge-sick", color: "from-rose-500 to-pink-600", bgAlert: "bg-rose-500/10 text-rose-400" };
+    if (lowerType.includes("personal")) return { label: "Personal Leave", icon: <FaUserClock />, class: "badge-personal", color: "from-amber-400 to-orange-500", bgAlert: "bg-amber-500/10 text-amber-400" };
+    if (lowerType.includes("vacation")) return { label: "Vacation", icon: <FaUmbrellaBeach />, class: "badge-vacation", color: "from-cyan-400 to-blue-500", bgAlert: "bg-cyan-500/10 text-cyan-400" };
+    if (lowerType.includes("ordination")) return { label: "Ordination", icon: <FaPray />, class: "badge-ordination", color: "from-purple-500 to-indigo-600", bgAlert: "bg-purple-500/10 text-purple-400" };
+    if (lowerType.includes("maternity")) return { label: "Maternity", icon: <FaFileMedical />, class: "badge-sick", color: "from-pink-400 to-rose-400", bgAlert: "bg-pink-500/10 text-pink-400" };
+    
+    return { label: type, icon: <FaCalendarAlt />, class: "badge-default", color: "from-slate-400 to-gray-500", bgAlert: "bg-slate-500/10 text-slate-400" };
   };
 
   const getStatusBadge = (status) => {
@@ -176,19 +249,19 @@ const RequestLeavePage = () => {
       case "pending":
         return (
           <span className="status-badge pending">
-            <FaClock /> รออนุมัติ
+            <FaClock /> Pending
           </span>
         );
       case "approved":
         return (
           <span className="status-badge approved">
-            <FaCheckCircle /> อนุมัติแล้ว
+            <FaCheckCircle /> Approved
           </span>
         );
       case "rejected":
         return (
           <span className="status-badge rejected">
-            <FaTimesCircle /> ถูกปฏิเสธ
+            <FaTimesCircle /> Rejected
           </span>
         );
       default:
@@ -197,7 +270,7 @@ const RequestLeavePage = () => {
   };
 
   return (
-    <div className="request-leave-container">
+    <div className="request-leave-page">
       <EmployeeSidebar />
 
       <main className="request-leave-main">
@@ -205,217 +278,243 @@ const RequestLeavePage = () => {
           initial="hidden"
           animate="visible"
           variants={containerVariants}
-          className="content-wrapper"
+          className="content-container"
         >
+          {/* Header */}
           <header className="page-header">
-            <div className="header-content">
+            <div className="header-text">
               <h1>
-                <FaFileMedical className="header-icon" />
-                <span className="text-gradient">
-                  ส่งคำขอลา (Submit Request)
+                <span className="icon-wrapper-header">
+                  <FaFileMedical />
                 </span>
+                <span className="text-highlight">Request Leave</span>
+                <span className="subtitle">Submit Leave Application</span>
               </h1>
-              <p>กรอกแบบฟอร์มด้านล่างเพื่อส่งคำขอลาไปยังหัวหน้าแผนก</p>
+              <p>Manage your leave and check your request status here</p>
             </div>
           </header>
 
-          <div className="layout-grid-custom">
-            {/* Form Section */}
-            <motion.section
-              variants={itemVariants}
-              className="form-section-premium"
-            >
-              <div className="section-header-sm">
-                <FaPaperPlane className="text-indigo-400" />
-                <h3>แบบฟอร์มการลา</h3>
-              </div>
-
-              <form onSubmit={handleSubmit} className="leave-form">
-                {/* Leave Type section removed per user request */}
-
-                <div className="date-row">
-                  <div className="form-group">
-                    <label>ตั้งแต่วันที่</label>
-                    <div className="input-wrapper">
-                      <FaCalendarAlt className="input-icon" />
-                      <input
-                        type="date"
-                        className="form-control"
-                        value={formData.startDate}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            startDate: e.target.value,
-                          })
-                        }
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="form-group">
-                    <label>ถึงวันที่</label>
-                    <div className="input-wrapper">
-                      <FaCalendarAlt className="input-icon" />
-                      <input
-                        type="date"
-                        className="form-control"
-                        value={formData.endDate}
-                        min={formData.startDate}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            endDate: e.target.value,
-                          })
-                        }
-                        required
-                      />
-                    </div>
-                  </div>
+          {/* Balance Cards (Dynamic) */}
+          <motion.section className="balance-cards-grid" variants={containerVariants}>
+            {balances.map((item, index) => {
+               const style = getLeaveTypeInfo(item.type);
+               return (
+              <motion.div
+                key={index}
+                variants={itemVariants}
+                whileHover="hover"
+                className="balance-card"
+              >
+                <div className={`card-icon-bg ${style.class}`} style={{background: 'transparent'}}> {/* Fallback or custom gradient? Class usually handles it */}
+                   <div style={{ fontSize: '2rem', color: style.class.includes('sick') ? '#f43f5e' : 'inherit' }}>
+                     {/* We might need to adjust CSS or use inline styles for dynamic gradients if we don't have classes for all types. 
+                         Let's use the `color` prop from helper for inline gradient if convenient, or rely on classes.
+                         For now, let's assume classes like `badge-sick` exist or simple styling.
+                         Actually, the mock used: color: "from-rose-500 to-pink-600".
+                         Let's apply that as background-image linear-gradient.
+                     */}
+                     {style.icon}
+                   </div>
                 </div>
-
-                {/* Conflict Warning */}
-                {checkingSchedule && (
-                  <p className="text-sm text-gray-400 mb-2">
-                    {" "}
-                    <FaSpinner className="animate-spin" />{" "}
-                    กำลังตรวจสอบตารางงาน...
-                  </p>
-                )}
-                {scheduleConflict && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    className="warning-box"
-                  >
-                    <FaExclamationTriangle className="warning-icon" />
-                    <div>
-                      <strong>แจ้งเตือน:</strong> มีตารางงานในวันที่เลือกรวม{" "}
-                      {scheduleConflict.length} กะ
-                    </div>
-                  </motion.div>
-                )}
-
-                <div className="form-group">
-                  <label>เหตุผลการลา</label>
-                  <textarea
-                    className="form-control textarea"
-                    placeholder="ระบุเหตุผลที่ต้องการลา..."
-                    value={formData.reason}
-                    onChange={(e) =>
-                      setFormData({ ...formData, reason: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-
-                {/* File Upload - Custom UI */}
-                <div className="form-group">
-                  <label>แนบเอกสาร (ใบรับรองแพทย์/สลิป)</label>
-                  <div className="file-upload-wrapper">
-                    <input
-                      type="file"
-                      id="file-upload"
-                      className="file-upload-input"
-                      onChange={(e) => {
-                        // Just a visual handler for now as we don't have file state in backend payload yet
-                        const fileName = e.target.files[0]?.name;
-                        // Ideally set this to state to show the name
-                        // For now, let's use a local DOM manipulation or state if available.
-                        // I'll assume we can add a local state for visual feedback quickly or just let the user know.
-                        // But for now, let's just make the UI nice.
-                        if (fileName)
-                          document.getElementById(
-                            "file-name-display",
-                          ).innerText = fileName;
+                <div className="card-info">
+                  <h3>{style.label}</h3>
+                  <div className="progress-bar-container">
+                    <div
+                      className={`progress-bar-fill`}
+                      style={{ 
+                          width: `${(item.used / item.limit) * 100}%`,
+                          backgroundColor: style.class.includes('sick') ? '#f43f5e' : (style.class.includes('personal') ? '#fbbf24' : '#22d3ee') // Simple fallback colors
                       }}
-                    />
-                    <label htmlFor="file-upload" className="file-upload-label">
-                      <FaUpload className="file-icon-large" />
-                      <span className="file-upload-text">
-                        คลิกเพื่ออัปโหลดไฟล์ (Click to Upload)
-                      </span>
-                      <div
-                        id="file-name-display"
-                        className="text-sm text-indigo-300 mt-2 font-medium"
-                      ></div>
-                    </label>
+                    ></div>
+                  </div>
+                  <div className="card-stats">
+                    <span>Used <strong>{item.used}</strong> Days</span>
+                    <span>Remaining <strong>{item.limit - item.used}</strong> Days</span>
                   </div>
                 </div>
+              </motion.div>
+            )})}
+          </motion.section>
 
-                <button
-                  type="submit"
-                  className="btn-submit-premium full-width"
-                  disabled={submitting}
-                >
-                  {submitting ? (
-                    <FaSpinner className="animate-spin" />
-                  ) : (
-                    <>
-                      <FaPaperPlane /> ส่งคำขอลา
-                    </>
-                  )}
-                </button>
-              </form>
-            </motion.section>
-
-            {/* History Section */}
-            <motion.section
-              variants={itemVariants}
-              className="history-section-compact"
-            >
-              <div className="section-header-sm">
-                <FaHistory className="text-emerald-400" />
-                <h3>ประวัติการลาล่าสุด</h3>
-              </div>
-
-              {loading ? (
-                <div className="empty-state">
-                  <FaSpinner className="animate-spin" />
-                  <p>กำลังโหลดข้อมูล...</p>
-                </div>
-              ) : history.length === 0 ? (
-                <div className="empty-state">
-                  <FaHistory />
-                  <p>ยังไม่มีประวัติการลา</p>
-                </div>
-              ) : (
-                <div className="table-container-scroll">
-                  <table className="custom-table">
-                    <thead>
-                      <tr>
-                        <th>ประเภท</th>
-                        <th>วันที่ลา</th>
-                        <th>สถานะ</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {history.map((req) => (
-                        <tr key={req.id}>
-                          <td>
-                            <span
-                              className={`leave-type-badge type-${req.leave_type}`}
+          {/* Main Layout Grid */}
+          <div className="main-layout-grid">
+            {/* Left: Form */}
+            <motion.div variants={itemVariants} className="form-panel">
+               <div className="panel-header">
+                  <FaPaperPlane className="panel-icon" />
+                  <h2>Leave Request Form</h2>
+               </div>
+               
+               <form onSubmit={handleSubmit} className="premium-form">
+                  <div className="form-group-row">
+                    <div className="form-group">
+                        <label>Leave Type</label>
+                        <div className="select-wrapper">
+                            <select
+                                value={formData.leaveType}
+                                onChange={(e) => setFormData({...formData, leaveType: e.target.value})}
+                                className="form-control"
                             >
-                              {getLeaveTypeInfo(req.leave_type).label}
-                            </span>
-                          </td>
-                          <td>
-                            <div className="text-sm text-gray-300">
-                              {new Date(req.start_date).toLocaleDateString(
-                                "th-TH",
-                              )}
-                            </div>
-                          </td>
-                          <td>{getStatusBadge(req.status)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </motion.section>
+                                {leaveTypesList.map((type) => (
+                                    <option key={type.id} value={type.name}>
+                                        {type.label_en || type.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+                  </div>
+
+                  <div className="form-group-row two-col">
+                      <div className="form-group">
+                          <label>Start Date</label>
+                          <input
+                            type="date"
+                            className="form-control"
+                            value={formData.startDate}
+                            onChange={(e) => setFormData({...formData, startDate: e.target.value})}
+                            required
+                          />
+                      </div>
+                      <div className="form-group">
+                          <label>End Date</label>
+                          <input
+                            type="date"
+                            className="form-control"
+                            value={formData.endDate}
+                            min={formData.startDate}
+                            onChange={(e) => setFormData({...formData, endDate: e.target.value})}
+                            required
+                          />
+                      </div>
+                  </div>
+
+                   {/* Conflict Warning */}
+                   <AnimatePresence>
+                    {checkingSchedule && (
+                      <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="status-msg loading">
+                        <FaSpinner className="spin" /> Checking schedule...
+                      </motion.div>
+                    )}
+                    {scheduleConflict && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="status-msg warning"
+                      >
+                        <FaExclamationTriangle />
+                        <span>
+                          <strong>Warning:</strong> Found {scheduleConflict.length} schedule conflict(s)
+                        </span>
+                      </motion.div>
+                    )}
+                   </AnimatePresence>
+
+                  <div className="form-group">
+                      <label>Reason</label>
+                      <textarea
+                        className="form-control textarea-autosize"
+                        placeholder="Please specify the reason and additional details..."
+                        value={formData.reason}
+                        onChange={(e) => setFormData({...formData, reason: e.target.value})}
+                        required
+                        rows={4}
+                      />
+                  </div>
+
+                  <div className="form-group">
+                      <label>Attachment (If any)</label>
+                      <div className="file-dropzone">
+                          <input type="file" id="file" className="file-input" />
+                          <label htmlFor="file" className="file-label">
+                              <FaUpload className="upload-icon" />
+                              <span>Click to upload or drag & drop</span>
+                              <small>Supports PDF, JPG, PNG (Max 5MB)</small>
+                          </label>
+                      </div>
+                  </div>
+
+                  <div className="form-actions">
+                      <button type="submit" className="btn-submit" disabled={submitting}>
+                        {submitting ? <FaSpinner className="spin" /> : <>Submit Request <FaPaperPlane /></>}
+                      </button>
+                  </div>
+               </form>
+            </motion.div>
+
+            {/* Right: History */}
+            <motion.div variants={itemVariants} className="history-panel">
+               <div className="panel-header">
+                  <FaHistory className="panel-icon" />
+                  <h2>Request History</h2>
+               </div>
+               
+               <div className="history-list-wrapper">
+                  {loading ? (
+                    <div className="loading-state"><FaSpinner className="spin" /></div>
+                  ) : history.length === 0 ? (
+                    <div className="empty-state">
+                        <div className="empty-icon"><FaHistory /></div>
+                        <p>No request history found</p>
+                    </div>
+                  ) : (
+                    <div className="history-cards">
+                        {history.map((req) => (
+                           <div key={req.id} className="history-card-item">
+                              <div className="card-item-header">
+                                  <div className="leave-type-pill">
+                                     {getLeaveTypeInfo(req.leave_type).icon}
+                                     {getLeaveTypeInfo(req.leave_type).label}
+                                  </div>
+                                  {getStatusBadge(req.status)}
+                              </div>
+                              <div className="card-item-body">
+                                  <div className="date-range">
+                                     <span>{new Date(req.start_date).toLocaleDateString("th-TH")}</span>
+                                     <span className="arrow">→</span>
+                                     <span>{new Date(req.endDate || req.end_date).toLocaleDateString("th-TH")}</span> 
+                                  </div>
+                                  <p className="reason-text">"{req.reason}"</p>
+                              </div>
+                           </div>
+                        ))}
+                    </div>
+                  )}
+               </div>
+            </motion.div>
           </div>
         </motion.div>
       </main>
+
+      {/* Popups */}
+      <PopupDoneEmp
+        isOpen={showSuccessPopup}
+        onClose={() => setShowSuccessPopup(false)}
+        title={popupTitle}
+        message={popupMessage}
+      />
+      
+      <PopupErrorEmp
+        isOpen={showErrorPopup}
+        onClose={() => setShowErrorPopup(false)}
+        title={popupTitle}
+        message={popupMessage}
+      />
+
+      <PopupSentDataEmp
+        isOpen={showSendingPopup}
+        title="Sending Request..."
+        message="Please wait, we are processing your request."
+      />
+
+      <PopupEmp
+        isOpen={showWarningPopup}
+        onClose={() => setShowWarningPopup(false)}
+        title={popupTitle}
+        message={popupMessage}
+        type="warning"
+      />
     </div>
   );
 };

@@ -259,6 +259,7 @@ const LeaveRequestCHRO = () => {
                       <input
                         type="date"
                         name="start_date"
+                        min={new Date().toISOString().split("T")[0]} // Restrict past dates
                         value={formData.start_date}
                         onChange={handleChange}
                         className="leave-input date-field"
@@ -273,6 +274,7 @@ const LeaveRequestCHRO = () => {
                       <input
                         type="date"
                         name="end_date"
+                        min={new Date().toISOString().split("T")[0]} // Restrict past dates
                         value={formData.end_date}
                         onChange={handleChange}
                         className="leave-input date-field"

@@ -21,10 +21,18 @@ export class CalendarRepository {
 
     static async addEvent(event: CalendarEvent): Promise<number> {
         // Note: Using holiday_calendar as the main event table
-        const { date, title, description, type } = event;
+        const { date, endDate, title, description, type, isAllDay, createdBy } = event;
         const [result] = await db.execute<ResultSetHeader>(
-            'INSERT INTO holiday_calendar (start_date, event_name, description, event_type, created_at) VALUES (?, ?, ?, ?, NOW())',
-            [date, title, description, type === 'holiday' ? 'Holiday' : 'Company Event']
+            'INSERT INTO holiday_calendar (start_date, end_date, event_name, description, event_type, is_all_day, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())',
+            [
+                date, 
+                endDate || date, // Default to start date if not provided
+                title, 
+                description, 
+                type,
+                isAllDay ? 1 : 0,
+                createdBy || 1 // Fallback to 1 if not provided (safety net)
+            ]
         );
         return result.insertId;
     }

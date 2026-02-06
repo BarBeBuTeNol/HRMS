@@ -1,6 +1,6 @@
 import React from "react";
 import "./PopupErrorEmp.css";
-import { AlertHexagon } from "lucide-react";
+import { AlertOctagon } from "lucide-react";
 
 const PopupErrorEmp = ({
   isOpen,
@@ -14,7 +14,7 @@ const PopupErrorEmp = ({
     <div className="popup-error-emp-overlay">
       <div className="popup-error-emp-container">
         <div className="popup-error-emp-header">
-          <AlertHexagon className="popup-error-emp-icon" />
+          <AlertOctagon className="popup-error-emp-icon" />
           <h2 className="popup-error-emp-title">{title}</h2>
         </div>
         <div className="popup-error-emp-body">

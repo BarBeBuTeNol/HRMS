@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import EmployeeSidebar from "../../../Component/Employee/EmployeeSidebar";
 import "../../../../App.css";
 import "./EmployeeDashboard.css";
 import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+
+dayjs.extend(relativeTime);
 import api from "../../../../services/api"; // Fixed import path
-import { Link } from "react-router-dom";
+
 import { motion } from "framer-motion"; // Import Framer Motion
 import {
   Calendar,
@@ -20,14 +24,21 @@ import {
   Zap,
   Trophy,
   Target,
+  Mail,
+  Phone,
 } from "lucide-react";
 import LoadingEmp from "../../../Component/loading/loading-emp/LoadingEmp";
 
 const EmployeeDashboard = () => {
+  const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentTime, setCurrentTime] = useState(dayjs());
+  const [showProfilePopup, setShowProfilePopup] = useState(false);
+
+  // Base URL for images
+  const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
   useEffect(() => {
     // Clock timer
@@ -67,6 +78,7 @@ const EmployeeDashboard = () => {
     actionableTasks,
     announcements,
     notifications,
+    employeeProfile,
   } = dashboardData;
   const user = JSON.parse(localStorage.getItem("currentUser"));
 
@@ -111,22 +123,90 @@ const EmployeeDashboard = () => {
             </p>
           </div>
           <div className="header-actions">
-            <Link to="/employee/notifications">
-              <motion.div
-                className="notification-bell"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-              >
-                <Bell size={24} />
-                {notifications.length > 0 && (
-                  <span className="badge">{notifications.length}</span>
-                )}
-              </motion.div>
-            </Link>
-            <div className="user-profile">
+            <motion.div
+              className="notification-bell"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => navigate("/employee/notifications")}
+            >
+              <Bell size={24} />
+              {notifications.filter(n => n.is_read === 0).length > 0 && (
+                <span className="badge">
+                  {notifications.filter(n => n.is_read === 0).length}
+                </span>
+              )}
+            </motion.div>
+            <div 
+              className="user-profile" 
+              onClick={() => setShowProfilePopup(!showProfilePopup)}
+            >
               <div className="avatar">
-                <User size={24} />
+                {employeeProfile?.profile_pic ? (
+                  <img 
+                    src={`${BASE_URL}/uploads/${employeeProfile.profile_pic}`} 
+                    alt="Profile" 
+                    className="avatar-img"
+                    style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <User size={24} />
+                )}
               </div>
+              
+              {/* Profile Popup */}
+              {showProfilePopup && (
+                <motion.div 
+                  className="profile-popup"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                >
+                  <div className="popup-header">
+                    {employeeProfile?.profile_pic ? (
+                      <img 
+                        src={`${BASE_URL}/uploads/${employeeProfile.profile_pic}`} 
+                        alt="Profile" 
+                        className="popup-avatar"
+                      />
+                    ) : (
+                      <div className="popup-avatar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                         <User size={32} />
+                      </div>
+                    )}
+                    <h3 className="popup-name">
+                      {employeeProfile?.first_name} {employeeProfile?.last_name}
+                    </h3>
+                    <p className="popup-role">
+                      {employeeProfile?.position_name || employeeProfile?.role_name}
+                    </p>
+                    <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                      {employeeProfile?.department_name} Department
+                    </span>
+                  </div>
+                  
+                  <div className="popup-body">
+                    <div className="popup-item">
+                      <Mail size={16} />
+                      <span>{employeeProfile?.email || user.email}</span>
+                    </div>
+                    <div className="popup-item">
+                      <Phone size={16} />
+                      <span>{employeeProfile?.phone || "No phone"}</span>
+                    </div>
+                  </div>
+                  
+                  <Link to="/employee/my-info" style={{ marginTop: '1rem', display: 'block' }}>
+                    <motion.button 
+                      className="quick-action-btn update"
+                      style={{ width: '100%', minWidth: 'unset', padding: '0.8rem' }}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      View Full Profile
+                    </motion.button>
+                  </Link>
+                </motion.div>
+              )}
             </div>
           </div>
         </motion.header>
@@ -212,7 +292,7 @@ const EmployeeDashboard = () => {
 
         {/* 5. Quick Actions (Moved up for better access) */}
         <motion.section className="quick-actions-bar" variants={itemVariants}>
-          <Link to="/employee/leave-request">
+          <Link to="/employee/request-leave">
             <motion.div
               className="quick-action-btn leave"
               whileHover={{
@@ -224,7 +304,7 @@ const EmployeeDashboard = () => {
               <FileText size={20} /> Request Leave
             </motion.div>
           </Link>
-          <Link to="/employee/change-request">
+          <Link to="/employee/my-info">
             <motion.div
               className="quick-action-btn update"
               whileHover={{
@@ -236,7 +316,7 @@ const EmployeeDashboard = () => {
               <RefreshCw size={20} /> Update Profile
             </motion.div>
           </Link>
-          <Link to="/employee/shift-swap">
+          <Link to="/employee/shift-requests">
             <motion.div
               className="quick-action-btn swap"
               whileHover={{
@@ -260,7 +340,7 @@ const EmployeeDashboard = () => {
             >
               <div className="section-header">
                 <h2>🔥 Actionable Tasks</h2>
-                <Link to="/employee/tasks" className="view-all">
+                <Link to="/employee/mywork" className="view-all">
                   View All <ChevronRight size={16} />
                 </Link>
               </div>

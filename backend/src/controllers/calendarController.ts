@@ -13,13 +13,21 @@ export const getCalendarEvents = async (req: Request, res: Response) => {
 
 export const addCalendarEvent = async (req: Request, res: Response) => {
     try {
-        const { date, title, description, type } = req.body;
+        const { date, title, description, type, endDate, isAllDay, createdBy } = req.body;
         if (!date || !title) {
              res.status(400).json({ message: 'Date and Title are required' });
              return;
         }
 
-        const newEventId = await CalendarRepository.addEvent({ date, title, description, type: type || 'holiday' });
+        const newEventId = await CalendarRepository.addEvent({ 
+            date, 
+            title, 
+            description, 
+            type: type || 'Company Event',
+            endDate,
+            isAllDay,
+            createdBy
+        });
         res.status(201).json({ message: 'Event added successfully', id: newEventId });
     } catch (error) {
         console.error('Error adding calendar event:', error);

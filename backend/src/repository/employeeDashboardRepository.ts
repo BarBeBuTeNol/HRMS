@@ -112,6 +112,31 @@ class EmployeeDashboardRepository {
         const [rows] = await pool.query<RowDataPacket[]>(sql, [userId]);
         return rows;
     }
+
+    // 7. Profile Data (NEW)
+    async getEmployeeProfile(userId: string) {
+        const sql = `
+            SELECT 
+                u.first_name, 
+                u.last_name, 
+                u.email, 
+                u.phone,
+                u.role_id,
+                ud.profile_image_url AS profile_pic,
+                r.role_name,
+                d.department_name,
+                j.position_name
+            FROM users u
+            LEFT JOIN user_detail ud ON u.id = ud.user_id
+            LEFT JOIN roles r ON u.role_id = r.id
+            LEFT JOIN departments d ON u.department_id = d.id
+            LEFT JOIN emp_info ei ON u.id = ei.user_id
+            LEFT JOIN job_positions j ON ei.position_id = j.id
+            WHERE u.id = ?
+        `;
+        const [rows] = await pool.query<RowDataPacket[]>(sql, [userId]);
+        return rows[0] || null;
+    }
 }
 
 export default new EmployeeDashboardRepository();

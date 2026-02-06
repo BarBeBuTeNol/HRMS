@@ -16,14 +16,16 @@ export const getEmployeeDashboardData = async (req: Request, res: Response) => {
             calendarData,
             actionableTasks,
             announcements,
-            notifications
+            notifications,
+            employeeProfile
         ] = await Promise.all([
             employeeDashboardRepository.getTodayShift(userId),
             employeeDashboardRepository.getTaskStats(userId),
             employeeDashboardRepository.getCalendarData(userId),
             employeeDashboardRepository.getActionableTasks(userId),
             employeeDashboardRepository.getAnnouncements(userId),
-            employeeDashboardRepository.getNotifications(userId)
+            employeeDashboardRepository.getNotifications(userId),
+            employeeDashboardRepository.getEmployeeProfile(userId)
         ]);
 
         res.json({
@@ -32,7 +34,8 @@ export const getEmployeeDashboardData = async (req: Request, res: Response) => {
             calendarData,
             actionableTasks,
             announcements,
-            notifications
+            notifications,
+            employeeProfile
         });
 
     } catch (error) {

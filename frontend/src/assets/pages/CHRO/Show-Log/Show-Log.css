@@ -200,6 +200,7 @@
 .sl-filters-card select,
 .sl-filters-card input[type="date"] {
   padding-left: 1rem;
+  cursor: pointer; /* Indicate clickable */
 }
 
 .sl-filters-card input:focus,

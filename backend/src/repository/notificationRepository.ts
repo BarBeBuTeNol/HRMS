@@ -14,6 +14,27 @@ class NotificationRepository {
         await pool.query('UPDATE notifications SET is_read = 1 WHERE id = ?', [id]);
     }
 
+    // Extended method for logging
+    async markAsReadWithLog(id: string, ipAddress: string) {
+        // 1. Get Notification Owner & Details
+        const [rows] = await pool.query<RowDataPacket[]>('SELECT user_id, message, type FROM notifications WHERE id = ?', [id]);
+        if (rows.length === 0) return; 
+
+        const notif = rows[0];
+
+        // 2. Update Status
+        await pool.query('UPDATE notifications SET is_read = 1 WHERE id = ?', [id]);
+
+        // 3. Log Activity
+        // Schema: user_id, action, details, ip_address
+        const details = `Read notification (${notif.type || 'System'}): ${notif.message ? notif.message.substring(0, 100) : 'No Content'}`;
+        
+        await pool.query(
+            'INSERT INTO activity_logs (user_id, action, details, ip_address) VALUES (?, ?, ?, ?)',
+            [notif.user_id, 'READ_NOTIFICATION', details, ipAddress]
+        );
+    }
+
     // Helper for sendNotification to create announcement
     async createAnnouncement(data: any, postedBy: number, targetDepartmentId: number | null, priority: string) {
         const [result] = await pool.query<ResultSetHeader>(

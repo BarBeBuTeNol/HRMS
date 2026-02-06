@@ -1,0 +1,712 @@
+/* CHRO Calendar Variables - Executive Gold/Dark Theme (Refined) */
+:root {
+  --chro-cal-bg: #111111; /* Slightly lighter/softer black for better readability */
+  --chro-cal-accent: #e0c058; /* Brighter Gold */
+  --chro-cal-accent-glow: rgba(224, 192, 88, 0.3);
+  --chro-cal-secondary: #1f1f1f;
+  --chro-cal-text: #ffffff; /* Pure white for max contrast */
+  --chro-cal-text-muted: #a0a0a0;
+  --chro-cal-border: 1px solid rgba(255, 255, 255, 0.12);
+  --chro-cal-weekend: #3e1a1a; /* Dark Red background for weekends */
+  --chro-cal-weekend-text: #ff6b6b; /* Red text for weekends */
+  
+  --font-display: 'Playfair Display', serif;
+  --font-body: 'Outfit', sans-serif;
+}
+
+  /* Wrapper to break out of CHROLayout padding */
+  .chro-calendar-fullscreen-wrapper {
+    width: calc(100% + 80px);
+    height: 100vh;
+    margin: -32px -40px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  
+  @media (max-width: 1024px) {
+    .chro-calendar-fullscreen-wrapper {
+      width: calc(100% + 40px); /* Match mobile padding 20px * 2 */
+      margin: -20px; /* Cancel out padding: 20px */
+      height: auto; /* Let it flow */
+      min-height: calc(100vh - 70px);
+    }
+  }
+
+/* Background Luxury Elements - Reduced opacity for clarity */
+.chro-calendar-container::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 80%;
+  height: 80%;
+  background: radial-gradient(circle, rgba(224, 192, 88, 0.04), transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Header Section */
+.chro-calendar-header {
+  padding: 1rem 2rem; /* Reduced padding slightly */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: var(--chro-cal-border);
+  background: #161616;
+  z-index: 10;
+}
+
+.chro-header-left h1 {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 500;
+  margin: 0;
+  background: linear-gradient(45deg, #e0c058, #fff8dc, #e0c058);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.5); /* Better legibility */
+}
+
+
+.chro-header-left p {
+  color: var(--chro-cal-accent);
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  font-size: 0.75rem;
+  margin-top: 4px;
+  opacity: 0.8;
+}
+
+/* Controls */
+.chro-controls {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.chro-nav-group {
+    display: flex;
+    background: rgba(255,255,255,0.03);
+    border-radius: 50px;
+    padding: 4px;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+.chro-nav-btn {
+  background: transparent;
+  border: none;
+  color: #888;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+.chro-nav-btn:hover {
+  background: var(--chro-cal-accent);
+  color: #000;
+  transform: rotate(360deg);
+}
+
+.chro-nav-btn.today-btn {
+    width: auto;
+    padding: 0 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--chro-cal-text);
+}
+.chro-nav-btn.today-btn:hover {
+    transform: none;
+    background: rgba(224, 192, 88, 0.2);
+    color: var(--chro-cal-accent);
+}
+
+.chro-create-btn {
+  background: transparent;
+  color: var(--chro-cal-accent);
+  border: 1px solid var(--chro-cal-accent);
+  padding: 10px 24px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 0.8rem;
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chro-btn-icon {
+    width: 18px;
+    height: 18px;
+}
+
+.chro-create-btn::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; width: 0%; height: 100%;
+  background: var(--chro-cal-accent);
+  transition: width 0.3s ease;
+  z-index: -1;
+}
+
+.chro-create-btn:hover {
+  color: #000;
+  box-shadow: 0 0 20px var(--chro-cal-accent-glow);
+}
+.chro-create-btn:hover::before {
+  width: 100%;
+}
+
+/* Grid Header */
+.chro-grid-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  padding: 1rem 0;
+  background: #161616; /* Match header bg */
+  border-bottom: 2px solid rgba(224, 192, 88, 0.2);
+}
+
+.chro-dow {
+  text-align: center;
+  color: #e0c058; /* Gold color for visibility */
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Calendar Grid */
+.chro-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-auto-rows: 1fr;
+  flex: 1;
+  overflow-y: auto;
+  border-left: 1px solid rgba(255, 255, 255, 0.1); /* Left border for container */
+}
+
+.chro-day {
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.8rem;
+  position: relative;
+  transition: all 0.2s ease;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  background: var(--chro-cal-bg);
+  cursor: pointer; /* Ensure pointer cursor */
+}
+
+.chro-day:hover {
+  background: #1f1f1f;
+  box-shadow: inset 0 0 0 2px rgba(224, 192, 88, 0.3); /* Gold inset focus */
+  z-index: 2;
+}
+
+/* Weekend / Holiday Style (Red) */
+/* Weekend / Holiday Style (Red) - Polished */
+.chro-day.weekend-red {
+  background: linear-gradient(135deg, rgba(60, 20, 20, 0.6) 0%, rgba(30, 10, 10, 0.4) 100%);
+  border: 1px solid rgba(255, 107, 107, 0.2);
+}
+.chro-day.weekend-red::after {
+  content: '';
+  position: absolute;
+  top: 5px; right: 5px;
+  width: 6px; height: 6px;
+  background: #ff6b6b;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #ff6b6b;
+  opacity: 0.5;
+}
+.chro-day.weekend-red .chro-date-num {
+  color: #ff8e8e; /* Brighter red text */
+}
+
+/* Empty State/Hashed */
+.chro-day.empty {
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(255,255,255,0.02) 10px,
+    rgba(255,255,255,0.02) 11px
+  );
+}
+
+.chro-day.today {
+  background: linear-gradient(180deg, rgba(224, 192, 88, 0.1) 0%, transparent 100%);
+  border: 1px solid rgba(224, 192, 88, 0.3);
+}
+
+.chro-date-num {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  color: #fff;
+  opacity: 0.7;
+  margin-bottom: 0.5rem;
+}
+.chro-day:hover .chro-date-num { opacity: 1; }
+.chro-day.today .chro-date-num { color: var(--chro-cal-accent); opacity: 1; font-weight: 700; }
+
+/* Event Indicators - Minimalist/Clean */
+.chro-events-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.chro-event-item {
+  font-size: 0.8rem;
+  padding: 6px 10px;
+  border-left: 2px solid;
+  background: rgba(255,255,255,0.03);
+  color: #ccc;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s, background 0.2s;
+  will-change: transform;
+}
+
+.chro-event-item::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; bottom: 0; right: 0;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 0;
+}
+.chro-event-item:hover {
+  transform: translateX(4px);
+  background: rgba(255,255,255,0.08);
+}
+.chro-event-item span { position: relative; z-index: 1; }
+
+/* Types */
+.chro-event-item.holiday { border-color: #ef4444; color: #fca5a5; }
+.chro-event-item.event { border-color: #d4af37; color: #fceda3; }
+.chro-event-item.meeting { border-color: #ffffff; color: #e5e5e5; }
+
+/* Modal - Premium Card */
+.chro-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(45, 35, 15, 0.85), rgba(5, 5, 5, 0.98)); /* Premium Gold-tinted dark gradient */
+  backdrop-filter: blur(12px); /* Softer, premium blur */
+  z-index: 99999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Override Shared Popup Z-Index to appear above Calendar Modal */
+.popup-done-chro-overlay,
+.popup-error-chro-overlay,
+.chro-sending-overlay,
+.confirm-modal-overlay-chro {
+    z-index: 100000 !important;
+}
+
+.chro-modal-panel {
+  background: #0a0a0a;
+  width: 90%;
+  max-width: 500px;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  box-shadow: 0 0 60px rgba(0,0,0,0.8);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Modal Texture */
+.chro-modal-panel::before {
+  content: '';
+  position: absolute;
+  top: 0; right: 0; width: 150px; height: 150px;
+  background: linear-gradient(135deg, transparent 50%, rgba(212, 175, 55, 0.05) 50%);
+  pointer-events: none;
+}
+
+.chro-modal-header {
+  padding: 2rem;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.chro-modal-header h2 {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  margin: 0;
+  color: var(--chro-cal-accent);
+}
+.chro-modal-header span {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #666;
+}
+
+.chro-modal-body {
+  padding: 2rem;
+}
+
+.chro-input-group {
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.chro-input-group label {
+  position: absolute;
+  top: -10px;
+  left: 0;
+  font-size: 0.7rem;
+  color: var(--chro-cal-accent);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.chro-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #333;
+  padding: 10px 0;
+  color: white;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  transition: all 0.3s;
+}
+.chro-input:focus {
+  outline: none;
+  border-bottom-color: var(--chro-cal-accent);
+  box-shadow: 0 4px 10px -4px rgba(212, 175, 55, 0.1);
+}
+
+.chro-modal-footer {
+  padding: 0 2rem 2rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.chro-btn-cancel {
+  background: transparent;
+  border: none;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.chro-btn-cancel:hover { color: #fff; }
+
+.chro-btn-submit {
+  background: var(--chro-cal-accent);
+  color: #000;
+  border: none;
+  padding: 12px 30px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.chro-btn-submit:hover {
+  background: #fff;
+  box-shadow: 0 0 20px var(--chro-cal-accent-glow);
+}
+
+@media (max-width: 768px) {
+  /* Header Layout: Vertical Stack (Title / Controls) */
+  .chro-calendar-header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+      padding: 16px 16px 16px; /* Increased bottom padding */
+      position: relative;
+      background: linear-gradient(to bottom, #161616, #111);
+      border-bottom: 5px solid rgba(224, 192, 88, 0.1); /* Thicker bottom border for separation */
+      box-sizing: border-box;
+      width: 100%;
+  }
+
+  /* 1. Month Title Section - CENTERED */
+  .chro-header-left {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center; /* Center horizontally */
+      margin-bottom: 8px; /* More space below title */
+      text-align: center;
+  }
+
+  .chro-header-left h1 { 
+      font-size: 2.2rem;
+      line-height: 1;
+      margin: 0;
+      background: linear-gradient(45deg, #fff, #e0c058);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      padding: 0;
+  }
+  .chro-header-left p {
+      font-size: 0.7rem;
+      letter-spacing: 3px;
+      margin-top: 6px;
+      color: #999; /* Lighter text for subtitle */
+      padding: 0;
+  }
+  
+  /* 2. Controls Row - CENTERED */
+  .chro-controls {
+      width: 100%;
+      display: flex;
+      flex-direction: row;
+      justify-content: center; /* Center the group */
+      align-items: center;
+      gap: 16px; /* Gap between Nav and Add Button */
+  }
+  
+  /* Navigation Group */
+  .chro-nav-group {
+      margin: 0;
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      background: rgba(255,255,255,0.05); /* Glassy background */
+      border-radius: 20px; /* Fully rounded pill */
+      padding: 4px 6px;
+      border: 1px solid rgba(255,255,255,0.05);
+  }
+  .chro-nav-btn {
+      width: 36px; height: 36px; /* Slightly larger targets */
+      color: #aaa;
+  }
+  .chro-nav-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+  /* "New Agenda" Button - Icon Only Squircle (Right side) */
+  .chro-create-btn {
+      position: static;
+      width: 44px; /* Fixed size squircle */
+      height: 44px;
+      padding: 0;
+      border-radius: 14px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--chro-cal-accent);
+      color: #000;
+      box-shadow: 0 4px 12px rgba(224, 192, 88, 0.3);
+      border: none;
+  }
+  
+  /* Icon styling */
+  .chro-create-btn .chro-btn-icon {
+      width: 24px;
+      height: 24px;
+      stroke-width: 3px; /* Bold icon */
+  }
+  
+  /* Hide text on mobile */
+  .chro-create-btn .chro-btn-text {
+      display: none;
+  }
+  
+  /* Remove old pseudo-element hack */
+  .chro-create-btn::after {
+      content: none;
+  }
+  
+  .chro-create-btn:active { transform: scale(0.95); }
+
+  /* Grid Fixes */
+  .chro-grid-header {
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .chro-dow { font-size: 0; }
+  .chro-dow::first-letter { font-size: 0.8rem; font-weight: 700; color: #666; }
+
+  .chro-day { 
+      min-height: 70px; 
+      padding: 4px; 
+  }
+  .chro-date-num { 
+      font-size: 0.95rem; 
+      margin-bottom: 4px;
+  }
+  
+  /* Event Dots */
+  .chro-events-container {
+      flex-direction: row;
+      justify-content: center;
+      gap: 3px;
+      height: 6px;
+  }
+  .chro-event-item {
+      padding: 0;
+      width: 6px;
+      height: 6px;
+  }
+}
+
+/* --- Local Popups for Calendar CHRO --- */
+
+/* Overlay - Top Z-Index */
+.chro-local-overlay {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    z-index: 100000; /* Highest priority */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: chroFadeIn 0.2s ease-out;
+}
+
+/* Modal Card */
+.chro-local-card {
+    background: linear-gradient(135deg, #1a1a1a, #0a0a0a);
+    border: 1px solid rgba(224, 192, 88, 0.3); /* Gold border */
+    border-radius: 16px;
+    padding: 32px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 30px rgba(224, 192, 88, 0.1);
+    animation: chroScaleIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Icon Wrapper */
+.chro-local-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    font-size: 32px;
+}
+
+.chro-local-icon.loading {
+    border: 3px solid rgba(224, 192, 88, 0.1);
+    border-top: 3px solid #e0c058;
+    animation: chroSpin 1s linear infinite;
+}
+
+.chro-local-icon.success {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.chro-local-icon.warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.chro-local-icon.error {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+/* Typography */
+.chro-local-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 8px;
+    font-family: var(--font-display, sans-serif);
+}
+
+.chro-local-desc {
+    font-size: 1rem;
+    color: #aaa;
+    margin-bottom: 24px;
+    line-height: 1.5;
+}
+
+/* Actions */
+.chro-local-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+}
+
+.chro-local-btn {
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+    border: none;
+}
+
+.chro-local-btn.cancel {
+    background: transparent;
+    border: 1px solid #444;
+    color: #ccc;
+}
+.chro-local-btn.cancel:hover { border-color: #fff; color: #fff; }
+
+.chro-local-btn.confirm {
+    background: #e0c058;
+    color: #000;
+}
+.chro-local-btn.confirm:hover {
+    background: #f0d068;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(224, 192, 88, 0.4);
+}
+
+/* Notification Toast */
+.chro-local-toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #1a1a1a;
+    border-left: 4px solid #ef4444; /* Error red default */
+    padding: 16px 24px;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    z-index: 100001; /* Above modals if needed */
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 300px;
+    animation: chroSlideInRight 0.3s ease-out;
+}
+
+.chro-local-toast.success { border-left-color: #10b981; }
+.chro-local-toast-content h4 { margin: 0 0 4px; color: #fff; font-size: 1rem; }
+.chro-local-toast-content p { margin: 0; color: #bbb; font-size: 0.85rem; }
+
+/* Animations */
+@keyframes chroFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes chroScaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes chroSpin { to { transform: rotate(360deg); } }
+@keyframes chroSlideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }

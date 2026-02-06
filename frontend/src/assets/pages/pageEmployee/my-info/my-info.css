@@ -635,3 +635,72 @@
     justify-content: center;
   }
 }
+
+@media (max-width: 768px) {
+  .my-info-container {
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden; /* Prevent body scroll, handle inside content */
+  }
+
+  .my-info-content {
+    padding: 20px 16px; /* Reduce padding */
+    height: auto;
+    flex: 1;
+    overflow-y: auto;
+    width: 100%;
+  }
+
+  /* Header adjustments for mobile */
+  .my-info-header-card {
+    margin-bottom: 24px;
+    border-radius: 16px;
+  }
+
+  .my-info-cover-bg {
+    height: 140px;
+  }
+
+  .my-info-header-content {
+    margin-top: -60px;
+    padding: 0 16px 24px;
+  }
+
+  .my-info-pic,
+  .my-info-pic-placeholder {
+    width: 110px;
+    height: 110px;
+    border-width: 3px;
+  }
+
+  .my-info-identity h1 {
+    font-size: 2rem;
+  }
+
+  .verified-badge {
+    width: 24px;
+    height: 24px;
+  }
+
+  .my-info-role-badge {
+    font-size: 0.9rem;
+    padding: 4px 16px;
+    margin-bottom: 16px;
+  }
+
+  /* Stack Grid Cols */
+  .my-info-grid {
+    gap: 16px;
+    padding-bottom: 80px; /* Extra space for bottom safe area */
+  }
+
+  /* Adjust Cards */
+  .my-info-card {
+    padding: 20px;
+    border-radius: 16px;
+  }
+  
+  .my-info-grid-2-col {
+    grid-template-columns: 1fr; /* Stack inner grid */
+  }
+}

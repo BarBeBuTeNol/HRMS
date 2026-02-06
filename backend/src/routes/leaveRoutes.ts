@@ -6,17 +6,21 @@ const router = Router();
 
 // POST: ส่งคำขอลา (Employee)
 router.post("/", async (req, res) => {
+  console.log("📥 POST /leave-requests Body:", req.body);
   try {
     const { user_id, leave_type, start_date, end_date, reason } = req.body;
 
     // 1) insert leave request
+    console.log("➡️ Inserting leave request...");
     const [result] = await pool.query<ResultSetHeader>(
       `INSERT INTO leave_requests (user_id, leave_type, start_date, end_date, reason, status)
        VALUES (?, ?, ?, ?, ?, 'pending')`,
       [user_id, leave_type, start_date, end_date, reason],
     );
+    console.log("✅ Leave request inserted. ID:", (result as any).insertId);
 
     // 2) ดึงข้อมูลพนักงานหรกำ
+    console.log("➡️ Fetching employee info for user_id:", user_id);
     const [[emp]]: any = await pool.query(
       `SELECT u.first_name, u.last_name, u.department_id
        FROM users u
@@ -25,7 +29,10 @@ router.post("/", async (req, res) => {
     );
 
     if (emp) {
+      console.log("✅ Employee found:", emp.first_name, "Dept:", emp.department_id);
+      
       // 3) หา head ของแผนก
+      console.log("➡️ Finding Head of Dept:", emp.department_id);
       const [[head]]: any = await pool.query(
         `SELECT u.id, u.first_name, u.last_name
          FROM users u
@@ -35,17 +42,26 @@ router.post("/", async (req, res) => {
       );
 
       if (head) {
+        console.log("✅ Head found:", head.id);
         // 4) แจ้งเตือนหัวหน้า
         const message = `${emp.first_name} ${emp.last_name} ขอ "${leave_type}" ${start_date} ถึง ${end_date}`;
-        await pool.query(
-          `INSERT INTO notifications (user_id, message)
-           VALUES (?, ?)`,
-          [head.id, message],
-        );
-        console.log("✅ Notification sent to Head:", head.id);
+        console.log("➡️ Inserting notification for head...");
+        
+        try {
+            await pool.query(
+              `INSERT INTO notifications (user_id, message, type, is_read, created_at)
+               VALUES (?, ?, 'system', 0, NOW())`,
+              [head.id, message],
+            );
+            console.log("✅ Notification sent to Head:", head.id);
+        } catch (notifErr: any) {
+            console.error("⚠️ Failed to send notification (non-fatal):", notifErr.message);
+        }
       } else {
         console.log("⚠️ ไม่มีหัวหน้าใน department:", emp.department_id);
       }
+    } else {
+        console.warn("⚠️ Employee not found for user_id:", user_id);
     }
 
     res.json({
@@ -54,13 +70,15 @@ router.post("/", async (req, res) => {
       insertId: (result as any).insertId,
     });
   } catch (error: any) {
-    console.error("❌ Error in POST /leave-requests:", error);
+    console.error("❌ Error in POST /leave-requests FULL ERROR:", error);
     res
       .status(500)
       .json({
         success: false,
-        message: "เกิดข้อผิดพลาด",
+        message: "เกิดข้อผิดพลาดในการบันทึกข้อมูล",
         error: error.message,
+        sqlMessage: error.sqlMessage, // Return SQL error if available
+        stack: error.stack // useful for us to see where it failed if user shows response
       });
   }
 });
@@ -84,6 +102,64 @@ router.get("/all", async (req, res) => {
   }
 });
 
+// GET: Fetch all leave types (For dropdowns)
+router.get("/types", async (req, res) => {
+  try {
+    const [rows] = await pool.query("SELECT * FROM leave_types ORDER BY id ASC");
+    res.json(rows);
+  } catch (error: any) {
+    console.error("❌ Error in GET /leave-requests/types:", error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+});
+
+// GET: Summary of leave usage for a user (Personal Quota)
+router.get("/summary/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // 1. Get Quotas from DB
+    const [leaveTypes]: any = await pool.query("SELECT name, default_quota, label_en FROM leave_types");
+    const quotas: Record<string, number> = {};
+    leaveTypes.forEach((lt: any) => {
+        quotas[lt.name] = lt.default_quota;
+    });
+
+    // 2. Calculate sum of days used per leave type for current year
+    const [usageRows]: any = await pool.query(
+        `SELECT leave_type, 
+                SUM(DATEDIFF(end_date, start_date) + 1) as used_days
+         FROM leave_requests
+         WHERE user_id = ? 
+           AND status = 'approved'
+           AND YEAR(start_date) = YEAR(CURDATE())
+         GROUP BY leave_type`,
+        [userId],
+      );
+
+    // Format result
+    const summary = leaveTypes.map((lt: any) => {
+      const type = lt.name;
+      const found: any = usageRows.find(
+        (r: any) => r.leave_type === type,
+      );
+      return {
+        type,
+        label: lt.label_en,
+        used: found ? parseInt(found.used_days) : 0,
+        limit: lt.default_quota,
+      };
+    });
+
+    res.json(summary);
+  } catch (error: any) {
+    console.error("❌ Error in GET /leave-requests/summary/:userId:", error);
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
+  }
+});
+
 // GET: ประวัติการลาตาม user_id
 router.get("/:userId", async (req, res) => {
   try {
@@ -99,55 +175,6 @@ router.get("/:userId", async (req, res) => {
   } catch (error) {
     console.error("❌ Error in GET /leave-requests/:userId:", error);
     res.status(500).json({ message: "เกิดข้อผิดพลาด" });
-  }
-});
-
-// GET: Summary of leave usage for a user (Personal Quota)
-router.get("/summary/:userId", async (req, res) => {
-  try {
-    const { userId } = req.params;
-    // Calculate sum of days used per leave type for current year
-    // Note: DATEDIFF + 1 is a simple approx. For exact business days, we need holiday logic similar to analytics.
-    // However, to keep it efficient in SQL, we'll use this for now or implement a robust one if needed.
-    // Ideally, we store "days_count" in DB upon approval.
-    // For now, we'll use DATEDIFF.
-    const [rows] = await pool.query(
-      `SELECT leave_type, 
-              SUM(DATEDIFF(end_date, start_date) + 1) as used_days
-       FROM leave_requests
-       WHERE user_id = ? 
-         AND status = 'approved'
-         AND YEAR(start_date) = YEAR(CURDATE())
-       GROUP BY leave_type`,
-      [userId],
-    );
-
-    // Define quotas (could be from DB in future)
-    const quotas: any = {
-      "Sick Leave": 30,
-      "Annual Leave": 15,
-      "Personal Leave": 10, // Business leave
-      Other: 5,
-    };
-
-    // Format result
-    const summary = Object.keys(quotas).map((type) => {
-      const found: any = (rows as any[]).find(
-        (r: any) => r.leave_type === type,
-      );
-      return {
-        type,
-        used: found ? parseInt(found.used_days) : 0,
-        limit: quotas[type],
-      };
-    });
-
-    res.json(summary);
-  } catch (error: any) {
-    console.error("❌ Error in GET /leave-requests/summary/:userId:", error);
-    res
-      .status(500)
-      .json({ message: "Internal server error", error: error.message });
   }
 });
 

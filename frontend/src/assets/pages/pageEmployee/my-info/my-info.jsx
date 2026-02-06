@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import api from "../../../../services/api";
 import EmployeeSidebar from "../../../Component/Employee/EmployeeSidebar";
 import "./my-info.css";
@@ -18,13 +18,13 @@ import {
   Award,
   BookOpen,
   GraduationCap,
-  ChevronLeft,
+
   Star,
   BadgeCheck, // Added
 } from "lucide-react";
 
 const ProfilePage = () => {
-  const navigate = useNavigate();
+
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -50,7 +50,7 @@ const ProfilePage = () => {
     }
 
     api
-      .get(`/api/users/${userId}/profile`)
+      .get(`/users/${userId}/profile`)
       .then((res) => setProfile(res.data))
       .catch((err) => {
         console.error(err);
@@ -102,10 +102,7 @@ const ProfilePage = () => {
         initial="hidden"
         animate="visible"
       >
-        {/* Navigation */}
-        <button className="my-info-back-btn" onClick={() => navigate(-1)}>
-          <ChevronLeft size={20} /> Back
-        </button>
+
 
         {/* Header Card */}
         <motion.div className="my-info-header-card" variants={itemVariants}>

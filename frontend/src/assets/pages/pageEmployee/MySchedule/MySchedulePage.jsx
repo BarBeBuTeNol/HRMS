@@ -11,12 +11,10 @@ import {
   Coffee,
   X,
   MapPin,
-  AlignLeft,
-  User,
 } from "lucide-react";
 import api from "../../../../services/api";
 import EmployeeSidebar from "../../../Component/Employee/EmployeeSidebar";
-import "../../../Component/calendar/Calendar.css"; // Reuse Exclusive CSS
+import "./MySchedulePage.css"; // Import the new CSS
 
 const MySchedulePage = () => {
   const [currentDate, setCurrentDate] = useState(dayjs());
@@ -36,8 +34,6 @@ const MySchedulePage = () => {
         const userStr = localStorage.getItem("currentUser");
         if (userStr) {
           const user = JSON.parse(userStr);
-          // Backend route: /api/work-schedules/user/:userId
-          // Note: check if 'id' or 'employee_id' is correct based on your auth logic. Usually 'id'.
           const userId = user.id;
           const scheduleRes = await api.get(`/work-schedules/user/${userId}`);
           setSchedule(scheduleRes.data);
@@ -47,8 +43,7 @@ const MySchedulePage = () => {
       }
     };
     fetchData();
-  }, [currentDate]); // Re-fetching on date change isn't strictly necessary if APIs return ALL data, but good if paginated.
-  // Provided APIs return ALL data, so empty dependency [] is better, but keeping simple for now.
+  }, [currentDate]);
 
   const daysInMonth = currentDate.daysInMonth();
   const firstDayOfMonth = currentDate.startOf("month").day();
@@ -61,10 +56,9 @@ const MySchedulePage = () => {
     for (let i = 1; i <= daysInMonth; i++) {
       const dateStr = currentDate.date(i).format("YYYY-MM-DD");
 
-      // Find User Shift (Real Data: work_schedules)
-      // Schema: { id, user_id, date: "2024-01-01T00:00.000Z", shift: "Morning..." }
+      // Find User Shift
       const dayShift = schedule.find(
-        (s) => dayjs(s.date).format("YYYY-MM-DD") === dateStr,
+        (s) => dayjs(s.date).format("YYYY-MM-DD") === dateStr
       );
 
       const dayCompanyEvents = companyEvents.filter((e) => {
@@ -74,6 +68,7 @@ const MySchedulePage = () => {
       const dayOfWeek = currentDate.date(i).day();
       const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // Sun=0, Sat=6
       const hasHoliday = dayCompanyEvents.some((e) => e.type === "holiday");
+      const isToday = dayjs().format("YYYY-MM-DD") === dateStr;
 
       days.push({
         type: "day",
@@ -83,6 +78,7 @@ const MySchedulePage = () => {
         companyEvents: dayCompanyEvents,
         isWeekend,
         hasHoliday,
+        isToday,
         key: `day-${i}`,
       });
     }
@@ -98,8 +94,10 @@ const MySchedulePage = () => {
     setSelectedEvent({ ...eventData, dataType: type });
   };
 
-  // Weekend Click Handler (Simple data obj)
   const handleDayClick = (item) => {
+    // If there's a shift or event, we might want to show details even if not specifically clicking the event pill
+    // But usually clicking the cell is for creating new events (admin) or just viewing summary.
+    // For now keeping existing logic: Weekend click trigger.
     if (item.isWeekend) {
       setSelectedEvent({
         title: "Weekend",
@@ -111,158 +109,42 @@ const MySchedulePage = () => {
   };
 
   return (
-    <div
-      className="layout-container"
-      style={{ height: "100vh", overflow: "hidden" }}
-    >
+    <div className="ec-layout">
       <EmployeeSidebar />
-      <div
-        className="content-area"
-        style={{
-          padding: "10px",
-          height: "100vh",
-          overflow: "hidden",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        <div
-          className="exclusive-calendar-container"
-          style={{ padding: "1rem", minHeight: 0, height: "100%" }}
-        >
+      <div className="ec-content-area">
+        <div className="ec-container">
           {/* Header */}
-          <div
-            className="exclusive-calendar-header"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: "1rem",
-              padding: "1rem 2rem",
-            }}
-          >
-            <div
-              style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}
-            >
-              <div
-                style={{
-                  padding: "12px",
-                  background: "rgba(99, 102, 241, 0.15)",
-                  borderRadius: "16px",
-                  border: "1px solid rgba(99, 102, 241, 0.25)",
-                  backdropFilter: "blur(10px)",
-                  boxShadow: "0 8px 32px rgba(99, 102, 241, 0.15)",
-                }}
-              >
+          <div className="ec-header">
+            <div className="ec-title-group">
+              <div className="ec-icon-wrapper">
                 <CalendarIcon size={28} color="#818cf8" strokeWidth={1.5} />
               </div>
-              <div
-                style={{ display: "flex", flexDirection: "column", gap: "2px" }}
-              >
-                <span
-                  style={{
-                    fontSize: "0.8rem",
-                    fontWeight: "700",
-                    color: "#a5b4fc",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.25em",
-                  }}
-                >
-                  My Schedule
-                </span>
-                <span
-                  style={{
-                    fontSize: "2rem",
-                    fontWeight: "800",
-                    background:
-                      "linear-gradient(135deg, #ffffff 0%, #c7d2fe 100%)",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                  }}
-                >
+              <div className="ec-title-text">
+                <span className="ec-subtitle">My Schedule</span>
+                <span className="ec-main-title">
                   {currentDate.format("MMMM YYYY")}
                 </span>
               </div>
             </div>
 
             {/* Navigation Buttons */}
-            <div
-              className="exclusive-calendar-nav"
-              style={{
-                display: "flex",
-                gap: "8px",
-                alignItems: "center",
-                background: "rgba(255, 255, 255, 0.05)",
-                padding: "6px",
-                borderRadius: "16px",
-                border: "1px solid rgba(255, 255, 255, 0.1)",
-              }}
-            >
-              <button
-                onClick={handlePrevMonth}
-                className="hover-bg"
-                style={{
-                  padding: "8px",
-                  background: "transparent",
-                  border: "none",
-                  color: "white",
-                  cursor: "pointer",
-                }}
-              >
+            <div className="ec-nav">
+              <button onClick={handlePrevMonth} className="ec-nav-btn">
                 <ChevronLeft size={20} />
               </button>
-              <button
-                onClick={handleToday}
-                style={{
-                  padding: "6px 16px",
-                  borderRadius: "10px",
-                  background: "rgba(99, 102, 241, 0.2)",
-                  border: "1px solid rgba(99, 102, 241, 0.3)",
-                  color: "#e0e7ff",
-                  cursor: "pointer",
-                }}
-              >
+              <button onClick={handleToday} className="ec-nav-today-btn">
                 Today
               </button>
-              <button
-                onClick={handleNextMonth}
-                className="hover-bg"
-                style={{
-                  padding: "8px",
-                  background: "transparent",
-                  border: "none",
-                  color: "white",
-                  cursor: "pointer",
-                }}
-              >
+              <button onClick={handleNextMonth} className="ec-nav-btn">
                 <ChevronRight size={20} />
               </button>
             </div>
           </div>
 
           {/* Weekday Headers */}
-          <div
-            className="exclusive-calendar-grid"
-            style={{
-              marginBottom: "0.5rem",
-              gap: "8px",
-              flexGrow: 0, // Prevent headers from growing
-              height: "auto", // Take only necessary height
-              minHeight: "auto",
-            }}
-          >
+          <div className="ec-week-header">
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-              <div
-                key={d}
-                className="exclusive-calendar-day-header"
-                style={{
-                  padding: "0.8rem",
-                  background: "rgba(255,255,255,0.03)",
-                  borderRadius: "12px",
-                  fontSize: "0.85rem",
-                  marginBottom: 0,
-                }}
-              >
+              <div key={d} className="ec-day-name">
                 {d}
               </div>
             ))}
@@ -270,18 +152,11 @@ const MySchedulePage = () => {
 
           {/* Days Grid */}
           <motion.div
-            className="exclusive-calendar-grid"
+            className="ec-grid"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
             key={currentDate.format("YYYY-MM")}
-            style={{
-              gap: "8px",
-              flexGrow: 1,
-              display: "grid",
-              gridTemplateColumns: "repeat(7, 1fr)",
-              gridTemplateRows: "repeat(6, 1fr)", // Fixed 6 rows for consistency
-            }}
           >
             {generateCalendarDays().map((item) =>
               item.type === "empty" ? (
@@ -290,68 +165,20 @@ const MySchedulePage = () => {
                 <div
                   key={item.key}
                   onClick={() => handleDayClick(item)}
-                  className={`exclusive-calendar-day ${
-                    dayjs().format("YYYY-MM-DD") === item.date ? "today" : ""
-                  } ${item.isWeekend || item.hasHoliday ? "holiday-mode" : ""}`}
-                  style={{
-                    minHeight: "0" /* Allow Flex Shrink */,
-                    height: "100%" /* Fill Grid Cell */,
-                    background:
-                      dayjs().format("YYYY-MM-DD") === item.date
-                        ? "rgba(99, 102, 241, 0.15)"
-                        : "rgba(30, 30, 46, 0.6)",
-                    border:
-                      dayjs().format("YYYY-MM-DD") === item.date
-                        ? "1px solid #818cf8"
-                        : "1px solid rgba(255, 255, 255, 0.05)",
-                    padding: "6px", // Reduced padding
-                    gap: "4px",
-                    borderRadius: "12px", // Slightly tighter radius
-                    boxShadow:
-                      dayjs().format("YYYY-MM-DD") === item.date
-                        ? "0 0 30px rgba(99, 102, 241, 0.1)"
-                        : "none",
-                    display: "flex",
-                    flexDirection: "column",
-                  }}
+                  className={`ec-day-cell ${item.isToday ? "today" : "default"} 
+                    ${item.isWeekend || item.hasHoliday ? "holiday-mode" : ""}`}
                 >
                   {/* Date Number */}
                   <div
-                    style={{
-                      width: "24px", // Smaller circle
-                      height: "24px",
-                      minHeight: "24px", // Prevent shrinking
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      borderRadius: "50%",
-                      fontSize: "0.8rem", // Smaller font
-                      fontWeight: "bold",
-                      alignSelf: "flex-end", // Align to top-right corner
-                      background:
-                        dayjs().format("YYYY-MM-DD") === item.date
-                          ? "#818cf8"
-                          : "rgba(255,255,255,0.05)",
-                      color:
-                        dayjs().format("YYYY-MM-DD") === item.date
-                          ? "white"
-                          : "rgba(255,255,255,0.4)",
-                      marginBottom: "4px",
-                    }}
+                    className={`ec-date-number ${
+                      item.isToday ? "today" : "default"
+                    }`}
                   >
                     {item.day}
                   </div>
 
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "2px",
-                      overflowY: "auto",
-                      scrollbarWidth: "none",
-                      flexGrow: 1, // Fill remaining space
-                    }}
-                  >
+                  {/* Events List (Desktop) */}
+                  <div className="ec-events-list">
                     {/* Personal Shift */}
                     {item.shift && (
                       <motion.div
@@ -360,42 +187,18 @@ const MySchedulePage = () => {
                           handleEventClick(item.shift, "shift");
                         }}
                         whileHover={{ scale: 1.02 }}
-                        style={{
-                          padding: "6px 10px", // Increased padding
-                          borderRadius: "6px",
-                          background:
-                            item.shift.shift === "Day Off"
-                              ? "rgba(239, 68, 68, 0.15)"
-                              : "rgba(16, 185, 129, 0.15)",
-                          border:
-                            item.shift.shift === "Day Off"
-                              ? "1px solid rgba(239, 68, 68, 0.3)"
-                              : "1px solid rgba(16, 185, 129, 0.3)",
-                          color:
-                            item.shift.shift === "Day Off"
-                              ? "#fca5a5"
-                              : "#6ee7b7",
-                          fontSize: "0.9rem", // Increased font size
-                          fontWeight: "600",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          cursor: "pointer",
-                          marginBottom: "4px",
-                        }}
+                        className={`ec-event-item ${
+                          item.shift.shift === "Day Off"
+                            ? "ec-shift-off"
+                            : "ec-shift-work"
+                        }`}
                       >
                         {item.shift.shift === "Day Off" ? (
-                          <Coffee size={14} /> // Increased icon size
+                          <Coffee size={14} />
                         ) : (
-                          <Clock size={14} /> // Increased icon size
+                          <Clock size={14} />
                         )}
-                        <span
-                          style={{
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                          }}
-                        >
+                        <span className="ec-event-text">
                           {item.shift.shift}
                         </span>
                       </motion.div>
@@ -411,122 +214,88 @@ const MySchedulePage = () => {
                             handleEventClick(event, "event");
                           }}
                           whileHover={{ scale: 1.02 }}
-                          style={{
-                            padding: "6px 10px", // Increased padding
-                            borderRadius: "6px",
-                            background:
-                              event.type === "holiday"
-                                ? "rgba(244, 114, 182, 0.15)"
-                                : "rgba(59, 130, 246, 0.15)",
-                            border:
-                              event.type === "holiday"
-                                ? "1px solid rgba(244, 114, 182, 0.3)"
-                                : "1px solid rgba(59, 130, 246, 0.3)",
-                            color:
-                              event.type === "holiday" ? "#fbcfe8" : "#bfdbfe",
-                            fontSize: "0.9rem", // Increased font size
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "6px",
-                            cursor: "pointer",
-                            marginBottom: "4px",
-                          }}
+                          className={`ec-event-item ${
+                            event.type === "holiday"
+                              ? "ec-event-holiday"
+                              : "ec-event-normal"
+                          }`}
                         >
-                          <Briefcase size={14} /> {/* Increased icon size */}
-                          <span
-                            style={{
-                              whiteSpace: "nowrap",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                            }}
-                          >
+                          <Briefcase size={14} />
+                          <span className="ec-event-text">
                             {event.title || event.event_name}
                           </span>
                         </motion.div>
                       ))}
                   </div>
+
+                  {/* Mobile Dots (Hidden on Desktop) */}
+                  <div className="ec-mobile-dots">
+                    {item.shift && (
+                      <div
+                        className="ec-dot"
+                        style={{
+                          background:
+                            item.shift.shift === "Day Off"
+                              ? "#fca5a5"
+                              : "#6ee7b7",
+                        }}
+                      />
+                    )}
+                    {item.companyEvents &&
+                      item.companyEvents.map((e, idx) => (
+                        <div
+                           key={idx}
+                           className="ec-dot"
+                           style={{
+                             background: e.type === "holiday" ? "#fbcfe8" : "#bfdbfe"
+                           }}
+                        />
+                      ))}
+                  </div>
                 </div>
-              ),
+              )
             )}
           </motion.div>
+
           {/* Details Modal */}
           <AnimatePresence>
             {selectedEvent && (
               <motion.div
-                className="exclusive-calendar-modal-overlay"
+                className="ec-modal-overlay"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setSelectedEvent(null)}
-                style={{
-                  position: "fixed",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  background: "rgba(0,0,0,0.6)",
-                  backdropFilter: "blur(8px)",
-                  zIndex: 1000,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
               >
-                {/* Modal Content */}
                 <motion.div
-                  className="exclusive-calendar-modal"
+                  className={`ec-modal ${
+                    selectedEvent.type === "holiday" ? "holiday" : ""
+                  }`}
                   initial={{ scale: 0.9, opacity: 0, y: 20 }}
                   animate={{ scale: 1, opacity: 1, y: 0 }}
                   exit={{ scale: 0.9, opacity: 0, y: 20 }}
                   onClick={(e) => e.stopPropagation()}
-                  style={{
-                    background:
-                      selectedEvent.type === "holiday"
-                        ? "linear-gradient(135deg, #450a0a 0%, #1e1e2e 100%)" // Red tint for holiday
-                        : "#1e1e2e",
-                    padding: "30px",
-                    borderRadius: "24px",
-                    width: "450px",
-                    maxWidth: "90%",
-                    border:
-                      selectedEvent.type === "holiday"
-                        ? "1px solid rgba(239, 68, 68, 0.5)" // Red border
-                        : "1px solid rgba(255,255,255,0.1)",
-                    boxShadow:
-                      selectedEvent.type === "holiday"
-                        ? "0 25px 50px -12px rgba(220, 38, 38, 0.25)" // Red glow
-                        : "0 25px 50px -12px rgba(0,0,0,0.5)",
-                  }}
                 >
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "flex-start",
-                      marginBottom: "20px",
-                    }}
-                  >
+                  <div className="ec-modal-header">
                     <div
+                      className="ec-modal-icon-box"
                       style={{
-                        padding: "12px",
-                        borderRadius: "12px",
-                        // Icon Background Logic
                         background:
                           selectedEvent.dataType === "shift"
                             ? selectedEvent.shift === "Day Off"
                               ? "rgba(239, 68, 68, 0.2)"
                               : "rgba(16, 185, 129, 0.2)"
                             : selectedEvent.type === "holiday"
-                              ? "rgba(239, 68, 68, 0.2)" // Red for Holiday
-                              : "rgba(59, 130, 246, 0.2)",
+                            ? "rgba(239, 68, 68, 0.2)"
+                            : "rgba(59, 130, 246, 0.2)",
                         color:
                           selectedEvent.dataType === "shift"
                             ? selectedEvent.shift === "Day Off"
                               ? "#fca5a5"
                               : "#6ee7b7"
                             : selectedEvent.type === "holiday"
-                              ? "#fca5a5" // Red for Holiday
-                              : "#93c5fd",
+                            ? "#fca5a5"
+                            : "#93c5fd",
                       }}
                     >
                       {selectedEvent.dataType === "shift" ? (
@@ -537,84 +306,36 @@ const MySchedulePage = () => {
                     </div>
                     <button
                       onClick={() => setSelectedEvent(null)}
-                      style={{
-                        background: "transparent",
-                        border: "none",
-                        color: "rgba(255,255,255,0.5)",
-                        cursor: "pointer",
-                      }}
+                      className="ec-modal-close-btn"
                     >
                       <X size={24} />
                     </button>
                   </div>
 
                   <h2
-                    style={{
-                      fontSize: "1.5rem",
-                      fontWeight: "bold",
-                      color:
-                        selectedEvent.type === "holiday" ? "#fecaca" : "white", // Light red text
-                      marginBottom: "8px",
-                    }}
+                    className={`ec-modal-title ${
+                      selectedEvent.type === "holiday" ? "red" : ""
+                    }`}
                   >
                     {selectedEvent.dataType === "shift"
                       ? selectedEvent.shift
                       : selectedEvent.title || selectedEvent.event_name}
                   </h2>
 
-                  <p
-                    style={{
-                      color: "rgba(255,255,255,0.6)",
-                      fontSize: "0.95rem",
-                      marginBottom: "24px",
-                    }}
-                  >
+                  <p className="ec-modal-date">
                     {dayjs(selectedEvent.date).format("dddd, D MMMM YYYY")}
                   </p>
 
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "16px",
-                    }}
-                  >
+                  <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                     {selectedEvent.dataType === "event" &&
                       selectedEvent.description && (
                         <div
-                          style={{
-                            background:
-                              selectedEvent.type === "holiday"
-                                ? "rgba(239, 68, 68, 0.1)"
-                                : "rgba(255,255,255,0.03)",
-                            padding: "16px",
-                            borderRadius: "12px",
-                            border:
-                              selectedEvent.type === "holiday"
-                                ? "1px solid rgba(239, 68, 68, 0.2)"
-                                : "none",
-                          }}
+                          className={`ec-info-box ${
+                            selectedEvent.type === "holiday" ? "red-tint" : ""
+                          }`}
                         >
-                          <h4
-                            style={{
-                              color:
-                                selectedEvent.type === "holiday"
-                                  ? "rgba(254, 202, 202, 0.7)"
-                                  : "rgba(255,255,255,0.5)",
-                              fontSize: "0.75rem",
-                              textTransform: "uppercase",
-                              letterSpacing: "1px",
-                              marginBottom: "8px",
-                            }}
-                          >
-                            Description
-                          </h4>
-                          <p
-                            style={{
-                              color: "rgba(255,255,255,0.9)",
-                              lineHeight: "1.5",
-                            }}
-                          >
+                          <h4 className="ec-info-label">Description</h4>
+                          <p className="ec-info-value">
                             {selectedEvent.description}
                           </p>
                         </div>
@@ -633,19 +354,8 @@ const MySchedulePage = () => {
                       >
                         <MapPin size={20} color="rgba(255,255,255,0.5)" />
                         <div>
-                          <h4
-                            style={{
-                              color: "rgba(255,255,255,0.5)",
-                              fontSize: "0.75rem",
-                              textTransform: "uppercase",
-                              letterSpacing: "1px",
-                            }}
-                          >
-                            Location
-                          </h4>
-                          <p style={{ color: "rgba(255,255,255,0.9)" }}>
-                            Head Office, Floor 3
-                          </p>
+                          <h4 className="ec-info-label">Location</h4>
+                          <p className="ec-info-value">Head Office, Floor 3</p>
                         </div>
                       </div>
                     )}

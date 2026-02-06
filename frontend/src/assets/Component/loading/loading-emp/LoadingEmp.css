@@ -1,64 +1,174 @@
 @import "../../../theam/epm_theam/EmployeeTheme.css";
 
+/* --- Container & Background --- */
 .loading-emp-container {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: var(--emp-bg);
+  /* Deep, rich animated gradient background */
+  background: radial-gradient(circle at 50% 120%, #1e1b4b 0%, #0f172a 60%, #000000 100%);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 9999;
+  overflow: hidden;
+  perspective: 1000px;
 }
 
-.loading-emp-card {
-  background: white;
-  padding: 2.5rem;
-  border-radius: 1rem;
-  box-shadow: var(--emp-shadow);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.5rem;
-  border: 1px solid var(--emp-divider);
+/* --- Particles --- */
+.particles-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
 }
 
-.loading-emp-dots {
-  display: flex;
-  gap: 0.75rem;
+.particle {
+    position: absolute;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.4) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: floatParticle 10s infinite ease-in-out alternate;
 }
 
-.dot {
-  width: 0.75rem;
-  height: 0.75rem;
-  background: var(--emp-accent-color);
-  border-radius: 50%;
-  animation: empBounce 0.6s infinite alternate;
+.p1 { width: 300px; height: 300px; top: -50px; left: -50px; animation-duration: 15s; }
+.p2 { width: 200px; height: 200px; bottom: 10%; right: 10%; animation-duration: 12s; animation-delay: 2s; background: radial-gradient(circle, rgba(56, 189, 248, 0.3) 0%, transparent 70%); }
+.p3 { width: 150px; height: 150px; top: 20%; right: 30%; animation-duration: 18s; animation-delay: 1s; opacity: 0.6; }
+
+/* --- Wrapper --- */
+.loading-core-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2.5rem;
+    z-index: 10;
 }
 
-.dot:nth-child(2) {
-  animation-delay: 0.2s;
-}
-.dot:nth-child(3) {
-  animation-delay: 0.4s;
-}
-
-.loading-emp-text {
-  font-family: "Inter", sans-serif;
-  color: var(--emp-text-secondary);
-  font-size: 1rem;
-  font-weight: 500;
+/* --- Crystal Loader Animation --- */
+.crystal-loader {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    transform-style: preserve-3d;
+    animation: crystalFloat 4s ease-in-out infinite;
 }
 
-@keyframes empBounce {
-  from {
-    transform: translateY(0);
-    opacity: 0.7;
-  }
-  to {
-    transform: translateY(-10px);
-    opacity: 1;
-  }
+.crystal-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(4px);
+    border-radius: 12px;
+    /* Beautiful glass glow */
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.2), inset 0 0 20px rgba(99, 102, 241, 0.1);
+}
+
+.f1 { transform: rotateY(0deg) translateZ(20px); animation: spinFace1 3s infinite linear; border-color: rgba(99, 102, 241, 0.6); }
+.f2 { transform: rotateY(60deg) translateZ(20px); animation: spinFace2 3s infinite linear reverse; border-color: rgba(56, 189, 248, 0.6); }
+.f3 { transform: rotateX(45deg) translateZ(10px) scale(0.6); border-radius: 50%; border: 2px dashed rgba(255, 255, 255, 0.8); animation: spinRing 8s infinite linear; }
+
+.core-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 40px 10px rgba(99, 102, 241, 0.8);
+    animation: corePulse 1.5s infinite ease-in-out;
+}
+
+/* --- Text & Progress --- */
+.loading-text-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    opacity: 0;
+    animation: fadeInUp 0.8s ease-out 0.2s forwards;
+}
+
+.loading-title {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 300;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: white;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    background: linear-gradient(to right, #ffffff, #94a3b8);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.loading-bar-wrapper {
+    width: 200px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+}
+
+.loading-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 40%;
+    background: linear-gradient(90deg, transparent, #818cf8, #38bdf8, transparent);
+    animation: loadingScan 1.5s infinite linear;
+}
+
+.loading-subtitle {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.5);
+    letter-spacing: 1px;
+}
+
+/* --- Keyframes --- */
+@keyframes floatParticle {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(30px, -30px); }
+}
+
+@keyframes crystalFloat {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-15px) rotate(2deg); }
+}
+
+@keyframes spinFace1 {
+    0% { transform: rotateY(0deg) rotateX(0deg); }
+    100% { transform: rotateY(360deg) rotateX(360deg); }
+}
+@keyframes spinFace2 {
+    0% { transform: rotateY(60deg) rotateZ(0deg); }
+    100% { transform: rotateY(420deg) rotateZ(360deg); }
+}
+@keyframes spinRing {
+    0% { transform: rotateX(45deg) rotateZ(0deg) scale(0.6); }
+    100% { transform: rotateX(45deg) rotateZ(360deg) scale(0.6); }
+}
+
+@keyframes corePulse {
+    0%, 100% { opacity: 0.8; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 0.4; transform: translate(-50%, -50%) scale(0.8); }
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes loadingScan {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(300%); }
 }
