@@ -877,23 +877,25 @@ const DecideCHRO = () => {
                     <div className="decide-chro-actions">
                       {n.type === "leave_request" && (
                         <>
-                          <button
-                            className="decide-chro-btn decide-chro-btn-approve"
-                            style={
-                              n.status === "approved"
-                                ? { opacity: 0.5, pointerEvents: "none" }
-                                : {}
-                            }
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleApproveLeave(n);
-                            }}
-                          >
-                            <span className="decide-chro-btn-icon">✅</span>{" "}
-                            {n.status === "approved"
-                              ? "อนุมัติแล้ว"
-                              : "อนุมัติ"}
-                          </button>
+                          {n.status !== "rejected" && (
+                            <button
+                              className="decide-chro-btn decide-chro-btn-approve"
+                              style={
+                                n.status === "approved"
+                                  ? { opacity: 0.5, pointerEvents: "none" }
+                                  : {}
+                              }
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleApproveLeave(n);
+                              }}
+                            >
+                              <span className="decide-chro-btn-icon">✅</span>{" "}
+                              {n.status === "approved"
+                                ? "อนุมัติแล้ว"
+                                : "อนุมัติ"}
+                            </button>
+                          )}
                           {n.status !== "approved" &&
                             n.status !== "rejected" && (
                               <button
@@ -930,23 +932,25 @@ const DecideCHRO = () => {
                       )}
                       {n.type === "change_request" && (
                         <>
-                          <button
-                            className="decide-chro-btn decide-chro-btn-approve"
-                            style={
-                              n.status === "approved"
-                                ? { opacity: 0.5, pointerEvents: "none" }
-                                : {}
-                            }
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleChangeRequestAction(n, "approve");
-                            }}
-                          >
-                            <span className="decide-chro-btn-icon">✅</span>{" "}
-                            {n.status === "approved"
-                              ? "อนุมัติแล้ว"
-                              : "อนุมัติ"}
-                          </button>
+                          {n.status !== "rejected" && (
+                            <button
+                              className="decide-chro-btn decide-chro-btn-approve"
+                              style={
+                                n.status === "approved"
+                                  ? { opacity: 0.5, pointerEvents: "none" }
+                                  : {}
+                              }
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleChangeRequestAction(n, "approve");
+                              }}
+                            >
+                              <span className="decide-chro-btn-icon">✅</span>{" "}
+                              {n.status === "approved"
+                                ? "อนุมัติแล้ว"
+                                : "อนุมัติ"}
+                            </button>
+                          )}
                           {n.status !== "approved" &&
                             n.status !== "rejected" && (
                               <button
@@ -1152,21 +1156,23 @@ const DecideCHRO = () => {
                 >
                   {selectedNotification.type === "leave_request" && (
                     <>
-                      <button
-                        className="decide-chro-btn decide-chro-btn-approve"
-                        disabled={selectedNotification.status === "approved"}
-                        style={
-                          selectedNotification.status === "approved"
-                            ? { opacity: 0.5 }
-                            : {}
-                        }
-                        onClick={() => handleApproveLeave(selectedNotification)}
-                      >
-                        ✅{" "}
-                        {selectedNotification.status === "approved"
-                          ? "อนุมัติแล้ว"
-                          : "อนุมัติ"}
-                      </button>
+                      {selectedNotification.status !== "rejected" && (
+                        <button
+                          className="decide-chro-btn decide-chro-btn-approve"
+                          disabled={selectedNotification.status === "approved"}
+                          style={
+                            selectedNotification.status === "approved"
+                              ? { opacity: 0.5 }
+                              : {}
+                          }
+                          onClick={() => handleApproveLeave(selectedNotification)}
+                        >
+                          ✅{" "}
+                          {selectedNotification.status === "approved"
+                            ? "อนุมัติแล้ว"
+                            : "อนุมัติ"}
+                        </button>
+                      )}
                       {selectedNotification.status !== "approved" &&
                         selectedNotification.status !== "rejected" && (
                           <button
