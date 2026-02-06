@@ -70,6 +70,9 @@ const LeaveRequestCHRO = () => {
         ...formData,
       });
 
+      // Close loading popup first
+      setIsSubmitting(false);
+
       // Show success popup
       setShowSuccess(true);
 
@@ -84,44 +87,32 @@ const LeaveRequestCHRO = () => {
     } catch (err) {
       alert("Failed to submit request");
       console.error(err);
-    } finally {
       setIsSubmitting(false);
+    } finally {
+      // isSubmitting handled in try/catch blocks to ensure no overlap
     }
   };
 
-  // CHRO Specific Popups
-  // CHRO Specific Popups
+  // Success Timer Logic
+  useEffect(() => {
+    let timer;
+    if (showSuccess) {
+      setSuccessTimeLeft(3); // Reset timer
+      timer = setInterval(() => {
+        setSuccessTimeLeft((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            navigate("/chro/dashboard");
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [showSuccess, navigate]);
 
-  const CHROSuccessPopup = () => {
-    const [timeLeft, setTimeLeft] = useState(3);
-
-    useEffect(() => {
-      if (showSuccess) {
-        const timer = setInterval(() => {
-          setTimeLeft((prev) => {
-            if (prev <= 1) {
-              clearInterval(timer);
-              navigate("/chro/dashboard");
-              return 0;
-            }
-            return prev - 1;
-          });
-        }, 1000);
-        return () => clearInterval(timer);
-      }
-    }, [showSuccess]);
-
-    return (
-      <div style={{ position: "relative" }}>
-        <PopupDoneCHRO
-          isVisible={showSuccess}
-          onClose={() => setShowSuccess(false)}
-          text="Request Authorized"
-          subText={`Redirecting to Dashboard in ${timeLeft}s...`}
-        />
-      </div>
-    );
-  };
+  const [successTimeLeft, setSuccessTimeLeft] = useState(3);
 
   // Calculate stats
   const totalLeaves = history.length;
@@ -364,7 +355,14 @@ const LeaveRequestCHRO = () => {
 
       {/* Render Popups */}
       <PopupSentDataChro isVisible={isSubmitting} />
-      <CHROSuccessPopup />
+      <div style={{ position: "relative" }}>
+        <PopupDoneCHRO
+          isVisible={showSuccess}
+          onClose={() => setShowSuccess(false)}
+          text="Request Authorized"
+          subText={`Redirecting to Dashboard in ${successTimeLeft}s...`}
+        />
+      </div>
     </CHROLayout>
   );
 };
