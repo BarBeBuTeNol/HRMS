@@ -18,6 +18,7 @@ import {
 } from "react-icons/fa";
 import HRLayout from "../../../Component/HR/HRLayout";
 import "./Show_leave.css";
+import api from "../../../../services/api";
 
 // Helper to calculate days
 const getDaysDifference = (start, end) => {
@@ -47,16 +48,10 @@ export default function ShowLeave() {
     setIsLoading(true);
     try {
       const url = isHR
-        ? "/api/leave-requests/all"
-        : `/api/leave-requests/${userId}`;
-      const res = await fetch(url);
-
-      if (res.ok) {
-        const data = await res.json();
-        setLeaves(data);
-      } else {
-        console.error("Failed to fetch leaves", res.status);
-      }
+        ? "/leave-requests/all"
+        : `/leave-requests/${userId}`;
+      const res = await api.get(url);
+      setLeaves(res.data);
     } catch (err) {
       console.error("Error fetching leaves:", err);
     } finally {

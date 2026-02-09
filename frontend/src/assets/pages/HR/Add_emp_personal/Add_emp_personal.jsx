@@ -22,6 +22,7 @@ import "./Add_emp_personal.css";
 import PopupCHRO from "../../../Component/popup_notifications/popup_notifications-chro/PopupCHRO";
 import PopupErrorCHRO from "../../../Component/popup-error/popup-error-chro/PopupErrorCHRO";
 import PopupDoneCHRO from "../../../Component/poup_done/poup_done-chro/PopupDoneCHRO";
+import api from "../../../../services/api";
 
 const AddEmpPersonal = () => {
   const navigate = useNavigate();
@@ -75,11 +76,8 @@ const AddEmpPersonal = () => {
     // Fetch Genders logic
     const fetchGenders = async () => {
       try {
-        const res = await fetch("/api/employee-data/genders");
-        if (res.ok) {
-          const data = await res.json();
-          setGenders(data);
-        }
+        const res = await api.get("/employee-data/genders");
+        setGenders(res.data);
       } catch (err) {
         console.error("Failed to fetch genders", err);
       }
@@ -116,13 +114,12 @@ const AddEmpPersonal = () => {
     // Fetch full details from backend
     const fetchDetails = async () => {
       try {
-        const res = await fetch(`/api/users/${userId}`);
-        if (res.ok) {
-          const data = await res.json();
-          // Map backend fields to form state
-          const birthDate = data.birth_date
-            ? new Date(data.birth_date).toISOString().split("T")[0]
-            : "";
+        const res = await api.get(`/users/${userId}`);
+        const data = res.data;
+        // Map backend fields to form state
+        const birthDate = data.birth_date
+          ? new Date(data.birth_date).toISOString().split("T")[0]
+          : "";
 
           // Debug data to ensure we are getting fields
           console.log("Fetched User Data:", data);
@@ -166,7 +163,7 @@ const AddEmpPersonal = () => {
           // Set original form for dirty checking (exclude image file)
           const { image, ...rest } = loadedForm;
           setOriginalForm(JSON.stringify(rest));
-        }
+
       } catch (err) {
         console.error("Failed to fetch user details", err);
       }
@@ -297,86 +294,73 @@ const AddEmpPersonal = () => {
         formData.append("image", form.image);
       }
 
-      const res = await fetch("/api/employee-data/personal", {
-        method: "POST",
-        // Do NOT set Content-Type header for FormData, browser does it automatically with boundary
-        body: formData,
-      });
+      const res = await api.post("/employee-data/personal", formData);
+      const resultData = res.data;
 
-      if (res.ok) {
-        const resultData = await res.json();
-
-        // LOGGING
-        try {
-          const currentUser = JSON.parse(
-            localStorage.getItem("currentUser") || "{}",
-          );
-          await LogService.createLog({
-            userId: currentUser.id || currentUser.user_id,
-            action: "Update Personal Info",
-            details: `Updated personal info for ${form.firstName} ${form.lastName}`,
-            target: `${form.firstName} ${form.lastName}`,
-            severity: "Info",
-          });
-        } catch (logErr) {
-          console.warn("Logging failed", logErr);
-        }
-
-        // Update original form after successful save
-        const { image, ...currentRest } = form;
-
-        // If image was uploaded, update local URL if returned
-        if (resultData.imageUrl) {
-          setForm((prev) => ({ ...prev, imageUrl: resultData.imageUrl }));
-        }
-
-        setOriginalForm(JSON.stringify(currentRest));
-
-        const empList = JSON.parse(
-          localStorage.getItem("emp_personal_list") || "[]",
+      // LOGGING
+      try {
+        const currentUser = JSON.parse(
+          localStorage.getItem("currentUser") || "{}",
         );
-        empList.push(form); // Note: This local storage list might need update if we want to store URL instead of file object, but for now keeping as is.
-        localStorage.setItem("emp_personal_list", JSON.stringify(empList));
+        await LogService.createLog({
+          userId: currentUser.id || currentUser.user_id,
+          action: "Update Personal Info",
+          details: `Updated personal info for ${form.firstName} ${form.lastName}`,
+          target: `${form.firstName} ${form.lastName}`,
+          severity: "Info",
+        });
+      } catch (logErr) {
+        console.warn("Logging failed", logErr);
+      }
 
-        if (isEditMode) {
-          setPopup({
-            isOpen: true,
-            title: "Success",
-            message: "Changes saved successfully!",
-            type: "success",
-          });
-          // Stay on page
-        } else {
-          setPopup({
-            isOpen: true,
-            title: "Success",
-            message:
-              "Personal information saved successfully! Proceeding to Job Information...",
-            type: "success",
-          });
+      // Update original form after successful save
+      const { image, ...currentRest } = form;
 
-          // Delay navigation
-          setTimeout(() => {
-            navigate("/hr/add-emp-info", {
-              state: { empPersonal: form, userId: userId },
-            });
-          }, 1500);
-        }
-      } else {
-        const err = await res.json();
+      // If image was uploaded, update local URL if returned
+      if (resultData.imageUrl) {
+        setForm((prev) => ({ ...prev, imageUrl: resultData.imageUrl }));
+      }
+
+      setOriginalForm(JSON.stringify(currentRest));
+
+      const empList = JSON.parse(
+        localStorage.getItem("emp_personal_list") || "[]",
+      );
+      empList.push(form); // Note: This local storage list might need update if we want to store URL instead of file object, but for now keeping as is.
+      localStorage.setItem("emp_personal_list", JSON.stringify(empList));
+
+      if (isEditMode) {
         setPopup({
           isOpen: true,
-          title: "Error",
-          message: "Error: " + err.message,
-          type: "error",
+          title: "Success",
+          message: "Changes saved successfully!",
+          type: "success",
         });
+        // Stay on page
+      } else {
+        setPopup({
+          isOpen: true,
+          title: "Success",
+          message:
+            "Personal information saved successfully! Proceeding to Job Information...",
+          type: "success",
+        });
+
+        // Delay navigation
+        setTimeout(() => {
+          navigate("/hr/add-emp-info", {
+            state: { empPersonal: form, userId: userId },
+          });
+        }, 1500);
       }
+
     } catch (error) {
       console.error("Error saving personal info:", error);
+      const err = error.response?.data || {};
       setPopup({
         isOpen: true,
-        title: "Network Error",
-        message: "Failed to connect to server.",
+        title: "Error",
+        message: "Error: " + (err.message || "Failed to save"),
         type: "error",
       });
     }

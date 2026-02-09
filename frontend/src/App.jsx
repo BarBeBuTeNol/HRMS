@@ -48,6 +48,7 @@ import Send_notifi from "./assets/pages/HR/Send_notifi/Send_notifi";
 import Announcements from "./assets/pages/HR/Announcements/Announcements";
 import Leave_info from "./assets/pages/HR/Leave_info/Leave_info";
 import AddDepartment from "./assets/pages/HR/add_department/add_department";
+import CalendarHR from "./assets/Component/calendar/calendar-hr/CalendarHR";
 
 // =========================================
 //                 CHRO PAGES
@@ -131,6 +132,7 @@ function App() {
       <Route path="/hr/announcements" element={<Announcements />} />
       <Route path="/hr/leave-info" element={<Leave_info />} />
       <Route path="/hr/add-department" element={<AddDepartment />} />
+      <Route path="/hr/calendar" element={<CalendarHR />} />
       {/* ========================================= */}
       {/*              CHRO ROUTES               */}
       {/* ========================================= */}

@@ -83,7 +83,7 @@ const Sidebar_HR = () => {
           label: "Announcements",
         },
         {
-          path: "/calendar",
+          path: "/hr/calendar",
           icon: <FaCalendarAlt />,
           label: "Company Calendar",
         },

@@ -8,6 +8,9 @@ import {
   Calendar as CalendarIcon,
   X,
   Trash2,
+  Clock,
+  MapPin,
+  AlignLeft,
 } from "lucide-react";
 import dayjs from "dayjs";
 import api from "../../../../services/api";
@@ -25,7 +28,7 @@ const CalendarHR = () => {
   });
 
   // HR has permission to create events
-  const canCreateEvent = true; 
+  const canCreateEvent = true;
 
   // Fetch Events
   useEffect(() => {
@@ -54,7 +57,7 @@ const CalendarHR = () => {
     for (let i = 1; i <= daysInMonth; i++) {
       const dateStr = currentDate.date(i).format("YYYY-MM-DD");
       const dayEvents = events.filter(
-        (e) => dayjs(e.date).format("YYYY-MM-DD") === dateStr,
+        (e) => dayjs(e.date).format("YYYY-MM-DD") === dateStr
       );
 
       const dayOfWeek = currentDate.date(i).day();
@@ -83,7 +86,8 @@ const CalendarHR = () => {
     }
   };
 
-  const handlePrevMonth = () => setCurrentDate(currentDate.subtract(1, "month"));
+  const handlePrevMonth = () =>
+    setCurrentDate(currentDate.subtract(1, "month"));
   const handleNextMonth = () => setCurrentDate(currentDate.add(1, "month"));
   const handleToday = () => setCurrentDate(dayjs());
 
@@ -122,7 +126,7 @@ const CalendarHR = () => {
         setViewedDay({
           ...viewedDay,
           events: updatedEvents.filter(
-            (e) => dayjs(e.date).format("YYYY-MM-DD") === viewedDay.date,
+            (e) => dayjs(e.date).format("YYYY-MM-DD") === viewedDay.date
           ),
         });
       }
@@ -134,46 +138,74 @@ const CalendarHR = () => {
     }
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { duration: 0.5, staggerChildren: 0.1 } },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+  };
+
   return (
     <HRLayout>
       <div className="calendar-layout-hr">
         <div className="hr-calendar-container">
           {/* Background Decor */}
           <div className="hr-cal-bg-circle-1"></div>
-          
+          <div className="hr-cal-bg-circle-2"></div>
+
           {/* Header */}
           <div className="hr-calendar-header">
             <div className="hr-calendar-title">
               <div className="hr-icon-wrapper">
-                <CalendarIcon size={32} />
+                <CalendarIcon size={28} strokeWidth={2.5} />
               </div>
               <div>
-                <span>HR Department</span>
-                <span>{currentDate.format("MMMM YYYY")}</span>
+                <span>Company Calendar</span>
+                <motion.span
+                  key={currentDate.format("MMMM YYYY")}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {currentDate.format("MMMM YYYY")}
+                </motion.span>
               </div>
             </div>
 
             <div className="hr-calendar-nav">
               <div className="hr-nav-group">
-                <button onClick={handlePrevMonth} className="hr-cal-btn" title="Previous">
+                <button
+                  onClick={handlePrevMonth}
+                  className="hr-cal-btn"
+                  title="Previous"
+                >
                   <ChevronLeft size={20} />
                 </button>
                 <button onClick={handleToday} className="hr-cal-btn today-btn">
                   Today
                 </button>
-                <button onClick={handleNextMonth} className="hr-cal-btn" title="Next">
+                <button
+                  onClick={handleNextMonth}
+                  className="hr-cal-btn"
+                  title="Next"
+                >
                   <ChevronRight size={20} />
                 </button>
               </div>
 
               {canCreateEvent && (
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   className="hr-cal-btn primary"
                   onClick={() => setIsAddModalOpen(true)}
                 >
                   <Plus size={20} strokeWidth={2.5} />
                   <span>New Event</span>
-                </button>
+                </motion.button>
               )}
             </div>
           </div>
@@ -181,30 +213,44 @@ const CalendarHR = () => {
           {/* Grid Header */}
           <div className="hr-calendar-grid-header">
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-              <div key={d} className="hr-day-header">{d}</div>
+              <div key={d} className="hr-day-header">
+                {d}
+              </div>
             ))}
           </div>
 
           {/* Days Grid */}
           <motion.div
             className="hr-calendar-grid"
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4 }}
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
             key={currentDate.format("YYYY-MM")}
           >
             {generateCalendarDays().map((item) =>
               item.type === "empty" ? (
                 <div key={item.key} className="hr-calendar-day empty"></div>
               ) : (
-                <div
+                <motion.div
                   key={item.key}
+                  variants={itemVariants}
                   onClick={() => handleDayClick(item)}
                   className={`hr-calendar-day ${
                     dayjs().format("YYYY-MM-DD") === item.date ? "today" : ""
-                  } ${item.isWeekend || item.hasHoliday ? "holiday-mode" : ""}`}
+                  } ${
+                    item.isWeekend ? "weekend" : ""
+                  } ${item.hasHoliday ? "holiday-mode" : ""}`}
                   style={{
-                    cursor: item.isWeekend || item.events.length > 0 || canCreateEvent ? "pointer" : "default",
+                    cursor:
+                      item.isWeekend ||
+                      item.events.length > 0 ||
+                      canCreateEvent
+                        ? "pointer"
+                        : "default",
+                  }}
+                  whileHover={{
+                    y: -5,
+                    boxShadow: "0 10px 20px rgba(0,0,0,0.2)",
                   }}
                 >
                   <div className="hr-day-header-row">
@@ -213,12 +259,16 @@ const CalendarHR = () => {
 
                   <div className="hr-events-container">
                     {item.events.map((event, idx) => (
-                      <div key={idx} className={`hr-calendar-event ${event.type}`} title={event.title}>
+                      <div
+                        key={idx}
+                        className={`hr-calendar-event ${event.type}`}
+                        title={event.title}
+                      >
                         {event.title}
                       </div>
                     ))}
                   </div>
-                </div>
+                </motion.div>
               )
             )}
           </motion.div>
@@ -235,55 +285,83 @@ const CalendarHR = () => {
               >
                 <motion.div
                   className="hr-modal"
-                  initial={{ scale: 0.9, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.9, opacity: 0 }}
+                  initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                  animate={{ scale: 1, opacity: 1, y: 0 }}
+                  exit={{ scale: 0.9, opacity: 0, y: 20 }}
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className="hr-modal-header">
                     <div className="hr-modal-title">
-                      <h3>{dayjs(viewedDay.date).format("dddd, D MMMM YYYY")}</h3>
+                      <h3>
+                        {dayjs(viewedDay.date).format("dddd, D MMMM YYYY")}
+                      </h3>
                       <p>Company Schedule</p>
                     </div>
-                    <button onClick={() => setViewedDay(null)} className="hr-modal-close">
-                      <X size={20} />
+                    <button
+                      onClick={() => setViewedDay(null)}
+                      className="hr-modal-close"
+                    >
+                      <X size={24} />
                     </button>
                   </div>
                   <div className="hr-modal-content">
                     {viewedDay.events.length > 0 ? (
                       viewedDay.events.map((evt, idx) => (
-                        <div key={idx} className={`hr-modal-event-card ${evt.type}`}>
+                        <motion.div
+                          key={idx}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: idx * 0.1 }}
+                          className={`hr-modal-event-card ${evt.type}`}
+                        >
                           <div className="hr-event-bar"></div>
-                          <div className="hr-event-info">
-                            <h4>{evt.title}</h4>
-                            <p>{evt.description || "No description"}</p>
-                            
-                            {canCreateEvent && (
+                          <div className="hr-event-info hr-w-full">
+                            <div className="hr-flex-between">
+                              <h4>{evt.title}</h4>
+                              {canCreateEvent && (
                                 <button
-                                  className="text-red-400 text-xs mt-2 hover:text-red-300"
+                                  className="hr-delete-btn"
                                   onClick={(e) => handleDeleteEvent(evt.id, e)}
+                                  title="Delete Event"
                                 >
-                                  Delete
+                                  <Trash2 size={16} />
                                 </button>
-                            )}
+                              )}
+                            </div>
+                            <p className="hr-flex hr-items-center hr-gap-2 hr-mt-2">
+                              <AlignLeft size={14} />
+                              {evt.description || "No description"}
+                            </p>
+                            <div className="hr-flex hr-gap-3 hr-mt-3 hr-text-xs hr-text-slate">
+                                <span className="hr-flex hr-items-center hr-gap-2"><Clock size={12}/> All Day</span>
+                                <span className="hr-flex hr-items-center hr-gap-2"><MapPin size={12}/> Office</span>
+                            </div>
                           </div>
-                        </div>
+                        </motion.div>
                       ))
                     ) : (
-                      <p className="text-slate-400 text-center py-4">No events scheduled.</p>
+                      <div className="hr-center-content">
+                        <CalendarIcon size={48} className="hr-mb-4 hr-opacity-20" />
+                        <p>No events scheduled for this day.</p>
+                      </div>
                     )}
-                    
+
                     {canCreateEvent && (
-                      <button
-                        className="hr-btn-save w-full mt-4"
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="hr-btn-save hr-w-full hr-mt-6"
                         onClick={() => {
-                           setNewEvent((prev) => ({ ...prev, date: viewedDay.date }));
-                           setViewedDay(null);
-                           setIsAddModalOpen(true);
+                          setNewEvent((prev) => ({
+                            ...prev,
+                            date: viewedDay.date,
+                          }));
+                          setViewedDay(null);
+                          setIsAddModalOpen(true);
                         }}
                       >
-                         Add Event Here
-                      </button>
+                        <Plus size={18} className="inline mr-2" /> Add Event Here
+                      </motion.button>
                     )}
                   </div>
                 </motion.div>
@@ -303,45 +381,57 @@ const CalendarHR = () => {
               >
                 <motion.div
                   className="hr-modal"
-                  initial={{ scale: 0.9, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.9, opacity: 0 }}
+                  initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                  animate={{ scale: 1, opacity: 1, y: 0 }}
+                  exit={{ scale: 0.9, opacity: 0, y: 20 }}
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className="hr-modal-header">
                     <div className="hr-modal-title">
                       <h3>New Event</h3>
+                      <p>Create a new schedule entry</p>
                     </div>
-                    <button onClick={() => setIsAddModalOpen(false)} className="hr-modal-close">
-                      <X size={20} />
+                    <button
+                      onClick={() => setIsAddModalOpen(false)}
+                      className="hr-modal-close"
+                    >
+                      <X size={24} />
                     </button>
                   </div>
                   <div className="hr-modal-content">
                     <form onSubmit={handleAddEventSubmit}>
                       <div className="hr-form-group">
-                        <label>Title</label>
+                        <label>Event Title</label>
                         <input
                           type="text"
                           value={newEvent.title}
-                          onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+                          onChange={(e) =>
+                            setNewEvent({ ...newEvent, title: e.target.value })
+                          }
                           required
+                          placeholder="e.g. Annual Meeting"
+                          autoFocus
                         />
                       </div>
-                      <div className="flex gap-4">
-                        <div className="hr-form-group flex-1">
+                      <div className="hr-flex hr-gap-4">
+                        <div className="hr-form-group hr-flex-1">
                           <label>Date</label>
                           <input
                             type="date"
                             value={newEvent.date}
-                            onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
+                            onChange={(e) =>
+                              setNewEvent({ ...newEvent, date: e.target.value })
+                            }
                             required
                           />
                         </div>
-                        <div className="hr-form-group flex-1">
+                        <div className="hr-form-group hr-flex-1">
                           <label>Type</label>
                           <select
                             value={newEvent.type}
-                            onChange={(e) => setNewEvent({ ...newEvent, type: e.target.value })}
+                            onChange={(e) =>
+                              setNewEvent({ ...newEvent, type: e.target.value })
+                            }
                           >
                             <option value="holiday">Holiday</option>
                             <option value="event">Event</option>
@@ -353,17 +443,32 @@ const CalendarHR = () => {
                         <label>Description</label>
                         <textarea
                           value={newEvent.description}
-                          onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
+                          onChange={(e) =>
+                            setNewEvent({
+                              ...newEvent,
+                              description: e.target.value,
+                            })
+                          }
                           rows={3}
+                          placeholder="Additional details..."
                         />
                       </div>
                       <div className="hr-modal-actions">
-                        <button type="button" onClick={() => setIsAddModalOpen(false)} className="hr-btn-cancel">
+                        <button
+                          type="button"
+                          onClick={() => setIsAddModalOpen(false)}
+                          className="hr-btn-cancel"
+                        >
                           Cancel
                         </button>
-                        <button type="submit" className="hr-btn-save">
-                          Create
-                        </button>
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          type="submit"
+                          className="hr-btn-save"
+                        >
+                          Create Event
+                        </motion.button>
                       </div>
                     </form>
                   </div>
@@ -371,47 +476,51 @@ const CalendarHR = () => {
               </motion.div>
             )}
           </AnimatePresence>
-            
-           {/* Delete Confirmation Modal */}
-            <AnimatePresence>
-                {showDeleteModal && (
-                <div
-                    className="hr-modal-overlay"
-                    onClick={() => setShowDeleteModal(false)}
-                >
-                    <motion.div
-                    className="hr-modal"
-                    style={{ maxWidth: '400px', height: 'auto' }}
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0.9, opacity: 0 }}
-                    onClick={(e) => e.stopPropagation()}
-                    >
-                        <div className="hr-modal-header">
-                            <h3 className="text-white font-bold">Confirm Delete</h3>
-                        </div>
-                        <div className="p-6">
-                            <p className="text-slate-300 mb-6">Are you sure you want to delete this event?</p>
-                            <div className="flex justify-end gap-3">
-                                <button
-                                className="hr-btn-cancel"
-                                onClick={() => setShowDeleteModal(false)}
-                                >
-                                Cancel
-                                </button>
-                                <button
-                                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg"
-                                onClick={confirmDeleteEvent}
-                                >
-                                Delete
-                                </button>
-                            </div>
-                        </div>
-                    </motion.div>
-                </div>
-                )}
-            </AnimatePresence>
 
+          {/* Delete Confirmation Modal */}
+          <AnimatePresence>
+            {showDeleteModal && (
+              <div
+                className="hr-modal-overlay"
+                onClick={() => setShowDeleteModal(false)}
+              >
+                <motion.div
+                  className="hr-modal"
+                  style={{ maxWidth: "400px", height: "auto" }}
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.9, opacity: 0 }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="hr-modal-header" style={{ padding: "1.5rem" }}>
+                    <h3 className="hr-text-white hr-font-bold hr-text-xl">
+                      Confirm Delete
+                    </h3>
+                  </div>
+                  <div style={{ padding: '1.5rem' }}>
+                    <p className="hr-text-slate-300 hr-mb-6">
+                      Are you sure you want to delete this event? This action
+                      cannot be undone.
+                    </p>
+                    <div className="hr-flex hr-justify-end hr-gap-3">
+                      <button
+                        className="hr-btn-cancel"
+                        onClick={() => setShowDeleteModal(false)}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        className="hr-btn-delete-confirm"
+                        onClick={confirmDeleteEvent}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </HRLayout>

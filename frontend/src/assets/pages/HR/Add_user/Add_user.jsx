@@ -19,6 +19,7 @@ import HRLayout from "../../../Component/HR/HRLayout";
 import PopupNotification from "../../../Component/popup_notifications/popup_notifications-hr/PopupHR";
 import PopupErrorHR from "../../../Component/popup-error/popup-error-hr/PopupErrorHR";
 import "./Add_user.css";
+import api from "../../../../services/api";
 
 const AddUser = () => {
   const navigate = useNavigate();
@@ -57,23 +58,19 @@ const AddUser = () => {
   // Fetch next Employee ID
   const fetchNextEmpId = async () => {
     try {
-      const res = await fetch("/api/users?pageSize=1");
-      if (res.ok) {
-        const responseData = await res.json();
-        const users = responseData.data || [];
+      const res = await api.get("/users?pageSize=1");
+      const responseData = res.data;
+      const users = responseData.data || [];
 
-        if (users.length === 0) {
-          setForm((prev) => ({ ...prev, empId: "001" }));
-          return;
-        }
-
-        // Backend sorts by ID DESC, so the first user has the max ID
-        const maxId = users[0].id || 0;
-        const nextId = (maxId + 1).toString().padStart(3, "0");
-        setForm((prev) => ({ ...prev, empId: nextId }));
-      } else {
+      if (users.length === 0) {
         setForm((prev) => ({ ...prev, empId: "001" }));
+        return;
       }
+
+      // Backend sorts by ID DESC, so the first user has the max ID
+      const maxId = users[0].id || 0;
+      const nextId = (maxId + 1).toString().padStart(3, "0");
+      setForm((prev) => ({ ...prev, empId: nextId }));
     } catch (err) {
       console.error("Error generating ID:", err);
       // Fallback
@@ -84,11 +81,8 @@ const AddUser = () => {
   // Fetch Departments
   const fetchDepartments = async () => {
     try {
-      const res = await fetch("/api/departments");
-      if (res.ok) {
-        const data = await res.json();
-        setDepartments(data);
-      }
+      const res = await api.get("/departments");
+      setDepartments(res.data);
     } catch (err) {
       console.error("Error fetching departments:", err);
     }
@@ -97,11 +91,8 @@ const AddUser = () => {
   // Fetch Roles
   const fetchRoles = async () => {
     try {
-      const res = await fetch("/api/roles");
-      if (res.ok) {
-        const data = await res.json();
-        setRoles(data);
-      }
+      const res = await api.get("/roles");
+      setRoles(res.data);
     } catch (err) {
       console.error("Error fetching roles:", err);
     }
@@ -110,11 +101,8 @@ const AddUser = () => {
   // Fetch Prefixes
   const fetchPrefixes = async () => {
     try {
-      const res = await fetch("/api/prefixes");
-      if (res.ok) {
-        const data = await res.json();
-        setPrefixes(data);
-      }
+      const res = await api.get("/prefixes");
+      setPrefixes(res.data);
     } catch (err) {
       console.error("Error fetching prefixes:", err);
     }
@@ -197,47 +185,34 @@ const AddUser = () => {
     };
 
     try {
-      const res = await fetch("/api/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
+      const res = await api.post("/users", payload);
+      const data = res.data;
 
-      if (res.ok) {
-        setPopup({
-          isOpen: true,
-          title: "User Created",
-          message:
-            "User created successfully! Proceeding to Employee Personal Information...",
-          type: "success",
+      setPopup({
+        isOpen: true,
+        title: "User Created",
+        message:
+          "User created successfully! Proceeding to Employee Personal Information...",
+        type: "success",
+      });
+      // Delay navigation
+      setTimeout(() => {
+        navigate("/hr/add-emp-personal", {
+          state: {
+            userId: data.userId,
+            firstName: form.firstName,
+            lastName: form.lastName,
+            email: form.email,
+            empId: form.empId,
+          },
         });
-        // Delay navigation
-        setTimeout(() => {
-          navigate("/hr/add-emp-personal", {
-            state: {
-              userId: data.userId,
-              firstName: form.firstName,
-              lastName: form.lastName,
-              email: form.email,
-              empId: form.empId,
-            },
-          });
-        }, 2000);
-      } else {
-        // Error from backend
-        setErrorPopup({
-          isOpen: true,
-          title: "Submission Error",
-          message: data.message || "Failed to create user.",
-        });
-      }
+      }, 2000);
     } catch (err) {
       console.error("Network error:", err);
       setErrorPopup({
         isOpen: true,
-        title: "Network Error",
-        message: "Network error. Please try again.",
+        title: "Submission Error",
+        message: err.response?.data?.message || "Failed to create user.",
       });
     }
   };

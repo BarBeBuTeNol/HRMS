@@ -18,6 +18,7 @@ import PopupDoneHR from "../../../Component/poup_done/poup_done-hr/PopupDoneHR";
 import PopupErrorHR from "../../../Component/popup-error/popup-error-hr/PopupErrorHR";
 import EditEmpNav from "../../../Component/HR/EditEmpNav";
 import "./Add_emp_info.css";
+import api from "../../../../services/api";
 
 const AddEmpInfo = () => {
   const navigate = useNavigate();
@@ -102,10 +103,9 @@ const AddEmpInfo = () => {
     const fetchFullDetails = async () => {
       if (!userId) return;
       try {
-        const res = await fetch(`/api/users/${userId}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data.department_id) setDepartmentId(data.department_id);
+        const res = await api.get(`/users/${userId}`);
+        const data = res.data;
+        if (data.department_id) setDepartmentId(data.department_id);
           setShowIds((prev) => ({
             ...prev,
             userId: userId,
@@ -151,7 +151,7 @@ const AddEmpInfo = () => {
             }
             setOriginalForm(JSON.stringify(loadedForm));
           }
-        }
+
       } catch (err) {
         console.error("Failed to fetch user details", err);
       }
@@ -165,11 +165,8 @@ const AddEmpInfo = () => {
   useEffect(() => {
     const fetchPositions = async () => {
       try {
-        const res = await fetch("/api/job-positions");
-        if (res.ok) {
-          const data = await res.json();
-          setJobPositions(data);
-        }
+        const res = await api.get("/job-positions");
+        setJobPositions(res.data);
       } catch (err) {
         console.error("Failed to fetch job positions", err);
       }
@@ -406,50 +403,40 @@ const AddEmpInfo = () => {
         formData.append("trainingFiles", file);
       });
 
-      const res = await fetch("/api/employee-data/job", {
-        method: "POST",
-        body: formData,
+      const res = await api.post("/employee-data/job", formData);
+      
+      setOriginalForm(JSON.stringify(form));
+      setPerformanceFiles([]);
+      setTrainingFiles([]);
+
+      const empInfoList = JSON.parse(
+        localStorage.getItem("emp_info_list") || "[]",
+      );
+      const newEmpInfo = {
+        ...form,
+        personalId: showIds.empCode,
+        imageUrl,
+        userId,
+        departmentId,
+      };
+      empInfoList.push(newEmpInfo);
+      localStorage.setItem("emp_info_list", JSON.stringify(empInfoList));
+
+      setDonePopup({
+        isOpen: true,
+        title: "Success",
+        message: isEditMode
+          ? "Job information updated!"
+          : "Job information saved! Proceeding...",
       });
-
-      if (res.ok) {
-        setOriginalForm(JSON.stringify(form));
-        setPerformanceFiles([]);
-        setTrainingFiles([]);
-
-        const empInfoList = JSON.parse(
-          localStorage.getItem("emp_info_list") || "[]",
-        );
-        const newEmpInfo = {
-          ...form,
-          personalId: showIds.empCode,
-          imageUrl,
-          userId,
-          departmentId,
-        };
-        empInfoList.push(newEmpInfo);
-        localStorage.setItem("emp_info_list", JSON.stringify(empInfoList));
-
-        setDonePopup({
-          isOpen: true,
-          title: "Success",
-          message: isEditMode
-            ? "Job information updated!"
-            : "Job information saved! Proceeding...",
-        });
-      } else {
-        const err = await res.json();
-        setErrorPopup({
-          isOpen: true,
-          title: "Error",
-          message: err.message || "Failed to save data.",
-        });
-      }
+      
     } catch (error) {
       console.error("Error saving job info:", error);
+      const err = error.response?.data || {};
       setErrorPopup({
         isOpen: true,
-        title: "Network Error",
-        message: "Failed to connect to server.",
+        title: "Error",
+        message: err.message || "Failed to save data.",
       });
     }
   };

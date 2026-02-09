@@ -18,6 +18,7 @@ import PopupSentDataHR from "../../../Component/popup-sent-data/popup-sent-data-
 import PopupDoneHR from "../../../Component/poup_done/poup_done-hr/PopupDoneHR";
 import LogService from "../../../../services/LogService";
 import "./Leave_info.css";
+import api from "../../../../services/api";
 
 const Leave_info = () => {
   const navigate = useNavigate();
@@ -86,13 +87,11 @@ const Leave_info = () => {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch("/api/users");
-      if (res.ok) {
-        const data = await res.json();
-        const userList = Array.isArray(data) ? data : data.data || [];
-        setUsers(userList);
-        setFilteredUsers(userList);
-      }
+      const res = await api.get("/users");
+      const data = res.data;
+      const userList = Array.isArray(data) ? data : data.data || [];
+      setUsers(userList);
+      setFilteredUsers(userList);
     } catch (err) {
       console.error("Error fetching users:", err);
     }
@@ -161,60 +160,50 @@ const Leave_info = () => {
 
       const payload = { ...formData, reason: finalReason, status }; // Add status and updated reason
 
-      const res = await fetch("/api/leave-requests", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const res = await api.post("/leave-requests", payload);
 
-      if (res.ok) {
-        // LOGGING
-        try {
-          let logDetails = "";
-          if (status === "Approved") {
-            // force approve logging
-            const hrName =
-              `${currentHrUser.first_name || ""} ${currentHrUser.last_name || ""}`.trim();
-            const empName =
-              isOnBehalf && selectedUser
-                ? `${selectedUser.first_name} ${selectedUser.last_name}`
-                : "Employee";
-            logDetails = `รายการนี้ถูกอนุมัติโดย HR ${hrName} แทนพนักงาน`;
-          } else {
-            logDetails = `Submitted ${formData.leave_type} for ${
-              isOnBehalf && selectedUser ? selectedUser.first_name : "Self"
-            } (${formData.start_date} to ${formData.end_date})`;
-          }
-
-          await LogService.createLog({
-            userId: currentHrId, // HR who submitted
-            action:
-              status === "Approved" ? "Force Approve (Admin)" : "Leave Request",
-            details: logDetails,
-            target:
-              isOnBehalf && selectedUser
-                ? `${selectedUser.first_name} ${selectedUser.last_name}`
-                : "Self",
-            severity: status === "Approved" ? "Warning" : "Info",
-          });
-        } catch (logErr) {
-          console.warn("Logging failed", logErr);
+      // LOGGING
+      try {
+        let logDetails = "";
+        if (status === "Approved") {
+          // force approve logging
+          const hrName =
+            `${currentHrUser.first_name || ""} ${currentHrUser.last_name || ""}`.trim();
+          const empName =
+            isOnBehalf && selectedUser
+              ? `${selectedUser.first_name} ${selectedUser.last_name}`
+              : "Employee";
+          logDetails = `รายการนี้ถูกอนุมัติโดย HR ${hrName} แทนพนักงาน`;
+        } else {
+          logDetails = `Submitted ${formData.leave_type} for ${
+            isOnBehalf && selectedUser ? selectedUser.first_name : "Self"
+          } (${formData.start_date} to ${formData.end_date})`;
         }
 
-        setShowSentData(false); // Hide spinner
-        setTimeout(() => setShowDone(true), 500); // Show Success after short delay
-      } else {
-        const errData = await res.json();
-        setShowSentData(false);
-        setErrorTitle("Submission Failed");
-        setErrorMessage(errData.message || "Failed to submit request");
-        setShowError(true);
+        await LogService.createLog({
+          userId: currentHrId, // HR who submitted
+          action:
+            status === "Approved" ? "Force Approve (Admin)" : "Leave Request",
+          details: logDetails,
+          target:
+            isOnBehalf && selectedUser
+              ? `${selectedUser.first_name} ${selectedUser.last_name}`
+              : "Self",
+          severity: status === "Approved" ? "Warning" : "Info",
+        });
+      } catch (logErr) {
+        console.warn("Logging failed", logErr);
       }
+
+      setShowSentData(false); // Hide spinner
+      setTimeout(() => setShowDone(true), 500); // Show Success after short delay
+
     } catch (err) {
       console.error("Submission error:", err);
+      const errData = err.response?.data;
       setShowSentData(false);
-      setErrorTitle("Network Error");
-      setErrorMessage("Could not connect to server. Please try again.");
+      setErrorTitle("Submission Failed");
+      setErrorMessage(errData?.message || "Could not connect to server. Please try again.");
       setShowError(true);
     } finally {
       setIsSubmitting(false);

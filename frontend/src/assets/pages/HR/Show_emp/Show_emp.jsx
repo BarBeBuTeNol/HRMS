@@ -27,6 +27,7 @@ import PopupNotification from "../../../Component/popup_notifications/popup_noti
 import LogService from "../../../../services/LogService";
 import "./Show_emp.css";
 import DepartmentFilter from "./DepartmentFilter";
+import api from "../../../../services/api";
 
 const Show_emp = () => {
   const navigate = useNavigate();
@@ -68,11 +69,8 @@ const Show_emp = () => {
 
   const fetchDepartments = async () => {
     try {
-      const res = await fetch("/api/departments");
-      if (res.ok) {
-        const data = await res.json();
-        setDepartments(data);
-      }
+      const res = await api.get("/departments");
+      setDepartments(res.data);
     } catch (err) {
       console.error("Failed to fetch departments", err);
     }
@@ -88,26 +86,22 @@ const Show_emp = () => {
         department: selectedDept,
       }).toString();
 
-      const res = await fetch(`/api/users?${query}`);
-      if (res.ok) {
-        // Fix: backend might return array directly or { data: [...] }
-        const result = await res.json();
-        console.log("Show_emp API Result:", result);
-        let data = [];
-        if (Array.isArray(result)) {
-          console.log("Result is Array");
-          data = result;
-        } else if (result.data && Array.isArray(result.data)) {
-          console.log("Result has data array");
-          data = result.data;
-        } else {
-          console.warn("Unexpected API structure", result);
-        }
-        console.log("Setting employee list with:", data);
-        setEmployeeList(data);
+      const res = await api.get(`/users?${query}`);
+      // Fix: backend might return array directly or { data: [...] }
+      const result = res.data;
+      console.log("Show_emp API Result:", result);
+      let data = [];
+      if (Array.isArray(result)) {
+        console.log("Result is Array");
+        data = result;
+      } else if (result.data && Array.isArray(result.data)) {
+        console.log("Result has data array");
+        data = result.data;
       } else {
-        throw new Error("Failed to fetch employees");
+        console.warn("Unexpected API structure", result);
       }
+      console.log("Setting employee list with:", data);
+      setEmployeeList(data);
     } catch (err) {
       console.error("Error fetching employees:", err);
       setError(err.message);
@@ -135,13 +129,8 @@ const Show_emp = () => {
 
   const fetchEmployeeDetail = async (id) => {
     try {
-      const res = await fetch(`/api/users/${id}`);
-      if (res.ok) {
-        const data = await res.json();
-        setSelectedEmp(data);
-      } else {
-        console.error("Failed to fetch detail");
-      }
+      const res = await api.get(`/users/${id}`);
+      setSelectedEmp(res.data);
     } catch (err) {
       console.error(err);
     }
@@ -165,38 +154,33 @@ const Show_emp = () => {
   const confirmDelete = async () => {
     if (!deleteConfirm.empId) return;
     try {
-      const res = await fetch(`/api/users/${deleteConfirm.empId}`, {
-        method: "DELETE",
-      });
-      if (res.ok) {
-        // LOGGING
-        try {
-          const currentUser = JSON.parse(
-            localStorage.getItem("currentUser") || "{}",
-          );
-          await LogService.createLog({
-            userId: currentUser.id || currentUser.user_id,
-            action: "Delete User",
-            details: `Deleted employee ${deleteConfirm.empName} (ID: ${deleteConfirm.empId})`,
-            target: deleteConfirm.empName,
-            severity: "Critical", // Deletion is critical
-          });
-        } catch (logErr) {
-          console.warn("Logging failed", logErr);
-        }
-
-        setEmployeeList((prev) =>
-          prev.filter((e) => e.id !== deleteConfirm.empId),
+      await api.delete(`/users/${deleteConfirm.empId}`);
+      
+      // LOGGING
+      try {
+        const currentUser = JSON.parse(
+          localStorage.getItem("currentUser") || "{}",
         );
-        setPopup({
-          isOpen: true,
-          title: "Deleted",
-          message: "Employee deleted successfully.",
-          type: "success",
+        await LogService.createLog({
+          userId: currentUser.id || currentUser.user_id,
+          action: "Delete User",
+          details: `Deleted employee ${deleteConfirm.empName} (ID: ${deleteConfirm.empId})`,
+          target: deleteConfirm.empName,
+          severity: "Critical", // Deletion is critical
         });
-      } else {
-        throw new Error("Failed to delete");
+      } catch (logErr) {
+        console.warn("Logging failed", logErr);
       }
+
+      setEmployeeList((prev) =>
+        prev.filter((e) => e.id !== deleteConfirm.empId),
+      );
+      setPopup({
+        isOpen: true,
+        title: "Deleted",
+        message: "Employee deleted successfully.",
+        type: "success",
+      });
     } catch (err) {
       setPopup({
         isOpen: true,

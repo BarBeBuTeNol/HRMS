@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
+import logoImage from "../hrms-logo.png";
 import "./LoginPage.css";
 
 const LoginPage = () => {
@@ -26,21 +27,21 @@ const LoginPage = () => {
       if (res.data?.ok && res.data?.user) {
         const user = res.data.user;
 
-        // ✅ เก็บข้อมูลผู้ใช้ใน localStorage
+        // ✅ Keep user data in localStorage
         localStorage.setItem("currentUser", JSON.stringify(user));
         localStorage.setItem("userId", String(user.id));
         if (res.data.token) {
           localStorage.setItem("token", res.data.token);
         }
 
-        // ✅ เปลี่ยนหน้า dashboard ตาม role (ใช้ role_name จาก DB)
+        // ✅ Redirect based on role
         const roleName = user.role_name || ""; // fallback
         switch (roleName) {
           case "HR":
             navigate("/hr/dashboard", { replace: true });
             break;
           case "CHRO":
-          case "Admin": // Admin เข้าหน้าเดียวกับ CHRO
+          case "Admin": // Admin goes to CHRO dashboard
             navigate("/chro/dashboard", { replace: true });
             break;
           case "Head":
@@ -50,18 +51,18 @@ const LoginPage = () => {
             navigate("/employee/dashboard", { replace: true });
             break;
           default:
-            setError(`สิทธิ์ของผู้ใช้ไม่ถูกต้อง (${roleName})`);
+            setError(`Invalid user role (${roleName})`);
         }
       } else {
-        setError(res.data?.message || "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง");
+        setError(res.data?.message || "Invalid username or password");
       }
     } catch (err) {
       console.error("Login failed:", err);
-      // ✅ แสดงข้อความจาก backend ถ้ามี
+      // ✅ Show error from backend if available
       if (err.response && err.response.data && err.response.data.message) {
         setError(err.response.data.message);
       } else {
-        setError("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์");
+        setError("Server connection error");
       }
     } finally {
       setLoading(false);
@@ -69,33 +70,60 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="login-container">
-      <form className="login-box" onSubmit={handleLogin}>
-        {/* <img src={logoImage} alt="HRMS Logo" className="logo" /> */}
-        <h2>เข้าสู่ระบบ HRMS</h2>
+    <div className="hrms-login-page">
+      <div className="hrms-login-background">
+        <div className="shape shape-1"></div>
+        <div className="shape shape-2"></div>
+        <div className="shape shape-3"></div>
+      </div>
+      
+      <div className="hrms-login-card">
+        <div className="hrms-login-header">
+          <div className="hrms-logo-container">
+             <img src={logoImage} alt="HRMS Logo" className="hrms-login-logo" /> 
+          </div>
+          <h2>Welcome Back</h2>
+          <p>Sign in to HRMS</p>
+        </div>
 
-        <input
-          type="text"
-          placeholder="ชื่อผู้ใช้"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          required
-        />
+        <form className="hrms-login-form" onSubmit={handleLogin}>
+          <div className="input-group">
+            <input
+              type="text"
+              placeholder=" "
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              className="hrms-input"
+              id="username"
+            />
+            <label htmlFor="username">Username</label>
+          </div>
 
-        <input
-          type="password"
-          placeholder="รหัสผ่าน"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+          <div className="input-group">
+            <input
+              type="password"
+              placeholder=" "
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="hrms-input"
+              id="password"
+            />
+            <label htmlFor="password">Password</label>
+          </div>
 
-        {error && <p className="error">{error}</p>}
+          {error && <div className="hrms-error-message">{error}</div>}
 
-        <button type="submit" disabled={loading}>
-          {loading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
-        </button>
-      </form>
+          <button type="submit" disabled={loading} className="hrms-login-btn">
+            {loading ? (
+              <span className="loading-spinner"></span>
+            ) : (
+              "Login"
+            )}
+          </button>
+        </form>
+      </div>
     </div>
   );
 };
