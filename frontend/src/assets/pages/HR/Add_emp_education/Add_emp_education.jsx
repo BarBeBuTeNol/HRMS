@@ -20,6 +20,7 @@ import PopupNotification from "../../../Component/popup_notifications/popup_noti
 import PopupDoneHR from "../../../Component/poup_done/poup_done-hr/PopupDoneHR";
 import PopupErrorHR from "../../../Component/popup-error/popup-error-hr/PopupErrorHR";
 import "./Add_emp_education.css";
+import api from "../../../../services/api";
 
 const AddEmpEducation = () => {
   const location = useLocation();
@@ -83,10 +84,9 @@ const AddEmpEducation = () => {
     const fetchEducationDetails = async () => {
       if (!userId) return;
       try {
-        const res = await fetch(`/api/users/${userId}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data.education_level || data.institution || data.program) {
+        const res = await api.get(`/users/${userId}`);
+        const data = res.data;
+        if (data.education_level || data.institution || data.program) {
             // Handle legacy single-row data or new multi-row data
             const initialList = [];
             if (data.education_level || data.institution || data.program) {
@@ -125,7 +125,7 @@ const AddEmpEducation = () => {
             skill: data.skills ? String(data.skills) : "",
           };
           setOriginalForm(JSON.stringify(loadedForm));
-        }
+
       } catch (err) {
         console.error("Failed to fetch education details", err);
       }
@@ -254,44 +254,34 @@ const AddEmpEducation = () => {
         formData.append("educationFiles", file);
       });
 
-      const res = await fetch("/api/employee-data/education", {
-        method: "POST",
-        body: formData,
+      const res = await api.post("/employee-data/education", formData);
+      const result = res.data;
+
+      setIsSaved(true);
+      setEducationFiles([]); // Clear files after save
+
+      // Update dirty state
+      const sentForm = {
+        educationList: educationList,
+        skill: skill,
+      };
+      setOriginalForm(JSON.stringify(sentForm));
+
+      setDonePopup({
+        isOpen: true,
+        title: "Success",
+        message: isEditMode
+          ? "Education details updated successfully."
+          : "Employee registration has been completed successfully.",
       });
 
-      const result = await res.json();
-
-      if (res.ok) {
-        setIsSaved(true);
-        setEducationFiles([]); // Clear files after save
-
-        // Update dirty state
-        const sentForm = {
-          educationList: educationList,
-          skill: skill,
-        };
-        setOriginalForm(JSON.stringify(sentForm));
-
-        setDonePopup({
-          isOpen: true,
-          title: "Success",
-          message: isEditMode
-            ? "Education details updated successfully."
-            : "Employee registration has been completed successfully.",
-        });
-      } else {
-        setErrorPopup({
-          isOpen: true,
-          title: "Error Saving",
-          message: "Error saving data: " + result.message,
-        });
-      }
     } catch (err) {
-      console.error("Network Error:", err);
+      console.error("Error Saving:", err);
+      const message = err.response?.data?.message || err.message;
       setErrorPopup({
         isOpen: true,
-        title: "Network Error",
-        message: "Network Error: " + err.message,
+        title: "Error Saving",
+        message: "Error saving data: " + message,
       });
     }
   };

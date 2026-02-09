@@ -8,14 +8,17 @@ const router = Router();
 router.post("/", async (req, res) => {
   console.log("📥 POST /leave-requests Body:", req.body);
   try {
-    const { user_id, leave_type, start_date, end_date, reason } = req.body;
+    const { user_id, leave_type, start_date, end_date, reason, status } = req.body;
+
+    // Determine initial status (default to 'pending')
+    const initialStatus = (status === 'approved' || status === 'Approved') ? 'approved' : 'pending';
 
     // 1) insert leave request
-    console.log("➡️ Inserting leave request...");
+    console.log(`➡️ Inserting leave request with status: ${initialStatus}...`);
     const [result] = await pool.query<ResultSetHeader>(
       `INSERT INTO leave_requests (user_id, leave_type, start_date, end_date, reason, status)
-       VALUES (?, ?, ?, ?, ?, 'pending')`,
-      [user_id, leave_type, start_date, end_date, reason],
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [user_id, leave_type, start_date, end_date, reason, initialStatus],
     );
     console.log("✅ Leave request inserted. ID:", (result as any).insertId);
 
