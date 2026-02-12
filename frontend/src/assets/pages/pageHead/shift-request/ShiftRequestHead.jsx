@@ -24,7 +24,7 @@ const ShiftRequestHead = () => {
   const fetchRequests = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await api.get("/task-replacement/pending");
+      const response = await api.get("/replacements/pending");
       setRequests(response.data);
       setLoading(false);
     } catch (error) {
@@ -78,7 +78,7 @@ const ShiftRequestHead = () => {
     if (result.isConfirmed) {
       try {
         const token = localStorage.getItem("token");
-        await api.post(`/task-replacement/${id}/approve`, {});
+        await api.post(`/replacements/${id}/approve`, {});
 
         Swal.fire({
           title: "Approved!",
@@ -113,7 +113,7 @@ const ShiftRequestHead = () => {
 
     try {
       const token = localStorage.getItem("token");
-      await api.post(`/task-replacement/${rejectTargetId}/reject`, {
+      await api.post(`/replacements/${rejectTargetId}/reject`, {
         reason: rejectReason,
       });
 
@@ -145,7 +145,7 @@ const ShiftRequestHead = () => {
           ? request.deadline.split("T")[0]
           : new Date().toISOString().split("T")[0];
 
-      const response = await api.get(`/task-replacement/workload`, {
+      const response = await api.get(`/replacements/workload`, {
         params: {
           replacementId: request.replacement_user_id,
           date: dateToCheck,

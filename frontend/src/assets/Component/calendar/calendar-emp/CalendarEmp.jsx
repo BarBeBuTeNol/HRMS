@@ -64,7 +64,7 @@ const CalendarEmp = () => {
     <div className={`calendar-layout-emp ${isSidebarOpen ? "" : "sidebar-collapsed"}`}>
       <EmployeeSidebar onToggle={setIsSidebarOpen} />
       
-      <div className="calendar-content-area" style={{ flex: 1, padding: '1rem' }}>
+      <div className="calendar-content-area">
         <div className="emp-calendar-container">
           {/* Header */}
           <div className="emp-calendar-header">
@@ -82,9 +82,12 @@ const CalendarEmp = () => {
                 <button onClick={() => setCurrentDate(currentDate.subtract(1, "month"))} className="emp-cal-btn">
                   <ChevronLeft size={18} />
                 </button>
-                <div style={{ padding: '0 10px', color: '#fff', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center' }}>
-                    {currentDate.format("MMM")}
-                </div>
+                <button 
+                  onClick={() => setCurrentDate(dayjs())} 
+                  className="emp-present-btn"
+                >
+                    Present
+                </button>
                 <button onClick={() => setCurrentDate(currentDate.add(1, "month"))} className="emp-cal-btn">
                   <ChevronRight size={18} />
                 </button>
@@ -109,7 +112,7 @@ const CalendarEmp = () => {
                 <div key={item.key} className="emp-cal-day empty" /> :
                 <div 
                     key={item.key} 
-                    className={`emp-cal-day ${dayjs().isSame(item.date, 'day') ? 'today' : ''}`}
+                    className={`emp-cal-day ${dayjs().isSame(item.date, 'day') ? 'today' : ''} ${(item.isWeekend || item.events.some(e => e.type === 'holiday')) ? 'is-holiday' : ''}`}
                     onClick={() => handleDayClick(item)}
                     style={{ cursor: item.events.length ? 'pointer' : 'default' }}
                 >

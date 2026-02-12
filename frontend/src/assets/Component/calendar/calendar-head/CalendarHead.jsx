@@ -53,6 +53,7 @@ const CalendarHead = () => {
       const dayEvents = events.filter(
         (e) => dayjs(e.date).format("YYYY-MM-DD") === dateStr
       );
+      const isHolidayEvent = dayEvents.some(e => e.type === 'holiday');
       const isWeekend = [0, 6].includes(currentDate.date(i).day());
       
       days.push({
@@ -61,6 +62,7 @@ const CalendarHead = () => {
         date: dateStr,
         events: dayEvents,
         isWeekend,
+        isHoliday: isHolidayEvent,
         key: `day-${i}`,
       });
     }
@@ -124,7 +126,7 @@ const CalendarHead = () => {
     <div className={`calendar-layout-head ${isSidebarOpen ? "" : "sidebar-collapsed"}`}>
       <HeadSidebar onToggle={setIsSidebarOpen} />
       
-      <div className="calendar-content-area" style={{ flex: 1, padding: '1rem' }}>
+      <div className="calendar-content-area">
         <div className="head-calendar-container">
           {/* Header */}
           <div className="head-calendar-header">
@@ -153,15 +155,6 @@ const CalendarHead = () => {
                   <ChevronRight size={20} />
                 </button>
               </div>
-              
-              <motion.button 
-                className="head-create-btn"
-                onClick={() => setIsAddModalOpen(true)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Plus size={18} /> New Event
-              </motion.button>
             </div>
           </div>
 
@@ -184,7 +177,7 @@ const CalendarHead = () => {
                 <div key={item.key} className="head-cal-day empty" /> :
                 <div 
                   key={item.key}
-                  className={`head-cal-day ${dayjs().isSame(item.date, 'day') ? 'today' : ''}`}
+                  className={`head-cal-day ${dayjs().isSame(item.date, 'day') ? 'today' : ''} ${item.isWeekend || item.isHoliday ? 'is-holiday' : ''}`}
                   onClick={() => handleDayClick(item)}
                   style={{ cursor: 'pointer' }}
                 >
@@ -215,36 +208,76 @@ const CalendarHead = () => {
                 >
                   <div className="head-modal-header">
                     <h3>{dayjs(viewedDay.date).format("dddd, D MMMM")}</h3>
-                    <button onClick={() => setViewedDay(null)} className="head-btn-secondary"><X size={18} /></button>
+                    <div className="head-modal-actions">
+                      <button 
+                        onClick={() => {
+                          setNewEvent(prev => ({ ...prev, date: viewedDay.date }));
+                          setViewedDay(null);
+                          setIsAddModalOpen(true);
+                        }} 
+                        className="head-btn-primary head-btn-icon"
+                        title="Add Event"
+                      >
+                        <Plus size={18} />
+                      </button>
+                      <button onClick={() => setViewedDay(null)} className="head-btn-secondary head-btn-icon"><X size={18} /></button>
+                    </div>
                   </div>
                   <div className="head-modal-body">
                     {viewedDay.events.length === 0 ? (
-                       <div className="text-center text-gray-400 py-8">
-                          <p>No events scheduled.</p>
+                       <div className="head-no-events-state">
+                          <div className="head-no-events-icon">
+                             <CalendarIcon size={32} />
+                          </div>
+                          <p className="head-no-events-title">No events scheduled</p>
+                          <p className="head-no-events-subtitle">Enjoy your free time!</p>
                           <button 
-                            className="head-btn-primary mt-4"
+                            className="head-btn-primary head-btn-large"
                             onClick={() => {
                                 setNewEvent(prev => ({ ...prev, date: viewedDay.date }));
                                 setViewedDay(null);
                                 setIsAddModalOpen(true);
                             }}
                           >
+                            <Plus size={18} className="mr-2" />
                             Add Event
                           </button>
                        </div>
                     ) : (
-                        viewedDay.events.map((ev, i) => (
-                          <div key={i} className={`p-3 mb-2 rounded border border-white/10 flex justify-between items-start bg-white/5`}>
-                             <div>
-                                <h4 className="text-white font-bold">{ev.title}</h4>
-                                <p className="text-sm text-purple-200">{ev.description}</p>
-                                <span className="text-xs uppercase mt-1 inline-block opacity-70">{ev.type}</span>
-                             </div>
-                             <button onClick={(e) => handleDeleteEvent(ev.id, e)} className="text-red-400 hover:text-white p-1">
-                                <Trash2 size={16} />
-                             </button>
-                          </div>
-                        ))
+                        <div className="head-event-list-container">
+                            {viewedDay.events.map((ev, i) => (
+                              <motion.div 
+                                key={i} 
+                                className={`head-event-card ${ev.type}`}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: i * 0.05 }}
+                              >
+                                 <div className="head-event-card-content">
+                                    <div className="head-event-header-row">
+                                        <span className={`head-event-badge ${ev.type}`}>{ev.type}</span>
+                                        {/* Placeholder for time if we add time later */}
+                                        {/* <span className="head-event-time">09:00 AM</span> */}
+                                    </div>
+                                    <h4 className="head-event-title">{ev.title}</h4>
+                                    <p className="head-event-desc">{ev.description || "No additional details."}</p>
+                                 </div>
+                                 <button onClick={(e) => handleDeleteEvent(ev.id, e)} className="head-event-delete-btn" title="Delete">
+                                    <Trash2 size={18} />
+                                 </button>
+                              </motion.div>
+                            ))}
+                            <button 
+                                className="head-btn-dashed mt-4"
+                                onClick={() => {
+                                    setNewEvent(prev => ({ ...prev, date: viewedDay.date }));
+                                    setViewedDay(null);
+                                    setIsAddModalOpen(true);
+                                }}
+                            >
+                                <Plus size={16} /> Add Another Event
+                            </button>
+                        </div>
                     )}
                   </div>
                 </motion.div>

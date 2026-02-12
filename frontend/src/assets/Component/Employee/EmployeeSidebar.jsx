@@ -92,7 +92,7 @@ const EmployeeSidebar = ({ onToggle }) => {
         },
 
         {
-          path: "/calendar",
+          path: "/employee/calendar",
           icon: <FaCalendarAlt />,
           label: "Company Calendar",
         },

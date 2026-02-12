@@ -160,7 +160,7 @@ const HeadSidebar = ({ unreadCount = 0, onToggle }) => {
       items: [
         // ปฏิทินบริษัท/วันหยุด
         {
-          path: "/calendar",
+          path: "/head/calendar",
           icon: <FaCalendarAlt />,
           label: "Company Calendar",
         },

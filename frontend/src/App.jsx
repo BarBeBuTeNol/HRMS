@@ -12,6 +12,7 @@ import ShiftRequestsPage from "./assets/pages/pageEmployee/ShiftRequests/ShiftRe
 import MySchedulePage from "./assets/pages/pageEmployee/MySchedule/MySchedulePage";
 import NotificationPage from "./assets/pages/pageEmployee/notification-emp/NotificationPage";
 import MyWork from "./assets/pages/pageEmployee/myWork/myWork";
+import CalendarEmp from "./assets/Component/calendar/calendar-emp/CalendarEmp";
 
 // =========================================
 //                 HEAD PAGES
@@ -32,6 +33,7 @@ import ShiftRequestHead from "./assets/pages/pageHead/shift-request/ShiftRequest
 import DepartmentNewsHead from "./assets/pages/pageHead/department-new/DepartmentNewsHead";
 import TeamPerformanceHead from "./assets/pages/pageHead/team-performance/TeamPerformanceHead";
 import CreateProject from "./assets/pages/pageHead/create-project/CreateProject";
+import CalendarHead from "./assets/Component/calendar/calendar-head/CalendarHead";
 
 // =========================================
 //                  HR PAGES
@@ -86,6 +88,7 @@ function App() {
       <Route path="/employee/schedule" element={<MySchedulePage />} />
       <Route path="/employee/notifications" element={<NotificationPage />} />
       <Route path="/employee/mywork" element={<MyWork />} />
+      <Route path="/employee/calendar" element={<CalendarEmp />} />
       {/* ========================================= */}
       {/*              HEAD ROUTES               */}
       {/* ========================================= */}
@@ -108,6 +111,7 @@ function App() {
       <Route path="/head/shift-replacements" element={<ShiftRequestHead />} />
       <Route path="/head/team-performance" element={<TeamPerformanceHead />} />
       <Route path="/head/create-project" element={<CreateProject />} />
+      <Route path="/head/calendar" element={<CalendarHead />} />
       {/* ========================================= */}
       {/*               HR ROUTES                */}
       {/* ========================================= */}

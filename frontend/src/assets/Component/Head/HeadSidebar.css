@@ -260,3 +260,115 @@
   background: rgba(239, 68, 68, 0.1);
   border: 1px solid rgba(239, 68, 68, 0.2);
 }
+
+/* Responsive Mobile Sidebar - Transform to Top Bar */
+@media screen and (max-width: 768px) {
+  .head-sidebar {
+    position: relative;
+    height: auto;
+    width: 100% !important; /* Force full width to override motion inline styles */
+    flex-direction: row;
+    align-items: center;
+    padding: 10px;
+    z-index: 50;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-right: none;
+    border-bottom: 1px solid var(--head-glass-border);
+  }
+
+  .head-toggle-btn {
+    display: none; /* Hide toggle on mobile */
+  }
+
+  .head-profile-section {
+    padding: 5px;
+    min-height: auto;
+    border-bottom: none;
+    margin-right: 15px;
+    flex-direction: row;
+  }
+
+  .head-user-info {
+    display: none !important; /* Hide text info/role to save space */
+  }
+
+  .head-avatar-wrapper {
+      margin-bottom: 0 !important;
+      width: 40px !important;
+      height: 40px !important;
+  }
+
+  .head-avatar {
+    width: 100%;
+    height: 100%;
+  }
+
+  .head-divider,
+  .head-footer {
+    display: none; /* Hide divider and logout footer on mobile bar */
+  }
+
+  .head-menu-container {
+    display: flex; /* Horizontal menu */
+    flex-direction: row;
+    padding: 0;
+    overflow-x: auto;
+    align-items: center;
+    flex: 1;
+  }
+
+  .head-menu-group {
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: row;
+  }
+
+  .head-menu-group ul {
+    display: flex;
+    flex-direction: row;
+  }
+
+  .head-group-title {
+    display: none;
+  }
+
+  .head-menu-item {
+    padding: 8px;
+    margin: 0 4px;
+    flex-direction: column;
+    justify-content: center;
+    border-radius: 8px;
+    border: none; /* simple border reset */
+  }
+  
+  /* Ensure active state looks good on mobile */
+  .head-menu-item.active {
+      background: rgba(197, 160, 89, 0.15);
+      border: 1px solid rgba(197, 160, 89, 0.3);
+  }
+  
+  .head-menu-item.active::before {
+      display: none; /* Remove left border indicator */
+  }
+
+  .head-icon {
+    margin-right: 0;
+    font-size: 1.2rem;
+    width: auto;
+  }
+
+  .head-label {
+    display: none !important; /* Hide labels on mobile */
+  }
+  
+  /* Badges on mobile */
+  .head-badge {
+      display: none; /* Hide full badge on mobile to update to dot? or keep small? */
+  }
+  .head-dot-badge {
+      top: 5px;
+      right: 5px;
+  }
+}
