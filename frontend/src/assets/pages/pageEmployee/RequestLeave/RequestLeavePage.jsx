@@ -269,6 +269,9 @@ const RequestLeavePage = () => {
     }
   };
 
+  // Helpers
+  const todayDate = new Date().toISOString().split("T")[0];
+
   return (
     <div className="request-leave-page">
       <EmployeeSidebar />
@@ -372,6 +375,7 @@ const RequestLeavePage = () => {
                             type="date"
                             className="form-control"
                             value={formData.startDate}
+                            min={todayDate}
                             onChange={(e) => setFormData({...formData, startDate: e.target.value})}
                             required
                           />
@@ -382,7 +386,7 @@ const RequestLeavePage = () => {
                             type="date"
                             className="form-control"
                             value={formData.endDate}
-                            min={formData.startDate}
+                            min={formData.startDate || todayDate}
                             onChange={(e) => setFormData({...formData, endDate: e.target.value})}
                             required
                           />

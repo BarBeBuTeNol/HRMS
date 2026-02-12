@@ -237,8 +237,10 @@ const LeaveAnalytics = () => {
                   contentStyle={{
                     backgroundColor: "#1e293b",
                     border: "1px solid #334155",
-                    color: "#fff",
+                    borderRadius: "8px",
                   }}
+                  itemStyle={{ color: "#fff" }}
+                  labelStyle={{ color: "#fff" }}
                 />
                 <Legend />
               </PieChart>
@@ -267,8 +269,10 @@ const LeaveAnalytics = () => {
                   contentStyle={{
                     backgroundColor: "#1e293b",
                     border: "1px solid #334155",
-                    color: "#fff",
+                    borderRadius: "8px",
                   }}
+                  itemStyle={{ color: "#fff" }}
+                  labelStyle={{ color: "#fff" }}
                 />
                 <Legend />
                 <Line

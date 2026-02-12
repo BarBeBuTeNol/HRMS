@@ -15,25 +15,29 @@
   --font-family: var(--head-font-family, 'Outfit', sans-serif);
 }
 
-.calendar-layout-head {
+.head-calendar-layout {
     width: 100%;
     min-height: 100vh;
     background: var(--head-bg-gradient, linear-gradient(180deg, #0f172a 0%, #1e293b 100%));
-    overflow-x: hidden;
+    overflow: hidden;
     position: relative;
+    display: flex;
+    flex-direction: row;
 }
 
-.calendar-content-area {
+.head-calendar-content {
+    flex: 1; /* Take remaining space */
+    min-width: 0; 
     padding: 2rem;
     min-height: 100vh;
     box-sizing: border-box;
     transition: margin-left 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-    margin-left: 260px; /* Matches Sidebar Expanded Width */
+    margin-left: 260px; /* Space for fixed expanded sidebar */
     width: auto;
 }
 
-.calendar-layout-head.sidebar-collapsed .calendar-content-area {
-    margin-left: 80px; /* Matches Sidebar Collapsed Width */
+.head-calendar-layout.sidebar-collapsed .head-calendar-content {
+    margin-left: 80px; /* Space for fixed collapsed sidebar */
 }
 
 .head-calendar-container {
@@ -626,25 +630,25 @@
 
 /* --- Responsive Design --- */
 @media (max-width: 1024px) { /* Tablet */
-    .calendar-content-area {
+    .head-calendar-content {
         padding: 1.5rem;
-        margin-left: 80px; /* Always collapsed on tablet usually */
-    }
-    .calendar-layout-head:not(.sidebar-collapsed) .calendar-content-area {
-        margin-left: 80px; /* Override if state gets out of sync/sidebar forces collapse */
-    }
-    .head-calendar-grid {
-        gap: 8px;
-        grid-auto-rows: minmax(100px, 1fr);
+        margin-left: 80px; /* Matches Sidebar Collapsed Width */
     }
 }
 
 @media (max-width: 768px) { /* Mobile */
-  .calendar-content-area {
-      padding: 0.5rem;
-      margin-left: 0 !important; /* Sidebar is now top bar */
-      padding-bottom: 20px; /* Reduced from 80px as sidebar is not fixed bottom */
+  .head-calendar-layout {
+      flex-direction: column;
+      overflow-y: auto;
+  }
+
+  .head-calendar-content {
+      padding: 0.75rem;
+      margin-left: 0 !important;
+      padding-bottom: 20px;
       width: 100%;
+      position: relative;
+      flex: none; /* Reset flex for stacking */
   }
   
   .head-calendar-container { 

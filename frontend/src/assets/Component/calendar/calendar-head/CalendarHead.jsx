@@ -123,10 +123,10 @@ const CalendarHead = () => {
   };
 
   return (
-    <div className={`calendar-layout-head ${isSidebarOpen ? "" : "sidebar-collapsed"}`}>
+    <div className={`head-calendar-layout ${isSidebarOpen ? "" : "sidebar-collapsed"}`}>
       <HeadSidebar onToggle={setIsSidebarOpen} />
       
-      <div className="calendar-content-area">
+      <div className="head-calendar-content">
         <div className="head-calendar-container">
           {/* Header */}
           <div className="head-calendar-header">

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -22,6 +22,16 @@ const Sidebar_HR = () => {
   const [open, setOpen] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
+  const sidebarRef = useRef(null);
+
+  useEffect(() => {
+    if (sidebarRef.current) {
+      const activeItem = sidebarRef.current.querySelector(".hr-menu-item.active");
+      if (activeItem) {
+        activeItem.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+    }
+  }, [location.pathname]);
 
   const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
   const displayUsername = currentUser.username || "Guest";
@@ -134,7 +144,7 @@ const Sidebar_HR = () => {
         </button>
       </div>
 
-      <div className="hr-sidebar-menu">
+      <div className="hr-sidebar-menu" ref={sidebarRef}>
         {menuItems.map((group, index) => (
           <div key={index} className="hr-menu-group">
             {open && <h4 className="hr-group-title">{group.title}</h4>}

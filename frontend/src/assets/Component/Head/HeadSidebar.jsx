@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -27,6 +27,7 @@ import LoadingHead from "../loading/loading-head/LoadingHead";
 const HeadSidebar = ({ unreadCount = 0, onToggle }) => {
   const [open, setOpen] = useState(() => window.innerWidth > 1024);
   const [loading, setLoading] = useState(true);
+  const sidebarRef = useRef(null);
 
   useEffect(() => {
     // Page transition loader since Sidebar remounts on nav
@@ -69,6 +70,16 @@ const HeadSidebar = ({ unreadCount = 0, onToggle }) => {
     localStorage.clear();
     navigate("/login");
   };
+
+  // --- Auto-scroll active item into view ---
+  useEffect(() => {
+    if (sidebarRef.current) {
+      const activeItem = sidebarRef.current.querySelector(".head-menu-item.active");
+      if (activeItem) {
+        activeItem.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+    }
+  }, [location.pathname]);
 
   const menuGroups = [
     {
@@ -247,7 +258,7 @@ const HeadSidebar = ({ unreadCount = 0, onToggle }) => {
         <div className="head-divider" />
 
         {/* Menu Items */}
-        <nav className="head-menu-container">
+        <nav className="head-menu-container" ref={sidebarRef}>
           {menuGroups.map((group, idx) => (
             <div key={idx} className="head-menu-group">
               {open && group.title && (

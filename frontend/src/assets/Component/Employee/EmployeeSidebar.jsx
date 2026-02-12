@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -27,6 +27,7 @@ const EmployeeSidebar = ({ onToggle }) => {
     if (onToggle) onToggle(nextState);
   };
   const [loading, setLoading] = useState(true);
+  const sidebarRef = useRef(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 800);
@@ -64,6 +65,16 @@ const EmployeeSidebar = ({ onToggle }) => {
     // Optionally clear specific keys or just navigate
     navigate("/login");
   };
+
+  // --- Auto-scroll active item into view ---
+  useEffect(() => {
+    if (sidebarRef.current) {
+      const activeItem = sidebarRef.current.querySelector(".emp-menu-item.active");
+      if (activeItem) {
+        activeItem.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+    }
+  }, [location.pathname]);
 
   const isActive = (path) => location.pathname === path;
 
@@ -184,7 +195,7 @@ const EmployeeSidebar = ({ onToggle }) => {
         <div className="emp-divider" />
 
         {/* --- Menu Items --- */}
-        <nav className="emp-menu-container">
+        <nav className="emp-menu-container" ref={sidebarRef}>
           {menuGroups.map((group, idx) => (
             <div key={idx} className="emp-menu-group">
               {open && group.title && (

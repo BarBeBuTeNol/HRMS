@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   FaTachometerAlt,
@@ -20,6 +20,16 @@ import "./SidebarCHRO.css";
 const SidebarCHRO = ({ isOpen, toggleSidebar }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const sidebarRef = useRef(null);
+
+  useEffect(() => {
+    if (sidebarRef.current) {
+      const activeItem = sidebarRef.current.querySelector(".chro-nav-item.active");
+      if (activeItem) {
+        activeItem.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+    }
+  }, [location.pathname]);
 
   const menuItems = [
     {
@@ -106,7 +116,7 @@ const SidebarCHRO = ({ isOpen, toggleSidebar }) => {
           <div className="chro-divider" />
 
           {/* Navigation Menu */}
-          <nav className="chro-nav-menu">
+          <nav className="chro-nav-menu" ref={sidebarRef}>
             {menuItems.map((item) => {
               // Simple check for active path
               // For Dashboard tab params, we just check base path
