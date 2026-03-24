@@ -12,6 +12,21 @@ export const createReplacementRequest = async (req: Request, res: Response) => {
             return res.status(400).json({ message: "Missing required fields (task/shift, replacement, reason)" });
         }
 
+        if (parseInt(replacement_id) === requesterId) {
+            return res.status(400).json({ message: "คุณไม่สามารถร้องขอให้ตัวเองทำแทนตัวเองได้ (Cannot request yourself as a replacement.)" });
+        }
+
+        // Prevent duplicate pending requests for the same task/shift
+        const existingRequests = await taskReplacementRepository.findByRequester(requesterId);
+        const hasPending = existingRequests.some((r: any) => 
+            r.status === 'Pending' && 
+            ((task_id && r.task_id == task_id) || (shift_id && r.shift_id == shift_id))
+        );
+
+        if (hasPending) {
+            return res.status(400).json({ message: "คุณได้ส่งคำขอแทนงานสำหรับรายการนี้ไปแล้วและกำลังรออนุมัติ (A pending replacement request already exists.)" });
+        }
+
         const requestId = await taskReplacementRepository.createRequest({
             task_id,
             shift_id,
@@ -75,7 +90,7 @@ export const getReplacementCandidates = async (req: Request, res: Response) => {
         // For now, we reuse existing repo logic or add a new method.
         // Let's use userRepository.findAll with a large limit.
         
-        const { rows } = await userRepository.findAll({ limit: 100, offset: 0, status: 'Active' } as any);
+        const { rows } = await userRepository.findAll({ limit: 10000, offset: 0, status: 'Active' } as any);
         
         // Filter out self
         const candidates = rows.filter((u: any) => u.id !== requesterId).map((u: any) => ({
@@ -140,10 +155,10 @@ export const approveRequest = async (req: Request, res: Response) => {
         // I'll add a proper findById to repo if I could, but I can't edit repo again in this single step easily.
         // I'll use `findAllPending` and find the one matching ID.
         
-        const allPending = await taskReplacementRepository.findAllPending();
-        const request = allPending.find((r: any) => r.id === parseInt(id));
+        // Using the newly added findById method for better performance compared to finding in allPending
+        const request = await taskReplacementRepository.findById(parseInt(id));
 
-        if (!request) {
+        if (!request || request.status !== 'Pending') {
             return res.status(404).json({ message: "Request not found or not pending" });
         }
 

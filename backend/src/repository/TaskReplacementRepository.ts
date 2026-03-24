@@ -51,12 +51,17 @@ class TaskReplacementRepository {
 
     // Get eligible tasks (In Progress) for a user
     async getEligibleTasks(userId: number) {
-        // Corrected schema: matches provided table definition
+        // Corrected schema: excludes tasks that already have a Pending replacement request
         const [rows] = await pool.query<RowDataPacket[]>(
             `SELECT id, task_name, description, deadline 
              FROM task_assignments 
-             WHERE user_id = ? AND status = 'In Progress'`,
-            [userId]
+             WHERE user_id = ? 
+             AND status NOT IN ('Completed', 'Cancelled', 'Done')
+             AND id NOT IN (
+                 SELECT task_id FROM task_replacements 
+                 WHERE original_user_id = ? AND status = 'Pending' AND task_id IS NOT NULL
+             )`,
+            [userId, userId]
         );
         return rows;
     }
@@ -64,11 +69,16 @@ class TaskReplacementRepository {
     // Get eligible shifts (Future dates) for a user
     async getEligibleShifts(userId: number) {
         // Corrected schema: work_date instead of shift_date, shift instead of shift_type
+        // Excludes shifts that already have a Pending replacement request
         const [rows] = await pool.query<RowDataPacket[]>(
             `SELECT id, work_date as shift_date, shift as shift_type 
              FROM work_schedules 
-             WHERE user_id = ? AND work_date >= CURDATE()`,
-            [userId]
+             WHERE user_id = ? AND work_date >= CURDATE()
+             AND id NOT IN (
+                 SELECT shift_id FROM task_replacements 
+                 WHERE original_user_id = ? AND status = 'Pending' AND shift_id IS NOT NULL
+             )`,
+            [userId, userId]
         );
         return rows;
     }
@@ -117,6 +127,30 @@ class TaskReplacementRepository {
             ORDER BY tr.created_at ASC`
         );
         return rows;
+    }
+
+    // Find a specific request by ID
+    async findById(id: number) {
+        const [rows] = await pool.query<RowDataPacket[]>(
+            `SELECT 
+                tr.*,
+                u_orig.first_name AS original_first_name,
+                u_orig.last_name AS original_last_name,
+                u_rep.first_name AS replacement_first_name,
+                u_rep.last_name AS replacement_last_name,
+                ta.task_name,
+                ta.deadline,
+                ws.work_date,
+                ws.shift
+            FROM task_replacements tr
+            JOIN users u_orig ON tr.original_user_id = u_orig.id
+            JOIN users u_rep ON tr.replacement_user_id = u_rep.id
+            LEFT JOIN task_assignments ta ON tr.task_id = ta.id
+            LEFT JOIN work_schedules ws ON tr.shift_id = ws.id
+            WHERE tr.id = ?`,
+            [id]
+        );
+        return rows[0];
     }
 
     // Update request status (Approve/Reject)
