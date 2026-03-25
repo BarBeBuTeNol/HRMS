@@ -105,6 +105,18 @@ export default function DirectPosition() {
     fetchData();
   }, [currentPage, pageSize]); // Re-fetch on page change
 
+  // Prevent background scrolling when a modal is open
+  useEffect(() => {
+    if (selectedEmployee || showBulkModal) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [selectedEmployee, showBulkModal]);
+
   // Filter Logic
   const filteredEmployees = useMemo(() => {
     return employees.filter((e) => {

@@ -1079,3 +1079,38 @@
   justify-content: center;
   margin-bottom: 40px;
 }
+
+/* --- Responsive Header & Date Badge --- */
+@media (max-width: 768px) {
+  .chro-header-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+  }
+  
+  .chro-welcome-text h1 {
+    font-size: 1.8rem;
+  }
+
+  .chro-welcome-text p {
+    font-size: 0.95rem;
+  }
+
+  .chro-date-badge {
+    align-self: flex-start;
+    width: 100%;
+    justify-content: center;
+    padding: 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #fff;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
+  }
+}
+

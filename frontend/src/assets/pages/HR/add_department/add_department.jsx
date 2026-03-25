@@ -393,12 +393,14 @@ const AddDepartment = () => {
                               >
                                 {dept.department_name.charAt(0).toUpperCase()}
                               </div>
-                              <span className="dept-name-text">
-                                {dept.department_name}
-                              </span>
-                              {index === 0 && !searchTerm && (
-                                <span className="new-badge">NEW</span>
-                              )}
+                              <div className="dept-text-wrapper">
+                                <span className="dept-name-text">
+                                  {dept.department_name}
+                                </span>
+                                {index === 0 && !searchTerm && (
+                                  <span className="new-badge">NEW</span>
+                                )}
+                              </div>
                             </div>
                           </td>
                           <td style={{ textAlign: "center" }}>

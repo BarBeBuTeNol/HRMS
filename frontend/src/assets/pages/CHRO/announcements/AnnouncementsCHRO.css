@@ -878,4 +878,78 @@
     display: flex;
     justify-content: center;
   }
+  
+  /* --- Premium Alerts System Mobile Responsiveness --- */
+  .exclusive-noti-item {
+    position: relative;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1.25rem;
+    padding-right: 2.5rem; /* Space for arrow */
+    gap: 0;
+  }
+
+  .noti-indicator {
+    position: absolute;
+    top: 1.25rem;
+    left: 1rem;
+    width: auto;
+  }
+
+  .glow-point {
+    width: 10px;
+    height: 10px;
+    box-shadow: 0 0 12px var(--chro-gold);
+  }
+
+  /* Adjust content if it has unread indicator */
+  .exclusive-noti-item.unread .noti-content {
+    padding-left: 1.5rem;
+  }
+
+  .noti-content {
+    width: 100%;
+    padding: 0; 
+  }
+
+  .noti-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 0.8rem;
+  }
+
+  /* Style the source text */
+  .noti-source {
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+  }
+
+  /* Premium Box for Time Announced */
+  .noti-time {
+    display: inline-flex;
+    align-items: center;
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(217, 119, 6, 0.05));
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    color: var(--chro-gold);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .noti-message {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: #cbd5e1;
+  }
+
+  .noti-arrow {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.4;
+  }
 }

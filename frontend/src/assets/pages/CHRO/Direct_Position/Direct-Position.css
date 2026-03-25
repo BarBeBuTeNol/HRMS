@@ -782,19 +782,45 @@
   }
 
   /* Modal */
+  .position-change-modal {
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    overflow: hidden; /* Stop external scrolling */
+  }
+  
+  .modal-content.premium-modal {
+    width: 100%;
+    max-height: 90vh; /* Restrict height to viewport */
+    overflow-y: auto; /* Enable internal scrolling */
+    -webkit-overflow-scrolling: touch; /* Smooth iOS scroll */
+    margin-bottom: 0;
+  }
+
+  /* Sticky header inside modal so context is always visible */
   .modal-user-header {
     flex-direction: column;
     text-align: center;
     padding: 20px;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 10; /* Above scrolling content */
+  }
+
+  .full-width {
+    grid-column: span 1;
   }
 
   .modal-body {
-    padding: 20px;
+    padding: 20px 16px;
   }
 
   .modal-actions {
-    flex-direction: column;
-    gap: 10px;
+    flex-direction: column-reverse;
+    gap: 12px;
+    margin-top: 24px;
+    padding-bottom: 10px;
   }
 
   .btn-confirm,
@@ -802,6 +828,7 @@
     width: 100%;
     justify-content: center;
     display: flex;
+    padding: 14px;
   }
 
   /* Pagination */

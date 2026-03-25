@@ -337,7 +337,6 @@
 .hr-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(16px);
   z-index: 9999;
   display: flex;
@@ -562,9 +561,202 @@
 }
 
 @media (max-width: 768px) {
-  .hr-calendar-header { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
-  .hr-calendar-nav { width: 100%; justify-content: space-between; }
-  .hr-calendar-grid { gap: 8px; }
-  .hr-calendar-day { padding: 8px; min-height: 80px; border-radius: 12px; }
-  .hr-day-number { width: 24px; height: 24px; font-size: 0.9rem; }
+  .calendar-layout-hr { 
+    padding: 0.5rem; 
+  }
+  
+  .hr-calendar-container { 
+    padding: 1.5rem 1rem; 
+    border-radius: 20px; 
+    min-height: auto; 
+  }
+
+  /* Header adjustments */
+  .hr-calendar-header { 
+    flex-direction: column; 
+    align-items: flex-start; 
+    gap: 1.5rem; 
+    padding-bottom: 1.25rem;
+  }
+  
+  .hr-calendar-title { 
+    flex-direction: column; 
+    align-items: flex-start; 
+    gap: 0.75rem; 
+  }
+  
+  .hr-icon-wrapper { 
+    padding: 0.75rem; 
+    border-radius: 16px; 
+  }
+  
+  .hr-icon-wrapper svg { 
+    width: 24px; 
+    height: 24px; 
+  }
+  
+  .hr-calendar-title span:last-child { 
+    font-size: 2rem; 
+  }
+
+  /* Navigation Options */
+  .hr-calendar-nav { 
+    width: 100%; 
+    flex-direction: column; 
+    align-items: stretch;
+    gap: 1rem; 
+  }
+  
+  .hr-nav-group { 
+    width: 100%; 
+    justify-content: space-between; 
+  }
+  
+  .hr-cal-btn.primary { 
+    width: 100%; 
+    justify-content: center; 
+    padding: 1rem;
+  }
+
+  /* Calendar Grid Structure */
+  .hr-calendar-grid-header { 
+    gap: 2px; 
+    padding: 4px; 
+    margin-bottom: 0.5rem; 
+  }
+  
+  .hr-day-header { 
+    padding: 0.4rem 0; 
+    font-size: 0.7rem; 
+  }
+  
+  .hr-calendar-grid { 
+    gap: 4px; 
+    grid-auto-rows: minmax(65px, 1fr); 
+  }
+  
+  .hr-calendar-day { 
+    padding: 4px; 
+    border-radius: 10px; 
+    min-height: 65px; 
+    align-items: center; 
+  }
+  
+  .hr-day-number { 
+    width: 28px; 
+    height: 28px; 
+    font-size: 0.95rem; 
+    margin-bottom: 2px;
+  }
+
+  /* Transform Event Pills to Dots on Mobile */
+  .hr-events-container { 
+    display: flex; 
+    flex-direction: row; 
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 3px;
+    margin-top: 0;
+  }
+  
+  .hr-calendar-event {
+    width: 6px;
+    height: 6px;
+    padding: 0;
+    border-radius: 50%;
+    color: transparent; /* hide text */
+    overflow: hidden;
+    border: none;
+    box-shadow: none;
+    background-color: transparent;
+  }
+
+  /* Set explicit colors for dots */
+  .hr-calendar-event.holiday { background: #ef4444; }
+  .hr-calendar-event.event { background: #6366f1; }
+  .hr-calendar-event.meeting { background: #10b981; }
+
+  /* Modal Adjustments */
+  .hr-modal-overlay {
+    padding: 1rem;
+    align-items: center; /* Center vertically on mobile iOS */
+  }
+
+  .hr-modal { 
+    padding: 0; 
+    max-height: 90vh; 
+    border-radius: 20px;
+  }
+  
+  .hr-modal-header { 
+    padding: 1.25rem 1.5rem; 
+    padding-right: 4rem; /* Crucial: reserve space so text doesn't overlap the absolute X close button */
+    flex-direction: column; 
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .hr-modal-title h3 {
+    font-size: 1.4rem;
+  }
+
+  .hr-modal-close { 
+    position: absolute; 
+    top: 1.25rem; 
+    right: 1.25rem; 
+    padding: 8px; /* Slightly smaller tap target */
+  }
+  
+  .hr-modal-content { 
+    padding: 1.25rem 1.5rem; 
+  }
+
+  .hr-modal-event-card {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .hr-event-bar {
+    width: 100%;
+    height: 4px;
+  }
+
+  /* Form & Actions inside Modal */
+  .hr-form-group {
+    margin-bottom: 1rem; /* tighter spacing for mobile */
+  }
+
+  .hr-form-group label {
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  /* Reduce overly fat padding on inputs for mobile */
+  .hr-form-group input, 
+  .hr-form-group select, 
+  .hr-form-group textarea {
+    padding: 0.8rem 1rem;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .hr-flex.hr-gap-4 {
+    flex-direction: column; /* Stack vertically to prevent input squishing on small screens */
+    gap: 0; 
+  }
+
+  .hr-modal-actions {
+    flex-direction: column-reverse; /* primary at top */
+    gap: 0.75rem;
+    padding-top: 1.5rem;
+    margin-top: 1.5rem;
+  }
+
+  .hr-btn-cancel, .hr-btn-save {
+    width: 100%;
+    margin: 0;
+    padding: 0.85rem;
+  }
 }

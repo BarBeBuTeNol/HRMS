@@ -414,14 +414,16 @@ const CalendarCHRO = () => {
                                 </div>
                                 <div className="chro-modal-body" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
                                     {viewedDay.events.length === 0 ? (
-                                        <div style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
-                                            No events scheduled.
-                                            <br/><br/>
-                                            <button className="chro-create-btn" onClick={() => {
+                                        <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#666' }}>
+                                            <div style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.5 }}>📅</div>
+                                            <p style={{ margin: '0 0 1.5rem', fontSize: '1.1rem' }}>No agenda scheduled.</p>
+                                            <button className="chro-btn-submit" style={{ width: '100%', borderRadius: '12px', padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} onClick={() => {
                                                 setNewEvent(prev => ({...prev, date: viewedDay.date}));
                                                 setViewedDay(null);
                                                 setIsAddModalOpen(true);
-                                            }}>+ Add Now</button>
+                                            }}>
+                                                <Plus size={18} /> Add New Agenda
+                                            </button>
                                         </div>
                                     ) : (
                                         viewedDay.events.map((ev, i) => (

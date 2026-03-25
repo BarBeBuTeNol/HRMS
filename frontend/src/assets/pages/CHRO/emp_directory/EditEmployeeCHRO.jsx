@@ -411,9 +411,9 @@ const EditEmployeeCHRO = () => {
                 <p>{formData.empId}</p>
               </div>
 
-              <div className="chro-nav-menu">
+              <div className="edit-emp-nav-menu">
                 <button
-                  className={`chro-nav-item ${
+                  className={`edit-emp-nav-item ${
                     activeTab === "personal" ? "active" : ""
                   }`}
                   onClick={() => setActiveTab("personal")}
@@ -421,7 +421,7 @@ const EditEmployeeCHRO = () => {
                   <FaUser /> Personal Data
                 </button>
                 <button
-                  className={`chro-nav-item ${
+                  className={`edit-emp-nav-item ${
                     activeTab === "job" ? "active" : ""
                   }`}
                   onClick={() => setActiveTab("job")}
@@ -429,7 +429,7 @@ const EditEmployeeCHRO = () => {
                   <FaBriefcase /> Job & Position
                 </button>
                 <button
-                  className={`chro-nav-item ${
+                  className={`edit-emp-nav-item ${
                     activeTab === "education" ? "active" : ""
                   }`}
                   onClick={() => setActiveTab("education")}

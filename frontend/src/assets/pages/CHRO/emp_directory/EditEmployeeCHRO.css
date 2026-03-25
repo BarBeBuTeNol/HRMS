@@ -172,13 +172,13 @@
 }
 
 /* Navigation Menu */
-.chro-nav-menu {
+.edit-emp-nav-menu {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.chro-nav-item {
+.edit-emp-nav-item {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -194,12 +194,12 @@
   font-weight: 500;
 }
 
-.chro-nav-item:hover {
+.edit-emp-nav-item:hover {
   background: rgba(255, 255, 255, 0.05);
   color: #e2e8f0;
 }
 
-.chro-nav-item.active {
+.edit-emp-nav-item.active {
   background: linear-gradient(90deg, rgba(217, 119, 6, 0.2), transparent);
   border-left: 4px solid #f59e0b;
   color: #fbbf24;
@@ -287,3 +287,100 @@
 }
 
 /* Animations included via framer-motion in JSX */
+
+/* --- Responsive Design for Mobile --- */
+@media screen and (max-width: 1024px) {
+  .chro-edit-layout {
+    grid-template-columns: 1fr; /* Stack sidebar and content */
+    gap: 20px;
+  }
+  
+  .edit-emp-nav-menu {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .edit-emp-nav-item {
+    flex: 1;
+    min-width: 140px;
+    justify-content: center;
+    text-align: center;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .chro-edit-container {
+    padding: 10px;
+  }
+
+  .chro-edit-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .chro-edit-title h1 {
+    font-size: 1.4rem;
+    line-height: 1.3;
+  }
+  
+  .chro-edit-header > button {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+  
+  .chro-save-btn,
+  .chro-back-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 12px;
+  }
+  
+  .chro-edit-sidebar {
+    padding: 20px 15px;
+  }
+
+  .edit-emp-nav-menu {
+    flex-direction: column;
+    gap: 12px;
+    padding-bottom: 0;
+    overflow-x: visible;
+  }
+
+  .edit-emp-nav-item {
+    flex: unset;
+    width: 100%;
+    min-width: unset;
+    padding: 16px 20px;
+    white-space: normal;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.03);
+    font-size: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    justify-content: flex-start;
+    text-align: left;
+    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  .edit-emp-nav-item.active {
+    background: linear-gradient(135deg, rgba(217, 119, 6, 0.15), rgba(180, 83, 9, 0.25));
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    color: #fbbf24;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+  }
+  
+  .chro-edit-content {
+    padding: 20px 15px;
+  }
+  
+  .chro-input-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .chro-form-group.full-width {
+    grid-column: span 1;
+  }
+}

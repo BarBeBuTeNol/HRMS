@@ -373,7 +373,6 @@
   .chro-logo-section, 
   .chro-divider, 
   .chro-user-info, 
-  .chro-logout-btn,
   .chro-active-indicator {
     display: none !important;
   }
@@ -382,11 +381,43 @@
   .chro-sidebar-footer {
     order: -1 !important;
     padding: 0 !important;
-    margin: 0 10px 0 0 !important;
+    margin: 0 10px 0 10px !important;
     border: none !important;
     background: transparent !important;
     width: auto !important;
     flex-shrink: 0 !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  /* Logout Button */
+  .chro-logout-btn {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 40px !important;
+    height: 40px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 12px !important;
+    background: rgba(239, 68, 68, 0.1) !important;
+    color: #ef4444 !important;
+    border: 1px solid rgba(239, 68, 68, 0.3) !important;
+  }
+  
+  .chro-logout-btn:hover {
+    background: rgba(239, 68, 68, 0.2) !important;
+  }
+  
+  .chro-logout-btn span {
+    display: none !important;
+  }
+
+  .chro-logout-btn svg {
+    margin: 0 !important;
+    font-size: 1.2rem !important;
   }
   
   .chro-user-profile {

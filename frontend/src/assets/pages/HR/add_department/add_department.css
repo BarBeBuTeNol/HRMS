@@ -645,6 +645,13 @@
   gap: 1rem;
 }
 
+.dept-text-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
 .dept-name-text {
   font-size: 1.05rem;
   font-weight: 500;
@@ -738,7 +745,36 @@
 
 @media (max-width: 768px) {
   .hr-add-dept-page {
-    padding: 1rem 0.5rem; /* Less padding to maximize space */
+    padding: 1rem 1rem; /* Better padding for mobile */
+  }
+
+  /* --- Mobile Page Header & Date Display Customization --- */
+  .page-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    border-bottom: none; /* Remove border to keep it clean */
+  }
+
+  .header-titles h1 {
+    font-size: 1.6rem;
+  }
+
+  .header-titles p {
+    font-size: 0.9rem;
+  }
+
+  .header-date {
+    width: 100%;
+    justify-content: center;
+    padding: 0.75rem;
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.8));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    font-size: 0.9rem;
+    color: #bae6fd;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   }
 
   /* Stack Header - Center Align for Mobile */
@@ -825,26 +861,49 @@
   .dept-row td:nth-child(2) {
     /* Name Cell */
     order: 1;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
+    padding-right: 3.5rem; /* Reserve absolute space for the ID tag to prevent overlap */
   }
 
   .dept-name-cell {
+    display: flex;
     flex-direction: row;
-    align-items: center;
+    align-items: flex-start; /* Keeps avatar top-aligned if text wraps */
+    gap: 0.8rem;
+  }
+
+  .dept-text-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0.35rem;
+    flex: 1;
+    min-width: 0;
   }
 
   .avatar-style-1,
   .avatar-style-2,
   .avatar-style-3,
   .avatar-style-4 {
-    width: 48px;
-    height: 48px;
+    width: 44px;
+    height: 44px;
     font-size: 1.2rem;
+    flex-shrink: 0; /* Prevent avatar from getting squished by long text */
   }
 
   .dept-name-text {
     font-size: 1.1rem;
-    font-weight: 600;
+    font-weight: 700;
+    line-height: 1.35;
+    word-break: break-word; /* Allow long words to break naturally */
+    display: block;
+    margin-top: 0;
+  }
+
+  .new-badge {
+    margin-left: 0; /* Reset desktop margin */
+    align-self: flex-start;
   }
 
   /* 2. ID - Absolute Top Right */
