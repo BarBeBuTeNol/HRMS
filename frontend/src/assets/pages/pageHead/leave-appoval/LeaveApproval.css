@@ -516,9 +516,12 @@
 }
 
 @media screen and (max-width: 768px) {
+  .leave-approval-container {
+    flex-direction: column;
+  }
   .leave-approval-content {
-    margin-left: 80px !important; /* Ensure content clears sidebar */
-    width: calc(100% - 80px);
+    margin-left: 0 !important;
+    width: 100% !important;
     padding: 1rem;
     padding-bottom: 5rem;
   }

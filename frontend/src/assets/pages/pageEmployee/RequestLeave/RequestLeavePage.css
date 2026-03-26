@@ -434,7 +434,6 @@
 .spin { animation: spin 1s linear infinite; }
 @keyframes spin { 100% { transform: rotate(360deg); } }
 
-/* Responsive */
 @media (max-width: 1024px) {
   .main-layout-grid {
     grid-template-columns: 1fr;
@@ -442,20 +441,90 @@
 }
 
 @media (max-width: 768px) {
-  .request-leave-main {
-    padding: 1.5rem;
+  .request-leave-page {
+    flex-direction: column;
   }
+  
+  .request-leave-main {
+    padding: 1.25rem;
+  }
+  
+  .content-container {
+    padding-bottom: 5rem; /* extra space at bottom for mobile */
+  }
+
   .balance-cards-grid {
     grid-template-columns: 1fr;
+    gap: 1rem;
   }
+
   .form-group-row.two-col {
     grid-template-columns: 1fr;
   }
+
+  .page-header {
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+
   .header-text h1 {
-     font-size: 1.75rem;
-     flex-direction: column;
-     align-items: flex-start;
+     font-size: 1.5rem;
+     flex-wrap: wrap;
+     justify-content: center;
      gap: 0.5rem;
   }
-  .page-header p { margin-left: 0; }
+
+  .page-header p { 
+    margin-left: 0; 
+    font-size: 0.95rem;
+    margin-top: 0.5rem;
+  }
+
+  .icon-wrapper-header {
+    width: 44px;
+    height: 44px;
+    font-size: 1.3rem;
+    border-radius: 12px;
+  }
+
+  .form-panel, .history-panel {
+    padding: 1.25rem;
+    border-radius: 20px;
+    gap: 1rem;
+  }
+
+  .panel-header {
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+  }
+
+  .panel-header h2 {
+    font-size: 1.15rem;
+  }
+
+  .premium-form {
+    gap: 1rem;
+  }
+
+  .form-group-row {
+    gap: 1rem;
+  }
+
+  .file-label {
+    padding: 1.5rem 1rem;
+  }
+
+  .upload-icon {
+    font-size: 2rem;
+  }
+
+  .history-list-wrapper {
+    max-height: 400px;
+  }
+
+  .card-item-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
 }

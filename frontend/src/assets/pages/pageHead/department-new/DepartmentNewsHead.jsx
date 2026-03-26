@@ -488,26 +488,6 @@ const NewsCard = ({
       variants={cardVariants}
       layout
     >
-      {/* Absolute Actions for Owner */}
-      {isOwner && (
-        <div className="card-actions-absolute">
-          <button
-            className="action-btn edit"
-            onClick={() => onEdit(item)}
-            title="Edit"
-          >
-            <FaEdit />
-          </button>
-          <button
-            className="action-btn delete"
-            onClick={() => onDelete(item.id)}
-            title="Delete"
-          >
-            <FaTrash />
-          </button>
-        </div>
-      )}
-
       {/* Top: Priority Badge Centered */}
       <div className="card-top-badge">
         <span className={`badge-priority ${item.priority}`}>
@@ -527,6 +507,26 @@ const NewsCard = ({
         <span className="separator">•</span>
         <span>{item.poster_name || "Unknown"}</span>
       </div>
+
+      {/* Actions (if owner) */}
+      {isOwner && (
+        <div className="card-actions-footer">
+          <button
+            className="action-btn edit"
+            onClick={() => onEdit(item)}
+            title="Edit"
+          >
+            <FaEdit /> <span>Edit</span>
+          </button>
+          <button
+            className="action-btn delete"
+            onClick={() => onDelete(item.id)}
+            title="Delete"
+          >
+            <FaTrash /> <span>Delete</span>
+          </button>
+        </div>
+      )}
     </motion.div>
   );
 };

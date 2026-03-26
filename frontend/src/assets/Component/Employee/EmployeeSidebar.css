@@ -301,9 +301,23 @@
     height: 40px;
   }
 
-  .emp-divider,
+  .emp-divider {
+    display: none; /* Hide divider on mobile bar */
+  }
+
   .emp-footer {
-    display: none; /* Hide divider and logout footer on mobile bar */
+    display: flex;
+    padding: 0 10px 0 0;
+    margin: 0;
+    background: transparent;
+    align-items: center;
+  }
+
+  .emp-menu-item.logout {
+    margin: 0 4px;
+    padding: 8px;
+    border-radius: 8px;
+    justify-content: center;
   }
 
   .emp-menu-container {

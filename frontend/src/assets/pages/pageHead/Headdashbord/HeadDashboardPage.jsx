@@ -417,7 +417,7 @@ const HeadDashboard = () => {
                       className="user-avatar"
                     />
                     <div
-                      className="user-details"
+                      className="user-details task-progress-details"
                       style={{
                         display: "flex",
                         alignItems: "center",
@@ -425,7 +425,7 @@ const HeadDashboard = () => {
                         gap: "1rem",
                       }}
                     >
-                      <div style={{ minWidth: "150px" }}>
+                      <div className="task-progress-info" style={{ minWidth: "150px" }}>
                         <div className="user-name">{task.first_name}</div>
                         <div className="user-meta" style={{ color: "#94a3b8" }}>
                           {task.task_name}
@@ -443,7 +443,7 @@ const HeadDashboard = () => {
                         </span>
                       </div>
                       <div
-                        className="user-meta"
+                        className="user-meta task-progress-meta"
                         style={{
                           color: "#94a3b8",
                           minWidth: "100px",

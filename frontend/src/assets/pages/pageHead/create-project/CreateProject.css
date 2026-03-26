@@ -564,23 +564,15 @@
     display: none !important;
   }
   
-  /* Compact content to fit with 80px Sidebar */
+  /* Compact content to fit with Top Navigation Bar */
   .cp-content-grid {
     margin-left: 0 !important;
     padding: 0.8rem; /* Reduced padding */
-    width: 100%;
-    /* On mobile sidebar is 80px fixed if we force it collapsed. 
-       But .create-project-container is flex row.
-       Actually, CreateProject.jsx structure is:
-       <div class="create-project-container">
-          <HeadSidebar />
-          <main class="cp-content-grid ...">
-       
-       HeadSidebar is fixed. cp-content-grid has margin-left.
-       Since we collapsed sidebar to 80px, margin-left should be 80px.
-    */
-    margin-left: 80px !important;
-    width: calc(100% - 80px) !important;
+    width: 100% !important;
+    padding-bottom: 3rem;
+  }
+  .create-project-container {
+    flex-direction: column;
   }
 
   .cp-card {

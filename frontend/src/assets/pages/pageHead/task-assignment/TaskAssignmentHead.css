@@ -609,10 +609,17 @@
 }
 
 @media (max-width: 768px) {
+    .task-assignment-container {
+        flex-direction: column;
+    }
+
     .main-content-wrapper,
     .main-content-wrapper.expanded,
     .main-content-wrapper.collapsed {
+        margin-left: 0 !important;
+        width: 100% !important;
         padding: 1rem;
+        padding-bottom: 3rem;
     }
 
     .page-title {

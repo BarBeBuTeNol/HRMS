@@ -599,7 +599,12 @@
 }
 
 @media (max-width: 768px) {
-    .team-performance-container { margin-left: 70px !important; padding: 1rem; }
+    .team-performance-container {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 1rem;
+        padding-bottom: 6rem;
+    }
     
     /* Header Stack */
     .header-flex-wrapper {

@@ -48,10 +48,11 @@
 @media (max-width: 768px) {
   .delegate-shift-container {
     background: #0f172a; /* Flat bg for performance on mobile */
+    flex-direction: column;
   }
   .delegate-main-content {
-    margin-left: 80px !important; /* Preserving user request for persistent sidebar space */
-    width: calc(100% - 80px) !important;
+    margin-left: 0 !important; 
+    width: 100% !important;
     padding: 1rem 1rem 3rem 1rem;
     gap: 1.5rem;
   }

@@ -264,13 +264,14 @@
 /* Responsive Mobile Sidebar - Transform to Top Bar */
 @media screen and (max-width: 768px) {
   .head-sidebar {
-    position: relative;
-    height: auto;
+    position: sticky !important;
+    top: 0;
+    height: 70px !important;
     width: 100% !important; /* Force full width to override motion inline styles */
-    flex-direction: row;
+    flex-direction: row !important;
     align-items: center;
-    padding: 10px;
-    z-index: 50;
+    padding: 0 10px;
+    z-index: 1000;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     overflow-x: auto;
     overflow-y: hidden;
@@ -283,11 +284,13 @@
   }
 
   .head-profile-section {
-    padding: 5px;
+    padding: 0 5px;
     min-height: auto;
     border-bottom: none;
     margin-right: 15px;
     flex-direction: row;
+    display: flex;
+    align-items: center;
   }
 
   .head-user-info {
@@ -298,6 +301,9 @@
       margin-bottom: 0 !important;
       width: 40px !important;
       height: 40px !important;
+      display: flex;
+      align-items: center;
+      justify-content: center;
   }
 
   .head-avatar {
@@ -305,9 +311,26 @@
     height: 100%;
   }
 
-  .head-divider,
+  .head-divider {
+    display: none; /* Hide divider on mobile bar */
+  }
+
   .head-footer {
-    display: none; /* Hide divider and logout footer on mobile bar */
+    padding: 0 5px;
+    margin-top: 0;
+    margin-left: auto;
+    border-top: none;
+    display: flex;
+    align-items: center;
+    border-left: 1px solid var(--head-glass-border);
+  }
+  
+  .head-footer .head-menu-item.logout {
+    padding: 8px;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .head-menu-container {

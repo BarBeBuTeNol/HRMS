@@ -474,10 +474,14 @@
 }
 
 @media screen and (max-width: 768px) {
+    .data-approval-container {
+        flex-direction: column;
+    }
     .data-approval-content {
-        margin-left: 80px !important;
-        width: calc(100% - 80px);
+        margin-left: 0 !important;
+        width: 100% !important;
         padding: 1rem;
+        padding-bottom: 3rem;
     }
 
     .data-approval-header {

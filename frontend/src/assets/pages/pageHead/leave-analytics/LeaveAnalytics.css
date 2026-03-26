@@ -299,10 +299,13 @@
 }
 
 @media screen and (max-width: 768px) {
+  .leave-analytics-container {
+    flex-direction: column;
+  }
   .leave-analytics-content {
-    margin-left: 90px; /* 80px sidebar + 10px spacing */
+    margin-left: 0 !important;
     padding: 1rem;
-    width: auto; /* Let it fill remaining space */
+    width: 100% !important; 
     margin-bottom: 80px; 
   }
 

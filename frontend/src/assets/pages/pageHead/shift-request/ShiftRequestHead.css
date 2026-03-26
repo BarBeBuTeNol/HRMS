@@ -228,8 +228,9 @@
 
 @media screen and (max-width: 768px) {
     .shift-request-container {
-        margin-left: 80px !important; /* Restore space for sidebar */
-        width: calc(100% - 80px); /* Adjust width */
+        flex-direction: column;
+        margin-left: 0 !important;
+        width: 100% !important;
         padding: 1rem;
         padding-bottom: 6rem;
     }
@@ -328,9 +329,19 @@
         align-self: flex-start;
     }
     
-    .card-actions {
-         flex-direction: column; /* Stack buttons */
+    .shift-request-container .card-actions {
+         display: grid !important;
+         grid-template-columns: 1fr 1fr;
          gap: 0.8rem;
+    }
+
+    .shift-request-container .btn-workload {
+         grid-column: 1 / -1;
+    }
+
+    .shift-request-container .action-btn {
+         padding: 0.8rem;
+         font-size: 0.9rem;
     }
 
     .user-flow {
@@ -489,13 +500,15 @@
 }
 
 /* Actions Section */
-.card-actions {
+.shift-request-container .card-actions {
   display: flex;
   gap: 0.75rem;
   margin-top: 1.5rem;
+  position: static !important; /* Fix global absolute leak */
+  opacity: 1 !important; /* Fix global opacity leak */
 }
 
-.action-btn {
+.shift-request-container .action-btn {
   flex: 1;
   padding: 0.6rem;
   border-radius: 8px;
@@ -509,6 +522,8 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  width: auto !important; /* Fix global 32px leak */
+  height: auto !important; /* Fix global 32px leak */
 }
 
 .btn-approve {

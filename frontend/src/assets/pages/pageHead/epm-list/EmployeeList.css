@@ -818,20 +818,23 @@
 }
 
 @media (max-width: 768px) {
-  /* On mobile, if sidebar is visible (icons), we need space */
-  /* Assuming sidebar is fixed width ~80px or overlay */
-  /* If the sidebar component logic doesn't hide it on mobile, we must push content */
+  .head-emp-list-wrapper {
+    flex-direction: column;
+  }
 
+  .head-emp-list-content,
   .head-emp-list-content.sidebar-open,
   .head-emp-list-content.sidebar-closed {
-    margin-left: 80px; /* Keep space for the icon toolbar */
-    width: calc(100% - 80px); /* Adjust width */
-    padding-bottom: 80px;
+    margin-left: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    padding-bottom: 2rem;
+    flex: 1;
   }
 
   .head-emp-list-container {
     padding: 1rem;
-    padding-top: 2rem;
+    padding-top: 1.5rem;
   }
 
   .head-emp-title-row {
