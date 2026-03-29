@@ -779,10 +779,9 @@
   transition: all 0.2s;
   border: 1px solid transparent;
 }
-.mini-action-btn:hover {
-  background: var(--emp-highlight);
-  color: #0f172a;
-  transform: scale(1.1);
+.mini-action-btn.schedule:hover {
+  background: var(--emp-highlight) !important;
+  color: #0f172a !important;
 }
 
 /* Scrollbar for list view */

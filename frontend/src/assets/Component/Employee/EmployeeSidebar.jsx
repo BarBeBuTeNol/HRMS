@@ -94,7 +94,7 @@ const EmployeeSidebar = ({ onToggle }) => {
         {
           path: "/employee/schedule",
           icon: <FaCalendarAlt />,
-          label: "Schedule",
+          label: "Work Schedule",
         },
         {
           path: "/employee/shift-requests",

@@ -2,6 +2,7 @@ import express from "express";
 import db from "../config/db"; // ✅ แก้ไข Path ให้ถูกต้อง (ตัด ../ และ src/ ออก)
 import { ResultSetHeader } from "mysql2";
 import { getMySchedules } from "../controllers/workScheduleController";
+import notificationRepository from "../repository/notificationRepository";
 
 const router = express.Router();
 
@@ -123,7 +124,30 @@ router.post("/bulk-upsert", async (req, res) => {
       new Date(),
     ]);
 
+
     await db.query(sql, [values]);
+
+    // --- Send Notifications ---
+    try {
+      // Group by user_id to avoid multiple notifications for same user in one update
+      const uniqueUserIds = [...new Set(schedules.map((s: any) => s.user_id))];
+      
+      const notifValues = uniqueUserIds.map((uid: any) => [
+        uid,
+        "Your work schedule has been updated by your Department Head.",
+        0,
+        new Date(),
+        null, // reference_id (optional)
+        'system'
+      ]);
+
+      if (notifValues.length > 0) {
+        await notificationRepository.createBulkNotifications(notifValues);
+      }
+    } catch (notifErr) {
+      console.error("⚠️ Notification failed but schedule saved:", notifErr);
+    }
+
     res.status(200).json({ message: "✅ Bulk upsert completed" });
   } catch (err) {
     console.error("❌ Bulk upsert error:", err);
@@ -171,6 +195,22 @@ router.delete("/user/:userId/date/:date", async (req, res) => {
       "DELETE FROM work_schedules WHERE user_id = ? AND work_date = ?",
       [userId, date],
     );
+
+    // --- Send Notification for OFF ---
+    try {
+      const message = `Your shift on ${date} has been set to OFF (Day Off) by your Department Head.`;
+      await notificationRepository.createBulkNotifications([[
+        userId,
+        message,
+        0,
+        new Date(),
+        null,
+        'system'
+      ]]);
+    } catch (notifErr) {
+        console.error("⚠️ Notification failed but shift removed:", notifErr);
+    }
+
     res.status(200).json({ message: "✅ Shift removed (OFF)" });
   } catch (err) {
     console.error("❌ Delete user shift error:", err);

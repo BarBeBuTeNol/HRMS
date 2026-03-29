@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import HRLayout from "../../../Component/HR/HRLayout";
 import "./Announcements.css";
@@ -19,9 +20,8 @@ const timeAgo = (dateMsg) => {
 };
 
 const Announcements = () => {
-  const [activeTab, setActiveTab] = useState("announcements"); // 'announcements' | 'notifications'
+  const navigate = useNavigate();
   const [announcements, setAnnouncements] = useState([]);
-  const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Modal State
@@ -36,12 +36,8 @@ const Announcements = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [annRes, notiRes] = await Promise.all([
-        api.get("/announcements"),
-        api.get(`/notifications/${userId}`),
-      ]);
+      const annRes = await api.get("/announcements");
       setAnnouncements(annRes.data);
-      setNotifications(notiRes.data);
     } catch (err) {
       console.error("Error fetching data:", err);
     } finally {
@@ -79,17 +75,7 @@ const Announcements = () => {
     }
   };
 
-  // Handler for Mark as Read (Notifications)
-  const markAsRead = async (id) => {
-    try {
-      await api.put(`/notifications/${id}/read`);
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, is_read: 1 } : n)),
-      );
-    } catch (err) {
-      console.error("Error marking read:", err);
-    }
-  };
+
 
   const openModal = (type, item) => {
     setModalType(type);
@@ -120,32 +106,28 @@ const Announcements = () => {
             <p className="ann-subtitle">Stay updated with the latest news</p>
           </div>
 
-          <div className="ann-tabs">
+          <div className="ann-actions">
             <button
-              className={`tab-btn ${
-                activeTab === "announcements" ? "active" : ""
-              }`}
-              onClick={() => setActiveTab("announcements")}
+              className="btn-primary"
+              style={{
+                padding: "0.8rem 1.5rem",
+                borderRadius: "12px",
+                border: "none",
+                cursor: "pointer",
+                fontWeight: "600",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+              onClick={() => navigate("/hr/create-announcement")}
             >
-              📢 Announcements
-            </button>
-            <button
-              className={`tab-btn ${
-                activeTab === "notifications" ? "active" : ""
-              }`}
-              onClick={() => setActiveTab("notifications")}
-            >
-              🔔 Notifications
-              {notifications.some((n) => !n.is_read) && (
-                <span className="badge-dot" />
-              )}
+              ➕ Create New Announcement
             </button>
           </div>
         </motion.div>
 
         <div className="ann-content">
           <AnimatePresence mode="wait">
-            {activeTab === "announcements" ? (
               <motion.div
                 key="announcements"
                 className="ann-grid"
@@ -206,38 +188,6 @@ const Announcements = () => {
                   </motion.div>
                 ))}
               </motion.div>
-            ) : (
-              <motion.div
-                key="notifications"
-                className="noti-list"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-              >
-                {notifications.length === 0 && !loading && (
-                  <div className="empty-state">No notifications.</div>
-                )}
-                {notifications.map((noti) => (
-                  <motion.div
-                    key={noti.id}
-                    className={`noti-item ${noti.is_read ? "read" : "unread"}`}
-                    onClick={() => markAsRead(noti.id)}
-                    whileHover={{ scale: 1.01 }}
-                  >
-                    <div className="noti-icon">
-                      {noti.is_read ? "📩" : "📫"}
-                    </div>
-                    <div className="noti-content">
-                      <p className="noti-msg">{noti.message}</p>
-                      <span className="noti-time">
-                        {timeAgo(noti.created_at)}
-                      </span>
-                    </div>
-                    {!noti.is_read && <div className="unread-dot" />}
-                  </motion.div>
-                ))}
-              </motion.div>
-            )}
           </AnimatePresence>
         </div>
 

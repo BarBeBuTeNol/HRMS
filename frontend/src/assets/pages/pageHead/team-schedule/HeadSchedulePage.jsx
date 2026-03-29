@@ -10,7 +10,7 @@ import {
   FaFilter,
   FaCalendarAlt,
 } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 import { motion } from "framer-motion";
@@ -28,10 +28,14 @@ const HeadSchedulePage = () => {
   const [holidays, setHolidays] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const initialSearch = queryParams.get("search") || "";
+
   // Filters
   const [selectedPosition, setSelectedPosition] = useState("All");
   const [positions, setPositions] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
 
   // Quick Add Modal
   const [showAddModal, setShowAddModal] = useState(false);

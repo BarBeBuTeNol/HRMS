@@ -214,7 +214,8 @@ class HeadDashboardController {
             `You have been assigned to new task: ${task_name}`, 
             0, 
             new Date(), 
-            result.insertId // reference_id (Task ID)
+            result.insertId, // reference_id (Task ID)
+            'task_assignment'
         ]
       ]);
 

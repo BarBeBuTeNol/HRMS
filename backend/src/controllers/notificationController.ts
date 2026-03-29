@@ -56,7 +56,7 @@ export const sendNotification = async (req: Request, res: Response) => {
       // Prepare bulk values: [user_id, message, is_read, created_at, reference_id]
       const fullMessage = title ? `[${title}] ${message}` : message;
       
-      const values = recipients.map((u: any) => [u.id, fullMessage, 0, new Date(), announcementId]);
+      const values = recipients.map((u: any) => [u.id, fullMessage, 0, new Date(), announcementId, 'announcement']);
       
       await notificationRepository.createBulkNotifications(values);
     }

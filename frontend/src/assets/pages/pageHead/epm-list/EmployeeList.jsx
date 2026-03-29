@@ -366,7 +366,7 @@ const EmployeeCard = ({ emp, onOpenInsight }) => {
             <FaGraduationCap /> Detail
           </button>
           <Link
-            to="/head/schedule"
+            to={`/head/team-schedule?search=${emp.first_name}`}
             className="action-btn btn-primary"
             title="Check Schedule"
           >
@@ -440,6 +440,14 @@ const EmployeeListItem = ({ emp, onOpenInsight }) => {
           >
             <FaGraduationCap />
           </button>
+          <Link
+            to={`/head/team-schedule?search=${emp.first_name}`}
+            className="mini-action-btn schedule"
+            title="View Schedule"
+            style={{ color: "var(--emp-highlight)", marginLeft: "8px", fontSize: "1.1rem" }}
+          >
+            <FaCalendarAlt />
+          </Link>
         </div>
       </div>
     </motion.div>

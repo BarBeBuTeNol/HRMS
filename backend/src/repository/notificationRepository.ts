@@ -56,7 +56,7 @@ class NotificationRepository {
 
     async createBulkNotifications(values: any[]) {
         await pool.query(
-            'INSERT INTO notifications (user_id, message, is_read, created_at, reference_id) VALUES ?',
+            'INSERT INTO notifications (user_id, message, is_read, created_at, reference_id, type) VALUES ?',
             [values]
         );
     }

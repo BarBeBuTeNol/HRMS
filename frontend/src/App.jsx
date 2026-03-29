@@ -46,7 +46,8 @@ import AddEmpEducation from "./assets/pages/HR/Add_emp_education/Add_emp_educati
 import Show_emp from "./assets/pages/HR/Show_emp/Show_emp";
 import Show_leave from "./assets/pages/HR/Show_leave/Show_leave";
 import Show_static_switch from "./assets/pages/HR/Show_static_switch/Show_static_switch";
-import Send_notifi from "./assets/pages/HR/Send_notifi/Send_notifi";
+import NotificationHR from "./assets/pages/HR/NotificationHR/NotificationHR";
+import CreateAnnouncement from "./assets/pages/HR/CreateAnnouncement/CreateAnnouncement";
 import Announcements from "./assets/pages/HR/Announcements/Announcements";
 import Leave_info from "./assets/pages/HR/Leave_info/Leave_info";
 import AddDepartment from "./assets/pages/HR/add_department/add_department";
@@ -132,7 +133,8 @@ function App() {
       <Route path="/hr/show-emp" element={<Show_emp />} />
       <Route path="/hr/show-leave" element={<Show_leave />} />
       <Route path="/hr/show-static-switch" element={<Show_static_switch />} />
-      <Route path="/hr/send-notification" element={<Send_notifi />} />
+      <Route path="/hr/notifications" element={<NotificationHR />} />
+      <Route path="/hr/create-announcement" element={<CreateAnnouncement />} />
       <Route path="/hr/announcements" element={<Announcements />} />
       <Route path="/hr/leave-info" element={<Leave_info />} />
       <Route path="/hr/add-department" element={<AddDepartment />} />

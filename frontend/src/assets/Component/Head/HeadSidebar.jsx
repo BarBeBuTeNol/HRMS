@@ -20,6 +20,7 @@ import {
   FaChartLine,
   FaBullhorn,
   FaProjectDiagram,
+  FaFileAlt,
 } from "react-icons/fa";
 import "./HeadSidebar.css";
 import LoadingHead from "../loading/loading-head/LoadingHead";
@@ -89,6 +90,13 @@ const HeadSidebar = ({ unreadCount = 0, onToggle }) => {
         { path: "/head/dashboard", icon: <FaThLarge />, label: "Dashboard" },
         // ข้อมูลส่วนตัวของ Head
         { path: "/head/profile", icon: <FaUserTie />, label: "My Profile" },
+      ],
+    },
+    {
+      title: "Leaves",
+      items: [
+        // ขอลา (Head)
+        { path: "/head/request-leave", icon: <FaFileAlt />, label: "Request Leave" },
       ],
     },
     {

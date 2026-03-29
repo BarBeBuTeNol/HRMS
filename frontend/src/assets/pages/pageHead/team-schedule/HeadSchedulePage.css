@@ -66,6 +66,8 @@
   backdrop-filter: blur(10px);
   flex-wrap: wrap;
   gap: 1rem;
+  position: relative;
+  z-index: 100; /* Ensure dropdowns stay above matrix */
 }
 
 .hs-header-left .hs-title {

@@ -19,18 +19,13 @@ import "./MySchedulePage.css"; // Import the new CSS
 const MySchedulePage = () => {
   const [currentDate, setCurrentDate] = useState(dayjs());
   const [schedule, setSchedule] = useState([]);
-  const [companyEvents, setCompanyEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null); // For Modal
 
   // --- Fetch Data ---
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 1. Fetch Company Events for Everyone
-        const calendarRes = await api.get("/calendar");
-        setCompanyEvents(calendarRes.data);
-
-        // 2. Fetch User Shift Schedule
+        // 1. Fetch User Shift Schedule
         const userStr = localStorage.getItem("currentUser");
         if (userStr) {
           const user = JSON.parse(userStr);
@@ -39,7 +34,7 @@ const MySchedulePage = () => {
           setSchedule(scheduleRes.data);
         }
       } catch (error) {
-        console.error("Failed to fetch calendar/schedule data", error);
+        console.error("Failed to fetch schedule data", error);
       }
     };
     fetchData();
@@ -61,13 +56,8 @@ const MySchedulePage = () => {
         (s) => dayjs(s.date).format("YYYY-MM-DD") === dateStr
       );
 
-      const dayCompanyEvents = companyEvents.filter((e) => {
-        return dayjs(e.date).format("YYYY-MM-DD") === dateStr;
-      });
-
       const dayOfWeek = currentDate.date(i).day();
       const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // Sun=0, Sat=6
-      const hasHoliday = dayCompanyEvents.some((e) => e.type === "holiday");
       const isToday = dayjs().format("YYYY-MM-DD") === dateStr;
 
       days.push({
@@ -75,9 +65,7 @@ const MySchedulePage = () => {
         day: i,
         date: dateStr,
         shift: dayShift,
-        companyEvents: dayCompanyEvents,
         isWeekend,
-        hasHoliday,
         isToday,
         key: `day-${i}`,
       });
@@ -120,7 +108,7 @@ const MySchedulePage = () => {
                 <CalendarIcon size={28} color="#818cf8" strokeWidth={1.5} />
               </div>
               <div className="ec-title-text">
-                <span className="ec-subtitle">My Schedule</span>
+                <span className="ec-subtitle">My Work Schedule</span>
                 <span className="ec-main-title">
                   {currentDate.format("MMMM YYYY")}
                 </span>
@@ -166,7 +154,7 @@ const MySchedulePage = () => {
                   key={item.key}
                   onClick={() => handleDayClick(item)}
                   className={`ec-day-cell ${item.isToday ? "today" : "default"} 
-                    ${item.isWeekend || item.hasHoliday ? "holiday-mode" : ""}`}
+                    ${item.isWeekend ? "holiday-mode" : ""}`}
                 >
                   {/* Date Number */}
                   <div
@@ -203,29 +191,6 @@ const MySchedulePage = () => {
                         </span>
                       </motion.div>
                     )}
-
-                    {/* Company Events */}
-                    {item.companyEvents &&
-                      item.companyEvents.map((event, idx) => (
-                        <motion.div
-                          key={`event-${idx}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEventClick(event, "event");
-                          }}
-                          whileHover={{ scale: 1.02 }}
-                          className={`ec-event-item ${
-                            event.type === "holiday"
-                              ? "ec-event-holiday"
-                              : "ec-event-normal"
-                          }`}
-                        >
-                          <Briefcase size={14} />
-                          <span className="ec-event-text">
-                            {event.title || event.event_name}
-                          </span>
-                        </motion.div>
-                      ))}
                   </div>
 
                   {/* Mobile Dots (Hidden on Desktop) */}
@@ -241,16 +206,6 @@ const MySchedulePage = () => {
                         }}
                       />
                     )}
-                    {item.companyEvents &&
-                      item.companyEvents.map((e, idx) => (
-                        <div
-                           key={idx}
-                           className="ec-dot"
-                           style={{
-                             background: e.type === "holiday" ? "#fbcfe8" : "#bfdbfe"
-                           }}
-                        />
-                      ))}
                   </div>
                 </div>
               )
@@ -285,16 +240,12 @@ const MySchedulePage = () => {
                             ? selectedEvent.shift === "Day Off"
                               ? "rgba(239, 68, 68, 0.2)"
                               : "rgba(16, 185, 129, 0.2)"
-                            : selectedEvent.type === "holiday"
-                            ? "rgba(239, 68, 68, 0.2)"
                             : "rgba(59, 130, 246, 0.2)",
                         color:
                           selectedEvent.dataType === "shift"
                             ? selectedEvent.shift === "Day Off"
                               ? "#fca5a5"
                               : "#6ee7b7"
-                            : selectedEvent.type === "holiday"
-                            ? "#fca5a5"
                             : "#93c5fd",
                       }}
                     >
@@ -327,20 +278,6 @@ const MySchedulePage = () => {
                   </p>
 
                   <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                    {selectedEvent.dataType === "event" &&
-                      selectedEvent.description && (
-                        <div
-                          className={`ec-info-box ${
-                            selectedEvent.type === "holiday" ? "red-tint" : ""
-                          }`}
-                        >
-                          <h4 className="ec-info-label">Description</h4>
-                          <p className="ec-info-value">
-                            {selectedEvent.description}
-                          </p>
-                        </div>
-                      )}
-
                     {selectedEvent.dataType === "shift" && (
                       <div
                         style={{

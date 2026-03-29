@@ -24,6 +24,7 @@ dayjs.extend(relativeTime);
 const MainHR = () => {
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(null);
+  const [profileData, setProfileData] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -93,6 +94,21 @@ const MainHR = () => {
     const interval = setInterval(fetchDashboardData, 30000);
     return () => clearInterval(interval);
   }, [navigate]);
+
+  useEffect(() => {
+    if (showProfile && currentUser?.id && !profileData) {
+      fetchUserProfile();
+    }
+  }, [showProfile, currentUser]);
+
+  const fetchUserProfile = async () => {
+    try {
+      const res = await api.get(`/users/${currentUser.id}/profile`);
+      setProfileData(res.data);
+    } catch (err) {
+      console.error("Error fetching user profile:", err);
+    }
+  };
 
   // Ensure current user is in the list with online status if logged in
   const displayedUserList = React.useMemo(() => {
@@ -204,13 +220,6 @@ const MainHR = () => {
                   title="Profile"
                 >
                   <FaUserCircle size={24} />
-                </button>
-                <button
-                  className="btn-icon logout"
-                  onClick={handleLogout}
-                  title="Logout"
-                >
-                  <FaSignOutAlt size={22} />
                 </button>
               </div>
             </header>
@@ -452,7 +461,7 @@ const MainHR = () => {
       <ProfileModal
         isOpen={showProfile}
         onClose={() => setShowProfile(false)}
-        user={currentUser}
+        user={profileData || currentUser}
       />
     </HRLayout>
   );

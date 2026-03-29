@@ -83,7 +83,7 @@ const Sidebar_HR = () => {
       title: "Communication",
       items: [
         {
-          path: "/hr/send-notification",
+          path: "/hr/notifications",
           icon: <FaBell />,
           label: "Notification",
         },

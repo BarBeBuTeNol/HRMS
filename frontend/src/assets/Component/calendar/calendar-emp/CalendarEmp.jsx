@@ -72,10 +72,10 @@ const CalendarEmp = () => {
               <div className="emp-icon-circle">
                  <CalendarIcon size={24} />
               </div>
-              <div>
-                <span>My Schedule</span>
-                <span>{currentDate.format("MMMM YYYY")}</span>
-              </div>
+                <div>
+                  <span className="emp-subtitle">Company Calendar</span>
+                  <span className="emp-main-title">{currentDate.format("MMMM YYYY")}</span>
+                </div>
             </div>
 
             <div className="emp-calendar-nav">
@@ -120,7 +120,7 @@ const CalendarEmp = () => {
                     <div className="emp-events-wrapper">
                         {item.events.map((ev, i) => (
                             <div key={i} className={`emp-event-pill ${ev.type} text-xs`}>
-                                {ev.title}
+                                {ev.title || ev.event_name}
                             </div>
                         ))}
                     </div>
@@ -147,7 +147,7 @@ const CalendarEmp = () => {
                             ) : (
                                 viewedDay.events.map((ev, i) => (
                                     <div key={i} className={`emp-event-detail ${ev.type}`}>
-                                        <h4>{ev.title}</h4>
+                                        <h4>{ev.title || ev.event_name}</h4>
                                         <p>{ev.description}</p>
                                     </div>
                                 ))
