@@ -499,7 +499,7 @@ const EmployeeDirectoryCHRO = () => {
                   <FaSearch className="chro-emp-search-icon" />
                   <input
                     type="text"
-                    placeholder="Search executive, manager, employee..."
+                    placeholder="Search by Name, ID, or Role..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="chro-emp-search-input"

@@ -15,9 +15,11 @@ import {
   FaChartLine
 } from "react-icons/fa";
 import api from "../../../../services/api";
+import PopupDoneHead from "../../../Component/poup_done/poup_done-head/PopupDoneHead";
 
 const DelegateShiftPage = () => {
   const [activeStep, setActiveStep] = useState(1);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [filterDate, setFilterDate] = useState("");
   const [filterName, setFilterName] = useState("");
   
@@ -45,8 +47,9 @@ const DelegateShiftPage = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const user = JSON.parse(localStorage.getItem("user"));
-      if (!user) return;
+      const currentUserStr = localStorage.getItem("currentUser");
+      const user = currentUserStr ? JSON.parse(currentUserStr) : null;
+      if (!user || !user.id) return;
 
       const response = await api.get(`/head/delegation-data/${user.id}`);
       const { workItems, employees } = response.data;
@@ -121,7 +124,7 @@ const DelegateShiftPage = () => {
       };
 
       await api.post("/head/delegate-work", payload);
-      alert("Delegate Shift Submitted Successfully!");
+      setIsPopupOpen(true);
       
       setActiveStep(1);
       setSelectedTask(null);
@@ -204,6 +207,7 @@ const DelegateShiftPage = () => {
                        id="chk-date"
                        type="date" 
                        value={filterDate}
+                       min={new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0]}
                        onChange={(e) => setFilterDate(e.target.value)}
                      />
                   </div>
@@ -214,29 +218,29 @@ const DelegateShiftPage = () => {
                      <div className="state-loading"><span>Loading...</span></div>
                    ) : filteredShifts.length > 0 ? (
                      filteredShifts.map((item) => (
-                       <div 
-                         key={`${item.type}-${item.id}`}
-                         className={`work-item-card ${selectedTask?.id === item.id && selectedTask?.type === item.type ? 'selected' : ''}`}
-                         onClick={() => handleTaskSelect(item)}
-                       >
-                         <div className={`wi-icon type-${item.type.toLowerCase()}`}>
-                           {item.type === 'Shift' ? <FaClock/> : <FaBriefcase/>}
-                         </div>
-                         <div className="wi-details">
-                           <h4>{item.title}</h4>
-                           <span>{item.type} • ID: #{item.id}</span>
-                         </div>
-                         <div className="wi-owner">
-                           <div className="owner-avatar">
-                             {item.image ? <img src={item.image} alt="owner" /> : <div className="placeholder">{item.employee.charAt(0)}</div>}
-                           </div>
-                           <span style={{fontSize: '0.9rem'}}>{item.employee}</span>
-                         </div>
-                         <div className="wi-date">{item.date}</div>
-                         <div className="wi-status">
-                           <span className="status-badge status-active">Active</span>
-                         </div>
-                       </div>
+                        <div 
+                          key={`${item.type}-${item.id}`}
+                          className={`work-item-card ${selectedTask?.id === item.id && selectedTask?.type === item.type ? 'selected' : ''}`}
+                          onClick={() => handleTaskSelect(item)}
+                        >
+                          <div className={`wi-icon type-${item.type.toLowerCase()}`}>
+                            {item.type === 'Shift' ? <FaClock/> : <FaBriefcase/>}
+                          </div>
+                          <div className="wi-details">
+                            <h4>{item.title}</h4>
+                            <span className="wi-type-badge">{item.type} • #{item.id}</span>
+                          </div>
+                          <div className="wi-owner">
+                            <div className="owner-avatar">
+                              {item.image ? <img src={item.image} alt="owner" /> : <div className="placeholder">{item.employee.charAt(0)}</div>}
+                            </div>
+                            <span className="owner-name">{item.employee}</span>
+                          </div>
+                          <div className="wi-date">{item.date}</div>
+                          <div className="wi-status">
+                            <span className="status-badge status-active">Active</span>
+                          </div>
+                        </div>
                      ))
                    ) : (
                      <div className="state-empty">
@@ -405,6 +409,11 @@ const DelegateShiftPage = () => {
           </div>
         </div>
       </div>
+      <PopupDoneHead
+        isOpen={isPopupOpen}
+        onClose={() => setIsPopupOpen(false)}
+        message="Delegate Shift Submitted Successfully!"
+      />
     </div>
   );
 };

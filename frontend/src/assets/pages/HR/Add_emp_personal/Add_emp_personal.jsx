@@ -174,10 +174,15 @@ const AddEmpPersonal = () => {
     }
   }, [userId, firstName, lastName, email, empId, isEditMode, navigate]);
 
-  // Check required fields (except image)
-  const isFormFilled = Object.entries(form)
-    .filter(([key]) => key !== "image" && key !== "imageUrl")
-    .every(([_, value]) => value && value !== "");
+  // Check required fields (Essential info only)
+  const isFormFilled = 
+    form.personalId && 
+    form.firstName && 
+    form.lastName && 
+    form.gender && 
+    form.birthDate && 
+    form.email && 
+    form.address;
 
   // Check if form is dirty
   const isDirty = (() => {
@@ -190,46 +195,52 @@ const AddEmpPersonal = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    let newValue = value;
 
     // Validation Rules
     switch (name) {
       case "personalId":
-        if (!/^\d*$/.test(value)) return; // Numbers only
-        if (value.length > 13) return;
+        if (newValue.length > 13) return;
+        // Numbers only, No spaces
+        newValue = newValue.replace(/[^0-9]/g, "");
         break;
 
       case "emergencyContactPhone":
-        if (!/^\d*$/.test(value)) return; // Numbers only
-        if (value.length > 12) return;
+        if (newValue.length > 20) return;
+        // Numbers only, No spaces
+        newValue = newValue.replace(/[^0-9]/g, "");
         break;
 
       case "religion":
-        if (!/^[a-zA-Z0-9\u0E00-\u0E7F\s]*$/.test(value)) return;
-        if (value.length > 25) return;
+        if (newValue.length > 50) return;
+        // Allow Thai/Eng letters, numbers, spaces. No special chars.
+        newValue = newValue.replace(/[^a-zA-Z0-9\u0E00-\u0E7F\s]/g, "");
         break;
 
       case "nationality":
       case "relationToEmergencyContact":
-        if (!/^[a-zA-Z0-9\u0E00-\u0E7F\s]*$/.test(value)) return;
-        if (value.length > 255) return;
+        if (newValue.length > 50) return;
+        // Allow Thai/Eng letters, numbers, spaces. No special chars.
+        newValue = newValue.replace(/[^a-zA-Z0-9\u0E00-\u0E7F\s]/g, "");
         break;
 
       case "emergencyContactName":
-        if (!/^[a-zA-Z0-9\u0E00-\u0E7F\s]*$/.test(value)) return;
-        if (value.length > 100) return;
+        if (newValue.length > 100) return;
+        // Allow Thai/Eng letters, numbers, spaces. No special chars.
+        newValue = newValue.replace(/[^a-zA-Z0-9\u0E00-\u0E7F\s]/g, "");
         break;
 
       case "address":
         // Allow common address characters: / . , -
-        if (!/^[a-zA-Z0-9\u0E00-\u0E7F\s\/\.,\-]*$/.test(value)) return;
-        if (value.length > 255) return;
+        if (newValue.length > 255) return;
+        if (!/^[a-zA-Z0-9\u0E00-\u0E7F\s\/\.,\-]*$/.test(newValue)) return;
         break;
 
       default:
         break;
     }
 
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((prev) => ({ ...prev, [name]: newValue }));
   };
 
   const handleImageChange = (e) => {
@@ -268,6 +279,17 @@ const AddEmpPersonal = () => {
         title: "Incomplete Form",
         message: "Please fill in all required fields properly.",
         type: "warning",
+      });
+      return;
+    }
+
+    // National ID MUST be exactly 13 digits
+    if (form.personalId.length !== 13) {
+      setPopup({
+        isOpen: true,
+        title: "Invalid National ID",
+        message: "National ID must be exactly 13 digits long.",
+        type: "error",
       });
       return;
     }
@@ -572,7 +594,7 @@ const AddEmpPersonal = () => {
                         name="religion"
                         value={form.religion}
                         onChange={handleChange}
-                        maxLength={25}
+                        maxLength={50}
                         required
                       />
                     </div>
@@ -663,7 +685,7 @@ const AddEmpPersonal = () => {
                         name="nationality"
                         value={form.nationality}
                         onChange={handleChange}
-                        maxLength={255}
+                        maxLength={50}
                         required
                       />
                     </div>
@@ -699,7 +721,7 @@ const AddEmpPersonal = () => {
                         name="emergencyContactPhone"
                         value={form.emergencyContactPhone}
                         onChange={handleChange}
-                        maxLength={12}
+                        maxLength={20}
                         required
                       />
                     </div>
@@ -713,7 +735,7 @@ const AddEmpPersonal = () => {
                         value={form.relationToEmergencyContact}
                         onChange={handleChange}
                         placeholder="e.g. Father"
-                        maxLength={255}
+                        maxLength={50}
                         required
                       />
                     </div>

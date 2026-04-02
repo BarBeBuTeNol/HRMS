@@ -28,9 +28,9 @@ class UserRepository {
     if (search) {
       const like = `%${search}%`;
       filters.push(
-        `(u.username LIKE ? OR u.first_name LIKE ? OR u.last_name LIKE ? OR u.email LIKE ? OR u.phone LIKE ?)`,
+        `(u.first_name LIKE ? OR u.last_name LIKE ? OR ei.emp_code LIKE ? OR r.role_name LIKE ?)`,
       );
-      queryParams.push(like, like, like, like, like);
+      queryParams.push(like, like, like, like);
     }
     if (role) {
       filters.push(`r.role_name = ?`);
@@ -72,6 +72,8 @@ class UserRepository {
             FROM users u
             LEFT JOIN roles r        ON u.role_id = r.id
             LEFT JOIN departments d  ON u.department_id = d.id
+            LEFT JOIN emp_info ei    ON u.id = ei.user_id 
+                AND ei.id = (SELECT MAX(id) FROM emp_info WHERE user_id = u.id)
             ${where}
             `,
       queryParams,

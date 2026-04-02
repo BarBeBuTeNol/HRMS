@@ -3,7 +3,7 @@ import api from "../../../../services/api";
 import Swal from "sweetalert2";
 import HeadSidebar from "../../../Component/Head/HeadSidebar";
 import "./ShiftRequestHead.css";
-import { FaExchangeAlt, FaClipboardList, FaClock, FaExclamationCircle, FaSearch } from "react-icons/fa";
+import { FaExchangeAlt, FaClipboardList, FaClock, FaExclamationCircle, FaSearch, FaTimes, FaCalendarCheck } from "react-icons/fa";
 
 const ShiftRequestHead = () => {
   const [requests, setRequests] = useState([]);
@@ -56,8 +56,11 @@ const ShiftRequestHead = () => {
       const searchLower = searchTerm.toLowerCase();
       const matchesSearch = 
         req.original_first_name?.toLowerCase().includes(searchLower) ||
+        req.original_last_name?.toLowerCase().includes(searchLower) ||
         req.replacement_first_name?.toLowerCase().includes(searchLower) ||
-        req.reason?.toLowerCase().includes(searchLower);
+        req.replacement_last_name?.toLowerCase().includes(searchLower) ||
+        req.original_user_id?.toString().includes(searchLower) ||
+        req.replacement_user_id?.toString().includes(searchLower);
 
       return matchesType && matchesSearch;
   });
@@ -248,7 +251,7 @@ const ShiftRequestHead = () => {
                       {req.task_id ? "Task Swap" : "Shift Swap"}
                     </span>
                     <span className="date-timestamp">
-                      Requested: {new Date(req.created_at).toLocaleDateString()}
+                      Requested: {req.created_at ? new Date(req.created_at).toLocaleDateString() : "Unknown"}
                     </span>
                   </div>
 
@@ -284,7 +287,7 @@ const ShiftRequestHead = () => {
                         <div className="detail-row">
                           <span className="detail-label">Deadline</span>
                           <span className="detail-value">
-                            {new Date(req.deadline).toLocaleDateString()}
+                            {req.deadline ? new Date(req.deadline).toLocaleDateString() : "Unknown"}
                           </span>
                         </div>
                       </>
@@ -293,7 +296,7 @@ const ShiftRequestHead = () => {
                         <div className="detail-row">
                           <span className="detail-label">Shift Date</span>
                           <span className="detail-value">
-                            {new Date(req.work_date).toLocaleDateString()}
+                            {req.work_date ? new Date(req.work_date).toLocaleDateString() : "Unknown"}
                           </span>
                         </div>
                         <div className="detail-row">
@@ -334,65 +337,63 @@ const ShiftRequestHead = () => {
         {/* Workload Modal */}
         {showWorkloadModal && workloadData && (
           <div
-            className="modal-overlay"
+            className="shift-req-modal-overlay"
             onClick={() => setShowWorkloadModal(false)}
           >
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <h2 className="modal-title">Workload Check</h2>
-              <p className="text-gray-400 mb-4">
-                Checking availability for{" "}
-                <strong>{selectedRequest.replacement_first_name}</strong> on{" "}
-                {selectedRequest.work_date
-                  ? new Date(selectedRequest.work_date).toLocaleDateString()
-                  : "Target Date"}
+            <div className="shift-req-modal-content" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-icon-header workload">
+                  <FaCalendarCheck />
+              </div>
+              <h2 className="shift-req-modal-title">Workload Check</h2>
+              <p className="modal-subtitle">
+                Checking availability for <strong>{selectedRequest.replacement_first_name}</strong> on <br/>
+                <span style={{color: '#fff', fontWeight: 500}}>
+                   {selectedRequest.work_date
+                     ? new Date(selectedRequest.work_date).toLocaleDateString()
+                     : "Target Date"}
+                </span>
               </p>
 
               <div className="workload-list">
-                <h3 className="text-white font-semibold mb-2">
-                  Existing Shifts
-                </h3>
+                <h3>Existing Shifts</h3>
                 {workloadData.shifts.length === 0 ? (
-                  <div className="workload-item text-green-400">
-                    No shifts scheduled for this day
+                  <div className="workload-item free-item">
+                     <i className="fas fa-check-circle"></i> No shifts scheduled for this day
                   </div>
                 ) : (
                   workloadData.shifts.map((s, idx) => (
-                    <div
-                      key={idx}
-                      className="workload-item text-orange-400 border-l-2 border-orange-500"
-                    >
-                      {s.shift} Shift (
-                      {new Date(s.work_date).toLocaleDateString()})
+                    <div key={idx} className="workload-item shift-item">
+                      <FaClock style={{color: '#f59e0b'}}/>
+                      {s.shift} Shift ({new Date(s.work_date).toLocaleDateString()})
                     </div>
                   ))
                 )}
 
-                <h3 className="text-white font-semibold mb-2 mt-4">
-                  Active Tasks
-                </h3>
+                <h3>Active Tasks</h3>
                 {workloadData.tasks.length === 0 ? (
-                  <div className="workload-item text-green-400">
-                    No active tasks found
+                  <div className="workload-item free-item">
+                     <i className="fas fa-check-circle"></i> No active tasks found
                   </div>
                 ) : (
                   workloadData.tasks.map((t, idx) => (
-                    <div
-                      key={idx}
-                      className="workload-item text-blue-400 border-l-2 border-blue-500"
-                    >
-                      {t.task_name} (Deadline:{" "}
-                      {new Date(t.deadline).toLocaleDateString()})
+                    <div key={idx} className="workload-item task-item">
+                      <FaClipboardList style={{color: '#3b82f6'}}/>
+                      <div>
+                        {t.task_name} <br/>
+                        <small style={{opacity: 0.7}}>Due: {new Date(t.deadline).toLocaleDateString()}</small>
+                      </div>
                     </div>
                   ))
                 )}
               </div>
 
-              <div className="modal-actions">
+              <div className="shift-req-modal-actions">
                 <button
-                  className="action-btn btn-workload"
+                  className="action-btn"
+                  style={{background: 'rgba(255,255,255,0.1)', color: '#fff'}}
                   onClick={() => setShowWorkloadModal(false)}
                 >
-                  Close
+                  Close Window
                 </button>
               </div>
             </div>
@@ -402,31 +403,36 @@ const ShiftRequestHead = () => {
         {/* Reject Modal */}
         {showRejectModal && (
           <div
-            className="modal-overlay"
+            className="shift-req-modal-overlay"
             onClick={() => setShowRejectModal(false)}
           >
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <h2 className="modal-title text-red-500">Reject Request</h2>
-              <p className="text-gray-400 mb-4">
-                Please provide a reason for rejecting this request.
+            <div className="shift-req-modal-content" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-icon-header reject">
+                  <FaTimes />
+              </div>
+              <h2 className="shift-req-modal-title">Reject Request</h2>
+              <p className="modal-subtitle">
+                Please provide a clear reason for rejecting this swap request. The requester will be notified.
               </p>
 
               <textarea
                 className="reject-reason-input"
-                placeholder="Enter reason here..."
+                placeholder="Enter rejection reason here..."
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
               />
 
-              <div className="modal-actions">
+              <div className="shift-req-modal-actions">
                 <button
-                  className="action-btn btn-workload"
+                  className="action-btn"
+                  style={{background: 'rgba(255,255,255,0.05)', color: '#94a3b8'}}
                   onClick={() => setShowRejectModal(false)}
                 >
                   Cancel
                 </button>
                 <button
-                  className="action-btn btn-reject bg-red-500/10"
+                  className="action-btn"
+                  style={{background: '#ef4444', color: '#fff', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)'}}
                   onClick={handleReject}
                 >
                   Confirm Rejection

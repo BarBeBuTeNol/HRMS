@@ -12,6 +12,7 @@ import {
 import dayjs from "dayjs";
 import api from "../../../../services/api";
 import HeadSidebar from "../../Head/HeadSidebar"; // Import layout
+import Swal from "sweetalert2";
 
 const CalendarHead = () => {
   const [currentDate, setCurrentDate] = useState(dayjs());
@@ -70,9 +71,22 @@ const CalendarHead = () => {
   };
 
   const handleDayClick = (item) => {
+    const isPastDate = dayjs(item.date).isBefore(dayjs().startOf('day'));
+
     if (item.events.length > 0 || item.isWeekend) {
         setViewedDay(item);
     } else {
+        if (isPastDate) {
+            Swal.fire({
+                title: "Invalid Date",
+                text: "You cannot schedule events in the past.",
+                icon: "warning",
+                confirmButtonColor: "#c5a059",
+                background: "#1e293b",
+                color: "#fff"
+            });
+            return;
+        }
         setNewEvent(prev => ({ ...prev, date: item.date }));
         setIsAddModalOpen(true);
     }
@@ -118,9 +132,10 @@ const CalendarHead = () => {
       setEventToDelete(null);
     } catch (error) {
       console.error("Failed to delete event", error);
-      alert("Failed to delete event");
     }
   };
+
+  const isViewedDayPast = viewedDay ? dayjs(viewedDay.date).isBefore(dayjs().startOf('day')) : false;
 
   return (
     <div className={`head-calendar-layout ${isSidebarOpen ? "" : "sidebar-collapsed"}`}>
@@ -209,6 +224,7 @@ const CalendarHead = () => {
                   <div className="head-modal-header">
                     <h3>{dayjs(viewedDay.date).format("dddd, D MMMM")}</h3>
                     <div className="head-modal-actions">
+                      {!isViewedDayPast && (
                       <button 
                         onClick={() => {
                           setNewEvent(prev => ({ ...prev, date: viewedDay.date }));
@@ -220,6 +236,7 @@ const CalendarHead = () => {
                       >
                         <Plus size={18} />
                       </button>
+                      )}
                       <button onClick={() => setViewedDay(null)} className="head-btn-secondary head-btn-icon"><X size={18} /></button>
                     </div>
                   </div>
@@ -230,7 +247,8 @@ const CalendarHead = () => {
                              <CalendarIcon size={32} />
                           </div>
                           <p className="head-no-events-title">No events scheduled</p>
-                          <p className="head-no-events-subtitle">Enjoy your free time!</p>
+                          <p className="head-no-events-subtitle">{isViewedDayPast ? "Past date" : "Enjoy your free time!"}</p>
+                          {!isViewedDayPast && (
                           <button 
                             className="head-btn-primary head-btn-large"
                             onClick={() => {
@@ -242,6 +260,7 @@ const CalendarHead = () => {
                             <Plus size={18} className="mr-2" />
                             Add Event
                           </button>
+                          )}
                        </div>
                     ) : (
                         <div className="head-event-list-container">
@@ -262,11 +281,14 @@ const CalendarHead = () => {
                                     <h4 className="head-event-title">{ev.title}</h4>
                                     <p className="head-event-desc">{ev.description || "No additional details."}</p>
                                  </div>
+                                 {!isViewedDayPast && (
                                  <button onClick={(e) => handleDeleteEvent(ev.id, e)} className="head-event-delete-btn" title="Delete">
                                     <Trash2 size={18} />
                                  </button>
+                                 )}
                               </motion.div>
                             ))}
+                            {!isViewedDayPast && (
                             <button 
                                 className="head-btn-dashed mt-4"
                                 onClick={() => {
@@ -277,6 +299,7 @@ const CalendarHead = () => {
                             >
                                 <Plus size={16} /> Add Another Event
                             </button>
+                            )}
                         </div>
                     )}
                   </div>

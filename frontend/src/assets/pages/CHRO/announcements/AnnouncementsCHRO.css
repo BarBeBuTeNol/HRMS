@@ -530,10 +530,9 @@
   background: #253347;
 }
 
-/* Custom Select Wrapper */
-.custom-select-wrapper::after {
-  /* Optional: custom arrow here if we hide default appearance, 
-       but standard select is fine for now with standard styling */
+/* Custom Select (Standard look) */
+.custom-select-wrapper {
+  position: relative;
 }
 
 /* Radio Cards Selection */
@@ -953,3 +952,88 @@
     opacity: 0.4;
   }
 }
+
+/* --- Pagination Styles --- */
+.chro-pagination-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--chro-glass-bg);
+  padding: 1.2rem 2rem;
+  border-radius: 16px;
+  margin-top: 2.5rem;
+  border: 1px solid var(--chro-glass-border);
+  box-shadow: var(--chro-shadow);
+  backdrop-filter: blur(12px);
+}
+
+.chro-pagination-info {
+  color: var(--chro-text-secondary);
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.chro-pagination-controls {
+  display: flex;
+  gap: 1.2rem; /* Increased gap to prevent overlapping */
+}
+
+.chro-page-btn {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  color: var(--chro-gold);
+  padding: 0.6rem 1.4rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 700;
+  font-family: "Outfit", sans-serif;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  min-width: 120px; /* Ensure uniform size */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.chro-page-btn:hover:not(:disabled) {
+  background: var(--chro-gold);
+  color: #0f172a;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(251, 191, 36, 0.2);
+  border-color: var(--chro-gold);
+}
+
+.chro-page-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.chro-page-btn:disabled {
+  opacity: 0.2;
+  cursor: not-allowed;
+  border-color: rgba(255, 255, 255, 0.05);
+  color: var(--chro-text-secondary);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+@media (max-width: 768px) {
+  .chro-pagination-container {
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    text-align: center;
+  }
+  
+  .chro-pagination-controls {
+    width: 100%;
+    gap: 1rem;
+  }
+  
+  .chro-page-btn {
+    flex: 1;
+    min-width: 0;
+  }
+}
+

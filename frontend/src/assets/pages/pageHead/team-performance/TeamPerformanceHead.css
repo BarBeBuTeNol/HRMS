@@ -575,21 +575,37 @@
     border-color: rgba(255,255,255,0.05);
 }
 
-.action-btn-icon {
-    width: 36px; height: 36px;
-    border-radius: 10px;
+.action-btn-text {
+    flex: 1;
     display: flex;
-    align-items: center; justify-content: center;
-    color: #64748b;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.65rem 0.5rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #cbd5e1;
     background: transparent;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     border: none;
     cursor: pointer;
+    transition: all 0.2s;
 }
-.action-btn-icon:hover { 
-    background: rgba(197, 160, 89, 0.2); 
-    color: #fbbf24; 
-    transform: translateY(-2px);
+
+.action-btn-text:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+}
+
+.action-btn-text.primary-action {
+    background: rgba(197, 160, 89, 0.15);
+    color: #fcd34d;
+    border: 1px solid rgba(197, 160, 89, 0.2);
+}
+
+.action-btn-text.primary-action:hover {
+    background: rgba(197, 160, 89, 0.25);
+    color: #fde68a;
 }
 
 /* --- Responsive --- */
@@ -880,28 +896,94 @@
 .p-med.active { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border-color: rgba(245, 158, 11, 0.3); }
 .p-high.active { background: rgba(239, 68, 68, 0.15); color: #f87171; border-color: rgba(239, 68, 68, 0.3); }
 
-/* Details Stats Grid */
-.stats-grid-mini {
+/* Premium Details Stats Grid */
+.premium-stats-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
+    margin-top: 1rem;
 }
-.stat-mini {
-    background: rgba(15, 23, 42, 0.6);
-    padding: 1.25rem;
+
+.premium-stat-card {
+    background: rgba(15, 23, 42, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 16px;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.3s ease;
+}
+
+.premium-stat-card:hover {
+    background: rgba(30, 41, 59, 0.6);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+.premium-stat-card .stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.premium-stat-card.completed .stat-icon { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+.premium-stat-card.delay .stat-icon { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+
+.premium-stat-card .stat-info {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    text-align: center;
-    border: 1px solid rgba(255,255,255,0.03);
-    transition: transform 0.2s;
 }
-.stat-mini:hover { transform: translateY(-2px); background: rgba(30, 41, 59, 0.8); }
-.stat-mini .lbl { color: #94a3b8; font-size: 0.8rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; }
-.stat-mini .val { font-size: 1.75rem; font-weight: 700; line-height: 1; }
+
+.premium-stat-card .lbl {
+    color: #94a3b8;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+}
+
+.premium-stat-card .val {
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.efficiency-badge {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1));
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #38bdf8;
+    font-weight: 700;
+    font-size: 1.1rem;
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.1);
+}
 
 @media (max-width: 480px) {
     /* Additional tweaks for very small screens if needed, otherwise handled above */
     .team-performance-container { padding: 0.75rem; }
+    
+    .premium-stats-grid { grid-template-columns: 1fr; }
+    .premium-stat-card.ontime { grid-column: span 1 !important; }
+    .ontime-content { flex-direction: column; align-items: flex-start !important; gap: 1rem; }
+    .efficiency-badge { width: 100%; justify-content: center; }
+}
+
+@media (max-width: 768px) {
+    .modal-container {
+        padding: 1.5rem;
+        width: 95%;
+        border-radius: 20px;
+    }
+    .modal-profile-header h3 {
+        font-size: 1.5rem;
+    }
 }

@@ -48,6 +48,7 @@ const AddEmpEducation = () => {
   });
   const [showAddForm, setShowAddForm] = useState(true);
   const [skill, setSkill] = useState("");
+  const [previousExperience, setPreviousExperience] = useState("");
   const [isSaved, setIsSaved] = useState(false);
 
   // Popup States
@@ -105,6 +106,7 @@ const AddEmpEducation = () => {
             }
           }
           if (data.skills) setSkill(data.skills);
+          if (data.previous_experience) setPreviousExperience(data.previous_experience);
           if ((data.image_url || data.profile_image_url) && !currentImage)
             setCurrentImage(data.image_url || data.profile_image_url);
           if (data.emp_code) setCurrentPersonalId(data.emp_code);
@@ -123,6 +125,7 @@ const AddEmpEducation = () => {
                   ]
                 : []),
             skill: data.skills ? String(data.skills) : "",
+            previousExperience: data.previous_experience ? String(data.previous_experience) : "",
           };
           setOriginalForm(JSON.stringify(loadedForm));
 
@@ -186,6 +189,30 @@ const AddEmpEducation = () => {
     setEducationFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const handleEduChange = (e) => {
+    const { name, value } = e.target;
+    let newValue = value;
+
+    if (name === "level") {
+      if (newValue.length > 50) return;
+      // Allow letters, numbers, spaces. Block special chars.
+      newValue = newValue.replace(/[^a-zA-Z0-9\u0E00-\u0E7F\s]/g, "");
+    } else if (name === "university" || name === "major") {
+      if (newValue.length > 120) return;
+      // Allow letters, numbers, spaces. Block special chars.
+      newValue = newValue.replace(/[^a-zA-Z0-9\u0E00-\u0E7F\s]/g, "");
+    }
+    setNewEducation((prev) => ({ ...prev, [name]: newValue }));
+  };
+
+  const handleSkillChange = (e) => {
+    let newValue = e.target.value;
+    if (newValue.length > 255) return;
+    // Allow Thai/Eng, numbers, spaces, and commas
+    newValue = newValue.replace(/[^a-zA-Z0-9\u0E00-\u0E7F\s,]/g, "");
+    setSkill(newValue);
+  };
+
   const handleAddEducation = () => {
     if (educationList.length >= 5) {
       setErrorPopup({
@@ -225,6 +252,7 @@ const AddEmpEducation = () => {
     const currentForm = {
       educationList,
       skill,
+      previousExperience,
     };
 
     return JSON.stringify(currentForm) !== originalForm;
@@ -248,7 +276,7 @@ const AddEmpEducation = () => {
         formData.append("program", "");
       }
       formData.append("skills", skill);
-      formData.append("previousExperience", ""); // Legacy field empty
+      formData.append("previousExperience", previousExperience);
 
       educationFiles.forEach((file) => {
         formData.append("educationFiles", file);
@@ -264,6 +292,7 @@ const AddEmpEducation = () => {
       const sentForm = {
         educationList: educationList,
         skill: skill,
+        previousExperience: previousExperience,
       };
       setOriginalForm(JSON.stringify(sentForm));
 
@@ -299,6 +328,7 @@ const AddEmpEducation = () => {
         const sentForm = {
           educationList: educationList,
           skill: skill,
+          previousExperience: previousExperience,
         };
         navigate("/hr/show-emp", { state: { newEmployee: sentForm } });
       }, 500);
@@ -419,15 +449,11 @@ const AddEmpEducation = () => {
                       <div className="input-group">
                         <input
                           type="text"
+                          name="level"
                           value={newEducation.level}
-                          onChange={(e) =>
-                            setNewEducation({
-                              ...newEducation,
-                              level: e.target.value,
-                            })
-                          }
+                          onChange={handleEduChange}
                           placeholder="e.g. Bachelor's Degree"
-                          maxLength={255}
+                          maxLength={50}
                         />
                       </div>
                     </div>
@@ -436,15 +462,11 @@ const AddEmpEducation = () => {
                       <div className="input-group">
                         <input
                           type="text"
+                          name="university"
                           value={newEducation.university}
-                          onChange={(e) =>
-                            setNewEducation({
-                              ...newEducation,
-                              university: e.target.value,
-                            })
-                          }
+                          onChange={handleEduChange}
                           placeholder="University Name"
-                          maxLength={255}
+                          maxLength={120}
                         />
                       </div>
                     </div>
@@ -453,15 +475,11 @@ const AddEmpEducation = () => {
                       <div className="input-group">
                         <input
                           type="text"
+                          name="major"
                           value={newEducation.major}
-                          onChange={(e) =>
-                            setNewEducation({
-                              ...newEducation,
-                              major: e.target.value,
-                            })
-                          }
+                          onChange={handleEduChange}
                           placeholder="Field of Study"
-                          maxLength={255}
+                          maxLength={120}
                         />
                       </div>
                     </div>
@@ -496,8 +514,24 @@ const AddEmpEducation = () => {
                     {/* <FaCode className="input-icon" />  Optional for textarea if desired, CSS supports it */}
                     <textarea
                       value={skill}
-                      onChange={(e) => setSkill(e.target.value)}
+                      onChange={handleSkillChange}
                       placeholder="List key technologies and skills..."
+                      maxLength={255}
+                    />
+                  </div>
+                  <span className="char-counter">
+                    {skill.length}/255
+                  </span>
+                </div>
+
+                <div className="form-group span-2">
+                  <label>Previous Experience</label>
+                  <div className="input-group">
+                    <textarea
+                      value={previousExperience}
+                      onChange={(e) => setPreviousExperience(e.target.value)}
+                      placeholder="Description of past work experience..."
+                      rows="4"
                     />
                   </div>
                 </div>

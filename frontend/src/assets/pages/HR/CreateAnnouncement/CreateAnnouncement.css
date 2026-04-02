@@ -27,11 +27,40 @@
 /* Header */
 .notifi-header-compact {
   display: flex;
-  align-items: center;
-  gap: 20px;
+  align-items: flex-start;
+  gap: 24px;
   margin-bottom: 32px;
   padding-bottom: 24px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.notifi-header-content {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex: 1;
+}
+
+.btn-back-premium {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 1.1rem;
+}
+
+.btn-back-premium:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  transform: translateX(-3px);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .notifi-icon {
@@ -276,6 +305,18 @@
     gap: 16px;
     margin-bottom: 24px;
     padding-bottom: 20px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .notifi-header-content {
+    gap: 16px;
+  }
+
+  .btn-back-premium {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
   }
 
   .notifi-icon {

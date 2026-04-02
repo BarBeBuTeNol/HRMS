@@ -10,7 +10,7 @@ import {
   FaGraduationCap,
   FaList,
   FaThLarge,
-  FaEllipsisV,
+  FaCalendarAlt,
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import HeadSidebar from "../../../Component/Head/HeadSidebar";
@@ -74,12 +74,20 @@ const HeadEmployeeList = () => {
     let temp = [...employees];
 
     if (searchTerm) {
-      temp = temp.filter(
-        (e) =>
-          e.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          e.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          e.emp_code?.toLowerCase().includes(searchTerm.toLowerCase()),
-      );
+      const lowerSearch = searchTerm.toLowerCase();
+      temp = temp.filter((e) => {
+        const fullName = `${e.first_name || ""} ${e.last_name || ""}`.toLowerCase();
+        const empCode = e.emp_code?.toLowerCase() || "";
+        const numericId = String(e.id).padStart(4, "0");
+
+        return (
+          e.first_name?.toLowerCase().includes(lowerSearch) ||
+          e.last_name?.toLowerCase().includes(lowerSearch) ||
+          fullName.includes(lowerSearch) ||
+          empCode.includes(lowerSearch) ||
+          numericId.includes(lowerSearch)
+        );
+      });
     }
 
     if (positionFilter) {
@@ -205,7 +213,16 @@ const HeadEmployeeList = () => {
             <div className="loading-wrapper">Loading employees...</div>
           ) : (
             <AnimatePresence mode="wait">
-              {viewMode === "grid" ? (
+              {filteredEmployees.length === 0 ? (
+                <motion.div
+                  key="no-results"
+                  className="no-results-found"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                >
+                  <p>No employees found matching your search.</p>
+                </motion.div>
+              ) : viewMode === "grid" ? (
                 <motion.div
                   key="grid"
                   className="head-emp-grid"
@@ -432,10 +449,10 @@ const EmployeeListItem = ({ emp, onOpenInsight }) => {
       </div>
       <div className="cell-contact">{emp.phone || "-"}</div>
       <div className="cell-action">
-        <div className="action-dropdown-trigger">
+        <div className="action-btn-group">
           <button
             onClick={() => onOpenInsight(emp.id)}
-            className="mini-action-btn"
+            className="mini-action-btn detail"
             title="View Insights"
           >
             <FaGraduationCap />
@@ -444,7 +461,6 @@ const EmployeeListItem = ({ emp, onOpenInsight }) => {
             to={`/head/team-schedule?search=${emp.first_name}`}
             className="mini-action-btn schedule"
             title="View Schedule"
-            style={{ color: "var(--emp-highlight)", marginLeft: "8px", fontSize: "1.1rem" }}
           >
             <FaCalendarAlt />
           </Link>

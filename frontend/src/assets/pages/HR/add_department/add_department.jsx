@@ -3,6 +3,7 @@ import DepartmentService from "../../../../services/DepartmentService";
 import LogService from "../../../../services/LogService";
 import HRLayout from "../../../Component/HR/HRLayout";
 import LoadingHR from "../../../Component/loading/loading-hr/LoadingHR";
+import PopupHR from "../../../Component/popup_notifications/popup_notifications-hr/PopupHR";
 import "./add_department.css";
 import {
   FaBuilding,
@@ -50,6 +51,14 @@ const AddDepartment = () => {
   const [editName, setEditName] = useState("");
   const [deleteId, setDeleteId] = useState(null); // Delete Modal State
 
+  // Popup Notification State
+  const [popup, setPopup] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info",
+  });
+
   const fetchDepartments = async () => {
     try {
       const data = await DepartmentService.getAllDepartments();
@@ -66,12 +75,39 @@ const AddDepartment = () => {
   // Success State
   const [showSuccessOverlay, setShowSuccessOverlay] = useState(false);
 
+  // --- Validation ---
+  const validateDepartmentName = (name) => {
+    if (name.length > 100) return false;
+    // Allow Thai, English, Numbers, Spaces. Block others.
+    const regex = /^[a-zA-Z0-9\u0E00-\u0E7F\s]*$/;
+    return regex.test(name);
+  };
+
+  const handleCreateNameChange = (e) => {
+    const val = e.target.value;
+    if (validateDepartmentName(val)) {
+      setDepartmentName(val);
+    }
+  };
+
+  const handleEditNameChange = (e) => {
+    const val = e.target.value;
+    if (validateDepartmentName(val)) {
+      setEditName(val);
+    }
+  };
+
   // --- Create ---
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!departmentName.trim()) {
-      showToast("error", "Department name is required");
+      setPopup({
+        isOpen: true,
+        title: "Invalid Input",
+        message: "Department name is required. Please enter a valid name.",
+        type: "warning",
+      });
       return;
     }
 
@@ -96,7 +132,12 @@ const AddDepartment = () => {
       }, 3000);
     } catch (error) {
       const errorMsg = error.response?.data?.message || "Failed to create";
-      showToast("error", errorMsg);
+      setPopup({
+        isOpen: true,
+        title: "Error Creating",
+        message: errorMsg,
+        type: "error",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -111,7 +152,12 @@ const AddDepartment = () => {
 
   const handleUpdate = async () => {
     if (!editName.trim()) {
-      showToast("error", "Department name cannot be empty");
+      setPopup({
+        isOpen: true,
+        title: "Validation Error",
+        message: "Department name cannot be empty.",
+        type: "warning",
+      });
       return;
     }
 
@@ -134,11 +180,21 @@ const AddDepartment = () => {
         `Updated department ID ${editingDept.id} to '${editName}'`,
       );
 
-      showToast("success", "Department Updated");
+      setPopup({
+        isOpen: true,
+        title: "Updated",
+        message: "Department information has been updated successfully.",
+        type: "success",
+      });
       setIsEditModalOpen(false);
       fetchDepartments();
     } catch (error) {
-      showToast("error", "Failed to update department");
+      setPopup({
+        isOpen: true,
+        title: "Update Failed",
+        message: "Could not update the department. Please try again.",
+        type: "error",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -158,10 +214,20 @@ const AddDepartment = () => {
       // Log Action
       await logAction("Delete Department", `Deleted department ID ${deleteId}`);
 
-      showToast("success", "Department Deleted");
+      setPopup({
+        isOpen: true,
+        title: "Deleted",
+        message: "The department has been removed from the system.",
+        type: "success",
+      });
       fetchDepartments();
     } catch (error) {
-      showToast("error", "Failed to delete department");
+      setPopup({
+        isOpen: true,
+        title: "Delete Error",
+        message: "Unable to delete the department.",
+        type: "error",
+      });
     } finally {
       setIsLoading(false);
       setDeleteId(null);
@@ -267,11 +333,15 @@ const AddDepartment = () => {
                     className="hr-compact-input"
                     placeholder="e.g. Innovation Lab"
                     value={departmentName}
-                    onChange={(e) => setDepartmentName(e.target.value)}
+                    onChange={handleCreateNameChange}
                     onFocus={() => setIsFocused(true)}
                     onBlur={() => setIsFocused(false)}
                     disabled={isLoading}
+                    maxLength={100}
                   />
+                </div>
+                <div className="input-footer">
+                  <span className="char-limit-indicator">{departmentName.length}/100</span>
                 </div>
               </div>
 
@@ -451,47 +521,77 @@ const AddDepartment = () => {
         <AnimatePresence>
           {isEditModalOpen && (
             <motion.div
-              className="modal-overlay"
+              className="modal-overlay-premium"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
+              <div className="modal-bg-blur" onClick={() => setIsEditModalOpen(false)}></div>
               <motion.div
-                className="modal-content"
-                initial={{ scale: 0.8, opacity: 0, y: 20 }}
+                className="modal-content-premium"
+                initial={{ scale: 0.85, opacity: 0, y: 30 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.8, opacity: 0, y: 20 }}
+                exit={{ scale: 0.85, opacity: 0, y: 30 }}
+                transition={{ type: "spring", damping: 20, stiffness: 300 }}
               >
-                <div className="modal-header">
-                  <h2>Edit Department</h2>
+                <div className="modal-header-premium">
+                  <div className="header-icon-box">
+                    <FaEdit />
+                  </div>
+                  <div className="header-text-group">
+                    <h2>Edit Department</h2>
+                    <p>Update identity for #{editingDept?.id}</p>
+                  </div>
                   <button
-                    className="close-btn"
+                    className="close-btn-premium"
                     onClick={() => setIsEditModalOpen(false)}
                   >
                     <FaTimes />
                   </button>
                 </div>
 
-                <div className="floating-input-group">
-                  <input
-                    type="text"
-                    className="floating-input"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    placeholder=" "
-                  />
-                  <label className="floating-label">Department Name</label>
+                <div className="modal-body-premium">
+                  <div className="edit-form-group">
+                    <label>Department Name</label>
+                    <div className="input-with-icon">
+                      <FaBuilding className="field-icon" />
+                      <input
+                        type="text"
+                        className="premium-input-field"
+                        value={editName}
+                        onChange={handleEditNameChange}
+                        placeholder="Enter department name"
+                        maxLength={100}
+                        autoFocus
+                      />
+                    </div>
+                    <div className="field-helper">
+                      <span>Letters, numbers, and spaces only</span>
+                      <span className={editName.length > 90 ? "warning-text" : ""}>
+                        {editName.length}/100
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="modal-actions">
+                <div className="modal-footer-premium">
                   <button
-                    className="btn-cancel"
+                    className="btn-link-premium"
                     onClick={() => setIsEditModalOpen(false)}
+                    disabled={isLoading}
                   >
-                    Cancel
+                    Discard
                   </button>
-                  <button className="btn-save" onClick={handleUpdate}>
-                    <FaSave style={{ marginRight: "0.5rem" }} /> Save Changes
+                  <button 
+                    className="btn-action-premium" 
+                    onClick={handleUpdate}
+                    disabled={isLoading || !editName.trim()}
+                  >
+                    {isLoading ? "Saving..." : (
+                      <>
+                        <FaSave /> Save Changes
+                      </>
+                    )}
                   </button>
                 </div>
               </motion.div>
@@ -503,43 +603,54 @@ const AddDepartment = () => {
         <AnimatePresence>
           {deleteId && (
             <motion.div
-              className="modal-overlay"
+              className="modal-overlay-premium"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
+              <div className="modal-bg-blur" onClick={() => setDeleteId(null)}></div>
               <motion.div
-                className="modal-content delete-modal-content"
-                initial={{ scale: 0.5, opacity: 0, y: 50 }}
+                className="modal-content-premium delete-premium"
+                initial={{ scale: 0.8, opacity: 0, y: 50 }}
                 animate={{
                   scale: 1,
                   opacity: 1,
                   y: 0,
-                  transition: { type: "spring", damping: 20, stiffness: 300 },
+                  transition: { type: "spring", damping: 25, stiffness: 400 },
                 }}
-                exit={{ scale: 0.9, opacity: 0 }}
+                exit={{ scale: 0.8, opacity: 0, y: 50 }}
               >
-                <div className="delete-icon-wrapper">
-                  <FaTrash />
+                <div className="delete-accent-bar"></div>
+                <div className="modal-body-premium delete-body">
+                  <div className="delete-icon-glow">
+                    <FaTrash />
+                  </div>
+                  <h2 className="delete-title-premium">Confirm Deletion</h2>
+                  <p className="delete-desc-premium">
+                    Are you sure you want to delete this department? <br/>
+                    All associated data will be permanently removed.
+                  </p>
+                  
+                  <div className="delete-info-card">
+                    <span className="info-label">Deleting Unit</span>
+                    <span className="info-value">#{deleteId} - {departments.find(d => d.id === deleteId)?.department_name}</span>
+                  </div>
                 </div>
-                <h2 className="delete-title">Delete Department?</h2>
-                <p className="delete-warning">
-                  Are you sure you want to delete this department? <br />
-                  This action cannot be undone.
-                </p>
 
-                <div className="modal-actions">
+                <div className="modal-footer-premium delete-footer">
                   <button
-                    className="btn-cancel"
+                    className="btn-link-premium"
                     onClick={() => setDeleteId(null)}
+                    disabled={isLoading}
                   >
-                    Cancel
+                    Keep Department
                   </button>
                   <button
-                    className="btn-delete-confirm"
+                    className="btn-danger-premium"
                     onClick={confirmDelete}
+                    disabled={isLoading}
                   >
-                    Yes, Delete It
+                    {isLoading ? "Deleting..." : "Confirm Delete"}
                   </button>
                 </div>
               </motion.div>
@@ -549,6 +660,16 @@ const AddDepartment = () => {
         {/* Success Overlay */}
         <SuccessOverlay show={showSuccessOverlay} />
       </div>
+
+      <PopupHR
+        isOpen={popup.isOpen}
+        onClose={() => setPopup({ ...popup, isOpen: false })}
+        title={popup.title}
+        message={popup.message}
+        type={popup.type}
+        autoClose={true}
+        duration={4000}
+      />
     </HRLayout>
   );
 };

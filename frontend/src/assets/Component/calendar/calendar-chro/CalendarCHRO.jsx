@@ -182,12 +182,18 @@ const CalendarCHRO = () => {
         const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
         const showRedWarning = isWeekend && dayEvents.length === 0;
 
+        const isToday = dayjs().isSame(dateStr, 'day');
+        const isPast = dayjs(dateStr).isBefore(dayjs(), 'day');
+        const isClickable = !isPast || dayEvents.length > 0;
+
         days.push({
             type: "day",
             day: i,
             date: dateStr,
             events: dayEvents,
-            isToday: dayjs().isSame(dateStr, 'day'),
+            isToday,
+            isPast,
+            isClickable,
             showRedWarning,
             key: `day-${i}`
         });
@@ -204,8 +210,30 @@ const CalendarCHRO = () => {
     e.preventDefault();
     
     // Basic Validation
-    if (!newEvent.title || !newEvent.date) {
-        setNotifState({ isOpen: true, type: 'error', title: 'Validation Error', message: 'Please fill in all required fields.' });
+    const trimmedTitle = newEvent.title.trim();
+    const todayStr = dayjs().format("YYYY-MM-DD");
+    
+    // Check for empty or only-space title
+    if (!trimmedTitle || !newEvent.date) {
+        setNotifState({ isOpen: true, type: 'error', title: 'Validation Error', message: 'Name/Title and Date are required. Cannot be just spaces.' });
+        return;
+    }
+
+    // Check for special characters (Allow alphanumeric, Thai, and common symbols: . , - _ ( ) / )
+    const titleRegex = /^[a-zA-Z0-9ก-๙\s\.\,\-\_\(\)\/]+$/;
+    if (!titleRegex.test(trimmedTitle)) {
+        setNotifState({ 
+            isOpen: true, 
+            type: 'error', 
+            title: 'Invalid Title', 
+            message: 'Title contains special characters. Only Alphanumeric, Thai, and basic symbols ( . , - _ / ) are allowed.' 
+        });
+        return;
+    }
+
+    // Check for past dates
+    if (dayjs(newEvent.date).isBefore(dayjs(), 'day')) {
+        setNotifState({ isOpen: true, type: 'error', title: 'Invalid Date', message: 'The date cannot be in the past. Please select today or a future date.' });
         return;
     }
 
@@ -216,7 +244,7 @@ const CalendarCHRO = () => {
       const userId = currentUser.id || 1; 
 
       const payload = {
-        title: newEvent.title,
+        title: trimmedTitle, // Use trimmed title
         date: newEvent.date,
         description: newEvent.description,
         type: newEvent.type,
@@ -328,8 +356,8 @@ const CalendarCHRO = () => {
                         :
                             <motion.div 
                                 key={item.key}
-                                className={`chro-day ${item.isToday ? 'today' : ''} ${item.showRedWarning ? 'weekend-red' : ''}`}
-                                onClick={() => handleDayClick(item)}
+                                className={`chro-day ${item.isToday ? 'today' : ''} ${item.showRedWarning ? 'weekend-red' : ''} ${!item.isClickable ? 'past-disabled' : ''}`}
+                                onClick={() => item.isClickable && handleDayClick(item)}
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 transition={{ delay: index * 0.005 }} // Faster stagger
@@ -363,13 +391,13 @@ const CalendarCHRO = () => {
                                 <div className="chro-modal-body">
                                     <form onSubmit={handleAddEventSubmit}>
                                         <div className="chro-input-group">
-                                            <label>Title</label>
-                                            <input className="chro-input" value={newEvent.title} onChange={e => setNewEvent({...newEvent, title: e.target.value})} autoFocus required />
+                                            <label>Title (Max 150)</label>
+                                            <input className="chro-input" value={newEvent.title} onChange={e => setNewEvent({...newEvent, title: e.target.value})} maxLength={150} autoFocus required />
                                         </div>
                                         <div style={{ display: 'flex', gap: '20px' }}>
                                             <div className="chro-input-group" style={{ flex: 1 }}>
                                                 <label>Date</label>
-                                                <input type="date" className="chro-input" value={newEvent.date} onChange={e => setNewEvent({...newEvent, date: e.target.value})} required />
+                                                <input type="date" className="chro-input" value={newEvent.date} onChange={e => setNewEvent({...newEvent, date: e.target.value})} min={dayjs().format("YYYY-MM-DD")} required />
                                             </div>
                                             <div className="chro-input-group" style={{ flex: 1 }}>
                                                 <label>Category</label>

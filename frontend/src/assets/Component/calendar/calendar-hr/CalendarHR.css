@@ -494,6 +494,10 @@
   cursor: pointer;
   box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
   transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
 }
 .hr-btn-save:hover {
   box-shadow: 0 15px 35px rgba(99, 102, 241, 0.5);

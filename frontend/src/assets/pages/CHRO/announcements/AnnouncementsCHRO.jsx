@@ -62,6 +62,11 @@ const AnnouncementsCHRO = () => {
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Pagination State
+  const [annPage, setAnnPage] = useState(1);
+  const [notiPage, setNotiPage] = useState(1);
+  const itemsPerPage = 10;
+
   // Modal State
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState(null); // 'create' | 'edit' | 'delete'
@@ -189,6 +194,41 @@ const AnnouncementsCHRO = () => {
     }).length,
   };
 
+  // Pagination & Sorting Component Logic
+  const sortedAnnouncements = [...announcements].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  const currentAnnouncements = sortedAnnouncements.slice((annPage - 1) * itemsPerPage, annPage * itemsPerPage);
+  const totalAnnPages = Math.ceil(sortedAnnouncements.length / itemsPerPage) || 1;
+
+  const sortedNotifications = [...notifications].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  const currentNotifications = sortedNotifications.slice(0, 10); // Show only top 10 latest
+
+  const renderPagination = (currentPage, totalPages, setPage) => {
+    if (totalPages <= 1) return null;
+    return (
+      <div className="chro-pagination-container">
+        <span className="chro-pagination-info">
+          Page {currentPage} of {totalPages}
+        </span>
+        <div className="chro-pagination-controls">
+          <button
+            className="chro-page-btn"
+            disabled={currentPage === 1}
+            onClick={() => setPage(currentPage - 1)}
+          >
+            Previous
+          </button>
+          <button
+            className="chro-page-btn"
+            disabled={currentPage === totalPages}
+            onClick={() => setPage(currentPage + 1)}
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <CHROLayout>
       {loading ? (
@@ -284,7 +324,8 @@ const AnnouncementsCHRO = () => {
           {/* Content Area */}
           <div className="chro-content-area glass-panel">
             {activeTab === "announcements" ? (
-              <div className="content-list-view">
+              <>
+                <div className="content-list-view">
                 {announcements.length === 0 && !loading && (
                   <div className="empty-state-exclusive">
                     <CheckCircle size={48} className="empty-icon" />
@@ -292,7 +333,7 @@ const AnnouncementsCHRO = () => {
                     <p>No new strategic updates at this time.</p>
                   </div>
                 )}
-                {announcements.map((item) => (
+                {currentAnnouncements.map((item) => (
                   <motion.div
                     className="exclusive-card"
                     key={item.id}
@@ -353,6 +394,8 @@ const AnnouncementsCHRO = () => {
                   </motion.div>
                 ))}
               </div>
+              {renderPagination(annPage, totalAnnPages, setAnnPage)}
+              </>
             ) : (
               <div className="content-list-view">
                 {notifications.length === 0 && !loading && (
@@ -362,7 +405,7 @@ const AnnouncementsCHRO = () => {
                     <p>No pending alerts requiring your attention.</p>
                   </div>
                 )}
-                {notifications.map((noti) => (
+                {currentNotifications.map((noti) => (
                   <motion.div
                     key={noti.id}
                     className={`exclusive-noti-item ${

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "../../../../services/api";
-import { FaGlobeAsia, FaBuilding, FaPaperPlane } from "react-icons/fa";
+import { FaGlobeAsia, FaBuilding, FaPaperPlane, FaArrowLeft } from "react-icons/fa";
 import { MdCheckCircle, MdNotificationsActive } from "react-icons/md";
 import HRLayout from "../../../Component/HR/HRLayout";
 import { PopupDoneHR } from "../../../Component/poup_done/Popup_done";
@@ -110,20 +110,29 @@ const CreateAnnouncement = () => {
         >
           {/* Header */}
           <div className="notifi-header-compact">
-            <div className="notifi-icon">
-              <MdNotificationsActive />
-            </div>
-            <div>
-              <h1 className="notifi-title">Create Announcement</h1>
-              <p
-                style={{
-                  margin: 0,
-                  color: "var(--text-secondary)",
-                  fontSize: "0.9rem",
-                }}
-              >
-                Send updates to employees or departments
-              </p>
+            <button 
+              className="btn-back-premium" 
+              onClick={() => navigate("/hr/announcements")}
+              title="Back to Announcements"
+            >
+              <FaArrowLeft />
+            </button>
+            <div className="notifi-header-content">
+              <div className="notifi-icon">
+                <MdNotificationsActive />
+              </div>
+              <div>
+                <h1 className="notifi-title">Create Announcement</h1>
+                <p
+                  style={{
+                    margin: 0,
+                    color: "var(--text-secondary)",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  Send updates to employees or departments
+                </p>
+              </div>
             </div>
           </div>
 

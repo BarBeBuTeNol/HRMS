@@ -360,7 +360,7 @@ const CalendarHR = () => {
                           setIsAddModalOpen(true);
                         }}
                       >
-                        <Plus size={18} className="inline mr-2" /> Add Event Here
+                        <Plus size={18} /> Add Event Here
                       </motion.button>
                     )}
                   </div>

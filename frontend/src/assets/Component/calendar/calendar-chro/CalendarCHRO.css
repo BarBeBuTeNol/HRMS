@@ -252,6 +252,18 @@
   border: 1px solid rgba(224, 192, 88, 0.3);
 }
 
+.chro-day.past-disabled {
+  opacity: 0.25;
+  cursor: default;
+  pointer-events: none;
+  filter: grayscale(0.8);
+}
+
+.chro-day.past-disabled:hover {
+  background: var(--chro-cal-bg);
+  box-shadow: none;
+}
+
 .chro-date-num {
   font-family: var(--font-display);
   font-size: 1.4rem;

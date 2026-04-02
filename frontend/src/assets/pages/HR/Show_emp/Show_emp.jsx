@@ -391,35 +391,60 @@ const Show_emp = () => {
       />
 
       {/* Delete Confirmation Modal */}
-      {deleteConfirm.isOpen && (
-        <div className="confirm-overlay">
-          <div className="confirm-modal">
-            <h3>Delete Employee?</h3>
-            <div className="confirm-content">
-              <p>Are you sure you want to delete</p>
-              <div className="text-highlight-wrapper">
-                <span className="text-highlight-danger">
-                  {deleteConfirm.empName}
-                </span>
+      <AnimatePresence>
+        {deleteConfirm.isOpen && (
+          <motion.div
+            className="modal-overlay-premium"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <div className="modal-bg-blur" onClick={() => setDeleteConfirm({ ...deleteConfirm, isOpen: false })}></div>
+            <motion.div
+              className="modal-content-premium delete-premium"
+              initial={{ scale: 0.8, opacity: 0, y: 50 }}
+              animate={{
+                scale: 1,
+                opacity: 1,
+                y: 0,
+                transition: { type: "spring", damping: 25, stiffness: 400 },
+              }}
+              exit={{ scale: 0.8, opacity: 0, y: 50 }}
+            >
+              <div className="delete-accent-bar"></div>
+              <div className="modal-body-premium delete-body">
+                <div className="delete-icon-glow">
+                  <FaTrashAlt />
+                </div>
+                <h2 className="delete-title-premium">Delete Account?</h2>
+                <div className="delete-emp-info-card">
+                  <span className="info-label">Employee</span>
+                  <span className="info-value">{deleteConfirm.empName}</span>
+                </div>
+                <p className="delete-desc-premium">
+                  Are you sure you want to delete this employee account? <br/>
+                  This record and all associated data will be lost.
+                </p>
               </div>
-              <p>This action cannot be undone.</p>
-            </div>
-            <div className="confirm-actions">
-              <button
-                className="btn-cancel"
-                onClick={() =>
-                  setDeleteConfirm({ isOpen: false, empId: null, empName: "" })
-                }
-              >
-                Cancel
-              </button>
-              <button className="btn-delete" onClick={confirmDelete}>
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+
+              <div className="modal-footer-premium delete-footer">
+                <button
+                  className="btn-link-premium"
+                  onClick={() => setDeleteConfirm({ ...deleteConfirm, isOpen: false })}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn-danger-premium"
+                  onClick={confirmDelete}
+                >
+                  Yes, Delete It
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="emp-page-container">
         <div className="emp-page-header">

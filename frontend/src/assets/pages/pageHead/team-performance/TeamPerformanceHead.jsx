@@ -98,9 +98,10 @@ const TeamPerformanceHead = () => {
 
   // Filter Members
   const filteredMembers = members.filter((member) => {
-    const matchesName = (member.first_name + " " + member.last_name)
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
+    const searchLower = searchTerm.toLowerCase();
+    const fullName = (member.first_name + " " + member.last_name).toLowerCase();
+    const matchesName = fullName.includes(searchLower) || (member.id && member.id.toString().includes(searchLower));
+    
     const matchesPos = filterPosition === "All" || member.position_name === filterPosition;
     return matchesName && matchesPos;
   });
@@ -108,8 +109,9 @@ const TeamPerformanceHead = () => {
   const uniquePositions = ["All", ...new Set(members.map(m => m.position_name).filter(Boolean))];
 
   // Find Top Performer
-  const topPerformer = members.length > 0 
-    ? members.reduce((prev, current) => (prev.total_completed > current.total_completed) ? prev : current)
+  const maxCompleted = members.length > 0 ? Math.max(...members.map(m => parseInt(m.total_completed) || 0)) : 0;
+  const topPerformer = maxCompleted > 0 
+    ? members.find(m => (parseInt(m.total_completed) || 0) === maxCompleted)
     : null;
 
   const openModal = (member, type) => {
@@ -389,7 +391,8 @@ const TeamPerformanceHead = () => {
                    value={filterPosition}
                    onChange={(e) => setFilterPosition(e.target.value)}
                  >
-                   {uniquePositions.map(pos => (
+                   <option value="All">All Positions</option>
+                   {uniquePositions.filter(p => p !== 'All').map(pos => (
                      <option key={pos} value={pos}>{pos}</option>
                    ))}
                  </select>
@@ -435,33 +438,30 @@ const TeamPerformanceHead = () => {
                         </div>
                     </div>
 
-                    <div className="member-actions">
+                    <div className="member-actions" style={{ gap: '0.5rem' }}>
                         <motion.button 
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            className="action-btn-icon" 
-                            title="View Profile"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="action-btn-text" 
                             onClick={() => openModal(member, 'profile')}
                         >
-                            <User size={18} />
+                            Profile
                         </motion.button>
                         <motion.button 
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            className="action-btn-icon" 
-                            title="Assign Task"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="action-btn-text"
                             onClick={() => openModal(member, 'assign')}
                         >
-                            <Briefcase size={18} />
+                            Assign
                         </motion.button>
                         <motion.button 
-                           whileHover={{ scale: 1.1 }}
-                           whileTap={{ scale: 0.9 }}
-                           className="action-btn-icon text-white bg-amber-500/20" 
-                           title="Details"
+                           whileHover={{ scale: 1.05 }}
+                           whileTap={{ scale: 0.95 }}
+                           className="action-btn-text primary-action" 
                            onClick={() => openModal(member, 'details')}
                         >
-                            <ChevronRight size={18} />
+                            Stats
                         </motion.button>
                     </div>
                 </motion.div>
@@ -560,119 +560,161 @@ function MemberActionModal({ isOpen, onClose, data, type }) {
     const renderContent = () => {
         switch(type) {
             case 'profile':
-
                 return (
-                    <div className="modal-content-body">
-                         <div className="modal-profile-header">
-                             <Avatar m={data} large />
-                             <div className="text-center mt-3">
-                                <h3 className="text-xl font-bold text-white">{data.first_name} {data.last_name}</h3>
-                                <div className="flex flex-col items-center gap-1 mt-1">
-                                    <span className="text-amber-400 font-medium">{data.position_name}</span>
-                                    <span className="text-gray-400 text-xs">{data.department_name || 'Department N/A'}</span>
-                                    <span className={`px-2 py-0.5 rounded text-xs font-semibold mt-1 
-                                        ${!data.employment_status || data.employment_status === 'Active' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-700 text-gray-400'}`}>
-                                        {data.employment_status || 'Active'}
-                                    </span>
+                    <div className="modal-content-body flex flex-col items-center w-full">
+                        <div style={{ position: 'relative', marginBottom: '1.5rem', marginTop: '1rem' }}>
+                            <Avatar m={data} large />
+                            <div style={{ position: 'absolute', bottom: '-5px', right: '-5px', background: '#10b981', border: '4px solid #1e293b', borderRadius: '50%', width: '28px', height: '28px' }}></div>
+                        </div>
+
+                        <h3 style={{ fontSize: '1.75rem', fontWeight: '800', color: '#fff', marginBottom: '0.25rem', textAlign: 'center' }}>
+                            {data.first_name} {data.last_name}
+                        </h3>
+                        <p style={{ color: '#c5a059', fontSize: '1rem', fontWeight: '600', letterSpacing: '0.5px' }}>
+                            {data.position_name || 'Employee'}
+                        </p>
+                        
+                        <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem', marginBottom: '2.5rem' }}>
+                             <span style={{ padding: '0.35rem 1rem', background: 'rgba(255,255,255,0.05)', color: '#94a3b8', borderRadius: '20px', fontSize: '0.85rem', fontWeight: '500', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                 {data.department_name || 'Department N/A'}
+                             </span>
+                             <span style={{ padding: '0.35rem 1rem', background: 'rgba(16, 185, 129, 0.1)', color: '#34d399', borderRadius: '20px', fontSize: '0.85rem', fontWeight: '600', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                                 {data.employment_status || 'Active'}
+                             </span>
+                        </div>
+
+                        <div className="modal-info-grid" style={{ width: '100%', background: 'rgba(15, 23, 42, 0.4)', borderRadius: '20px', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                                <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(59, 130, 246, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#60a5fa' }}><Mail size={20}/></div>
+                                <div>
+                                    <div style={{ fontSize: '0.8rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '600', marginBottom: '0.15rem' }}>Email Address</div>
+                                    <div style={{ color: '#fff', fontWeight: '500', fontSize: '1rem' }}>{data.email || 'No Email Provided'}</div>
                                 </div>
-                             </div>
-                         </div>
-                         <div className="modal-info-grid">
-                            <div className="info-item">
-                                <Mail size={16} className="text-gray-400" />
-                                <span>{data.email || 'No Email'}</span>
                             </div>
-                             <div className="info-item">
-                                <Phone size={16} className="text-gray-400" />
-                                <span>{data.phone || 'No Phone'}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                                <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#34d399' }}><Phone size={20}/></div>
+                                <div>
+                                    <div style={{ fontSize: '0.8rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '600', marginBottom: '0.15rem' }}>Phone Number</div>
+                                    <div style={{ color: '#fff', fontWeight: '500', fontSize: '1rem' }}>{data.phone || 'No Phone Provided'}</div>
+                                </div>
                             </div>
-                             <div className="info-item">
-                                <Calendar size={16} className="text-gray-400" />
-                                <span>Joined: {formatDate(data.join_date)}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                                <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(245, 158, 11, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fbbf24' }}><User size={20}/></div>
+                                <div>
+                                    <div style={{ fontSize: '0.8rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '600', marginBottom: '0.15rem' }}>Employee ID</div>
+                                    <div style={{ color: '#fff', fontWeight: '500', fontSize: '1rem' }}>{data.id || 'N/A'}</div>
+                                </div>
                             </div>
-                         </div>
+                        </div>
                     </div>
                 );
             case 'assign':
                 return (
                     <div className="modal-content-body">
-                        <div className="flex items-center gap-4 mb-6 border-b border-gray-700 pb-4">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', marginBottom: '2rem', padding: '1.25rem', background: 'rgba(15, 23, 42, 0.5)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
                             <Avatar m={data} />
                             <div>
-                                <h4 className="text-lg font-bold text-white">Assign to {data.first_name}</h4>
-                                <p className="text-xs text-amber-400">{data.position_name}</p>
+                                <h4 style={{ fontSize: '1.35rem', fontWeight: '800', color: '#fff', marginBottom: '0.25rem' }}>
+                                    Assign to {data.first_name}
+                                </h4>
+                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: '#c5a059', fontWeight: '600' }}>
+                                    <Briefcase size={14} /> {data.position_name || 'Member'}
+                                </div>
                             </div>
                         </div>
                         
-                        <h3 className="section-title"><Briefcase size={18}/> New Task Details</h3>
-                        <div className="form-group">
-                            <label>Task Title</label>
-                            <input type="text" className="modal-input" placeholder="e.g. Update Documentation" />
+                        <h3 className="section-title" style={{ fontSize: '1.15rem', paddingBottom: '0.75rem', borderBottomColor: 'rgba(255,255,255,0.1)', color: '#e2e8f0' }}>
+                            <Briefcase size={20} style={{ color: '#60a5fa' }}/> Task Specifications
+                        </h3>
+                        
+                        <div className="form-group" style={{ marginTop: '1.5rem' }}>
+                            <label style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8' }}>Task Title</label>
+                            <input type="text" className="modal-input" placeholder="e.g. Update Documentation" style={{ fontSize: '1rem', padding: '1rem' }}/>
                         </div>
                         <div className="form-group">
-                            <label>Priority</label>
+                            <label style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8' }}>Priority Level</label>
                             <div className="priority-select">
                                 <span 
                                     className={`p-badge p-low ${priority === 'Low' ? 'active' : ''}`}
                                     onClick={() => setPriority('Low')}
                                 >
-                                    Low
+                                    Low Priority
                                 </span>
                                 <span 
                                     className={`p-badge p-med ${priority === 'Medium' ? 'active' : ''}`}
                                     onClick={() => setPriority('Medium')}
                                 >
-                                    Medium
+                                    Medium Priority
                                 </span>
                                 <span 
                                     className={`p-badge p-high ${priority === 'High' ? 'active' : ''}`}
                                     onClick={() => setPriority('High')}
                                 >
-                                    High
+                                    High Priority
                                 </span>
                             </div>
                         </div>
                         <div className="form-group">
-                            <label>Due Date</label>
-                            <input type="date" className="modal-input" />
+                            <label style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8' }}>Target Due Date</label>
+                            <input 
+                                type="date" 
+                                className="modal-input" 
+                                min={new Date().toISOString().split("T")[0]}
+                                style={{ fontSize: '1rem', padding: '1rem' }}
+                            />
                         </div>
-                         <div className="mt-6">
-                            <button className="modal-btn-primary w-full">Confirm Assignment</button>
+                         <div className="mt-8">
+                            <button className="modal-btn-primary w-full" style={{ padding: '1rem', fontSize: '1.05rem', letterSpacing: '0.5px' }}>Confirm Assignment</button>
                          </div>
                     </div>
                 );
             case 'details':
                 return (
                     <div className="modal-content-body">
-                        <div className="flex items-center gap-4 mb-6">
-                            <Avatar m={data} />
-                            <div>
-                                <h4 className="text-lg font-bold text-white">Performance Stats</h4>
-                                <p className="text-xs text-gray-400">Current Month</p>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '1.5rem', width: '100%' }}>
+                            <Avatar m={data} large />
+                            <h4 style={{ fontSize: '1.35rem', fontWeight: 'bold', color: '#ffffff', marginTop: '0.75rem', marginBottom: '0.25rem' }}>
+                                {data.first_name}'s Stats
+                            </h4>
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(59, 130, 246, 0.1)', color: '#60a5fa', padding: '0.35rem 0.85rem', borderRadius: '999px', fontSize: '0.75rem', fontWeight: '600', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
+                                <Calendar size={14} /> Current Month
                             </div>
                         </div>
-                        <div className="stats-grid-mini">
-                            <div className="stat-mini">
-                                <span className="lbl">Completed</span>
-                                <span className="val text-emerald-400">{data.total_completed}</span>
+                        
+                        <div className="premium-stats-grid">
+                            <div className="premium-stat-card completed">
+                                <div className="stat-icon"><CheckCircle size={20} /></div>
+                                <div className="stat-info">
+                                    <span className="lbl">Completed</span>
+                                    <span className="val text-emerald-400">{data.total_completed}</span>
+                                </div>
                             </div>
-                             <div className="stat-mini">
-                                <span className="lbl">On-Time</span>
-                                <span className="val text-amber-400">{data.on_time_completed}</span>
+                            <div className="premium-stat-card delay">
+                                <div className="stat-icon"><AlertCircle size={20} /></div>
+                                <div className="stat-info">
+                                    <span className="lbl">Overdue</span>
+                                    <span className="val text-red-400">{data.total_overdue}</span>
+                                </div>
                             </div>
-                             <div className="stat-mini">
-                                <span className="lbl">Overdue</span>
-                                <span className="val text-red-400">{data.total_overdue}</span>
-                            </div>
-                             <div className="stat-mini">
-                                <span className="lbl">Efficiency</span>
-                                <span className="val text-blue-400">
-                                   {data.total_completed ? Math.round((data.on_time_completed / data.total_completed) * 100) : 0}%
-                                </span>
+                            <div className="premium-stat-card ontime" style={{ gridColumn: 'span 2' }}>
+                                <div className="flex items-center justify-between w-full ontime-content">
+                                    <div className="flex items-center gap-3">
+                                        <div className="stat-icon" style={{ background: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24' }}><Clock size={20} /></div>
+                                        <div className="stat-info">
+                                            <span className="lbl" style={{ textAlign: "left" }}>On-Time Delivered</span>
+                                            <span className="val text-amber-400">{data.on_time_completed} Tasks</span>
+                                        </div>
+                                    </div>
+                                    <div className="efficiency-badge">
+                                        <Zap size={16} />
+                                        {data.total_completed ? Math.round((data.on_time_completed / data.total_completed) * 100) : 0}% Efficiency
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                         <div className="mt-6">
-                            <button className="modal-btn-secondary w-full" onClick={onClose}>Close Details</button>
+                        
+                         <div className="mt-8">
+                            <button className="modal-btn-secondary w-full" onClick={onClose}>Close Overview</button>
                          </div>
                     </div>
                 );

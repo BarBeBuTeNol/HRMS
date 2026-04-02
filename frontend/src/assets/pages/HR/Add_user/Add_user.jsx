@@ -119,18 +119,29 @@ const AddUser = () => {
     const { name, value } = e.target;
     let newValue = value;
 
-    // 1. Username, First Name, Last Name: Max 255 chars, No special chars (Allow allow letters, numbers, Thai chars, spaces)
+    // 1. Username, First Name, Last Name: Max 50 chars, No special chars, No spaces
     if (["username", "firstName", "lastName"].includes(name)) {
-      if (newValue.length > 255) return; // Block > 255
-      // Regex: Allow A-Z, a-z, 0-9, Thai chars (\u0E00-\u0E7F), whitespace
-      // Remove anything else
-      newValue = newValue.replace(/[^a-zA-Z0-9\u0E00-\u0E7F\s]/g, "");
+      if (newValue.length > 50) return; // Block > 50
+      // Regex: Allow A-Z, a-z, 0-9, Thai chars (\u0E00-\u0E7F)
+      // Remove anything else (including spaces)
+      newValue = newValue.replace(/[^a-zA-Z0-9\u0E00-\u0E7F]/g, "");
     }
 
-    // 2. Phone Number: Max 12 chars, Numbers only
+    // 2. Phone Number: Max 20 chars, Numbers only, No spaces
     if (name === "telephone") {
-      if (newValue.length > 12) return; // Block > 12
+      if (newValue.length > 20) return; // Block > 20
       newValue = newValue.replace(/[^0-9]/g, ""); // Remove non-numeric
+    }
+
+    // 3. Email: Max 100, No spaces
+    if (name === "email") {
+      if (newValue.length > 100) return;
+      newValue = newValue.replace(/\s/g, ""); // Remove spaces
+    }
+
+    // 4. Password: Max 255
+    if (name === "password") {
+      if (newValue.length > 255) return;
     }
 
     setForm({ ...form, [name]: newValue });
@@ -162,11 +173,21 @@ const AddUser = () => {
     const missingFields = requiredFields.filter((field) => !form[field]);
 
     if (missingFields.length > 0) {
-      // 4. If data is incomplete, show Popup Error
       setErrorPopup({
         isOpen: true,
         title: "Missing Information",
         message: "Please fill in all required fields completely.",
+      });
+      return;
+    }
+
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email)) {
+      setErrorPopup({
+        isOpen: true,
+        title: "Invalid Email",
+        message: "Please enter a valid email address.",
       });
       return;
     }
@@ -290,7 +311,7 @@ const AddUser = () => {
                       placeholder="jdoe"
                       value={form.username}
                       onChange={handleChange}
-                      maxLength={255}
+                      maxLength={50}
                       required
                     />
                   </div>
@@ -309,6 +330,7 @@ const AddUser = () => {
                       placeholder="••••••••"
                       value={form.password}
                       onChange={handleChange}
+                      maxLength={255}
                       required
                     />
                   </div>
@@ -327,6 +349,7 @@ const AddUser = () => {
                       placeholder="john.doe@company.com"
                       value={form.email}
                       onChange={handleChange}
+                      maxLength={100}
                       required
                     />
                   </div>
@@ -374,7 +397,7 @@ const AddUser = () => {
                       placeholder="John"
                       value={form.firstName}
                       onChange={handleChange}
-                      maxLength={255}
+                      maxLength={50}
                       required
                     />
                   </div>
@@ -393,7 +416,7 @@ const AddUser = () => {
                       placeholder="Doe"
                       value={form.lastName}
                       onChange={handleChange}
-                      maxLength={255}
+                      maxLength={50}
                       required
                     />
                   </div>
@@ -412,7 +435,7 @@ const AddUser = () => {
                       placeholder="0812345678"
                       value={form.telephone}
                       onChange={handleChange}
-                      maxLength={12}
+                      maxLength={20}
                       required
                     />
                   </div>
