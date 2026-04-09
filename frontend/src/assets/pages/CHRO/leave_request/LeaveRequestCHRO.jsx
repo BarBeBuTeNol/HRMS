@@ -256,7 +256,6 @@ const LeaveRequestCHRO = () => {
                         className="leave-input date-field"
                         required
                       />
-                      <CalendarDays className="field-icon" size={18} />
                     </div>
                   </div>
                   <div className="leave-form-group">
@@ -271,7 +270,6 @@ const LeaveRequestCHRO = () => {
                         className="leave-input date-field"
                         required
                       />
-                      <CalendarDays className="field-icon" size={18} />
                     </div>
                   </div>
                 </div>

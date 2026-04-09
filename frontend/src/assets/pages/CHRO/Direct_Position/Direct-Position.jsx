@@ -37,6 +37,7 @@ export default function DirectPosition() {
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [bulkActionType, setBulkActionType] = useState(""); // 'department' | 'role' | 'status'
   const [bulkValue, setBulkValue] = useState("");
+  const [bulkReason, setBulkReason] = useState("");
 
   const [loading, setLoading] = useState(true);
 
@@ -154,17 +155,14 @@ export default function DirectPosition() {
   const openEditModal = async (emp) => {
     setSelectedEmployee(emp);
 
-    // Pre-fill with existing data first while loading
-    // Note: emp.job_position provides the NAME, but we need the ID to pre-select.
-    // We will attempt to find the ID from the fetched jobPositions list if possible, or wait for fresh user details
     const foundPos = jobPositions.find(
       (jp) => jp.position_name === emp.job_position,
-    );
+    )?.id;
 
     setEditForm({
-      position: foundPos ? foundPos.id : "", // Use ID if found
-      role_id: emp.role_id,
-      department_id: emp.department_id,
+      position: emp.position_id ? String(emp.position_id) : (foundPos ? String(foundPos) : ""), 
+      role_id: emp.role_id ? String(emp.role_id) : "",
+      department_id: emp.department_id ? String(emp.department_id) : "",
       status: emp.displayStatus || "Active",
       effectiveDate: "",
       note: "",
@@ -172,22 +170,18 @@ export default function DirectPosition() {
     });
 
     try {
-      // Fetch fresh details to ensure we have latest Position etc.
       const res = await api.get(`/users/${emp.id}`);
       const user = res.data;
       if (user) {
-        // Map user.job_position (which might be name or object) to ID.
-        // Based on userController, getUserById returns `jp.position_name AS job_position`.
-        // So we still have the name. We need to map it to ID from our list.
         const userPosId = jobPositions.find(
           (jp) => jp.position_name === user.job_position,
         )?.id;
 
         setEditForm((prev) => ({
           ...prev,
-          position: user.position_id || userPosId || "", // Prefer explicit ID if available in refetch, else find by name
-          role_id: user.role_id,
-          department_id: user.department_id,
+          position: user.position_id ? String(user.position_id) : (userPosId ? String(userPosId) : prev.position),
+          role_id: user.role_id ? String(user.role_id) : prev.role_id,
+          department_id: user.department_id ? String(user.department_id) : prev.department_id,
           status: user.status || prev.status,
         }));
       }
@@ -383,28 +377,68 @@ export default function DirectPosition() {
       return;
     }
     setBulkActionType(type);
-    setBulkValue("");
+    setBulkReason("");
+
+    if (selectedIds.length === 1) {
+      // eslint-disable-next-line eqeqeq
+      const u = employees.find((e) => e.id == selectedIds[0]);
+      if (u) {
+        if (type === "department") setBulkValue(u.department_id || "");
+        else if (type === "role") setBulkValue(u.role_id || "");
+        else if (type === "status") setBulkValue(u.displayStatus || "Active");
+        else setBulkValue("");
+      } else {
+        setBulkValue("");
+      }
+    } else {
+      setBulkValue("");
+    }
+
     setShowBulkModal(true);
   };
 
   const executeBulkAction = async () => {
     if (!bulkValue) return;
+    if (!bulkReason || !bulkReason.trim()) {
+      setWarningPopup({
+        isOpen: true,
+        title: "Reason Required",
+        message: "Please provide a valid reason for this bulk update request.",
+      });
+      return;
+    }
     setLoading(true);
     try {
-      const payload = { ids: selectedIds };
-      if (bulkActionType === "department") payload.department_id = bulkValue;
-      else if (bulkActionType === "role") payload.role_id = bulkValue;
-      else if (bulkActionType === "status") payload.status = bulkValue;
+      const fieldMap = {
+        department: "department_id",
+        role: "role_id",
+        status: "status"
+      };
 
-      await api.patch("/users/bulk", payload);
+      const changes = [{
+        field: fieldMap[bulkActionType],
+        oldValue: "Bulk Request",
+        newValue: bulkValue
+      }];
+
+      // Map promises to send change requests for all selected users
+      const requests = selectedIds.map(async (id) => {
+         const formDataPayload = new FormData();
+         formDataPayload.append("targetUserId", id);
+         formDataPayload.append("changes", JSON.stringify(changes));
+         formDataPayload.append("reason", bulkReason);
+         return api.post("/change-requests", formDataPayload);
+      });
+
+      await Promise.all(requests);
 
       // LOGGING
       try {
         const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
         await LogService.createLog({
           userId: currentUser.id || currentUser.user_id,
-          action: "Bulk Update",
-          details: `Bulk updated ${selectedIds.length} users. Type: ${bulkActionType}, Value: ${bulkValue}`,
+          action: "Bulk Change Request",
+          details: `Submitted bulk change requests for ${selectedIds.length} users. Type: ${bulkActionType}.`,
           target: "Multiple Users",
           severity: "Info",
         });
@@ -414,8 +448,8 @@ export default function DirectPosition() {
 
       setDonePopup({
         isOpen: true,
-        title: "Bulk Update Success",
-        message: `Bulk Update (${selectedIds.length} users) Successful`,
+        title: "Requests Submitted",
+        message: `Successfully submitted change requests for ${selectedIds.length} users.`,
       });
       fetchData();
       setSelectedIds([]);
@@ -424,7 +458,7 @@ export default function DirectPosition() {
       setErrorPopup({
         isOpen: true,
         title: "Bulk Action Failed",
-        message: err.message,
+        message: err.message || "Failed to submit requests",
       });
     } finally {
       setLoading(false);
@@ -686,7 +720,7 @@ export default function DirectPosition() {
                         <label>Assigned Role</label>
                         <select
                           className="position-select"
-                          value={editForm.role_id}
+                          value={editForm.role_id || ""}
                           onChange={(e) =>
                             setEditForm({
                               ...editForm,
@@ -694,8 +728,9 @@ export default function DirectPosition() {
                             })
                           }
                         >
+                          <option value="">-- Select Role --</option>
                           {roles.map((r) => (
-                            <option key={r.id} value={r.id}>
+                            <option key={r.id} value={String(r.id)}>
                               {r.role_name}
                             </option>
                           ))}
@@ -706,7 +741,7 @@ export default function DirectPosition() {
                         <label>Job Position</label>
                         <select
                           className="position-select"
-                          value={editForm.position}
+                          value={editForm.position || ""}
                           onChange={(e) =>
                             setEditForm({
                               ...editForm,
@@ -716,7 +751,7 @@ export default function DirectPosition() {
                         >
                           <option value="">-- Select Position --</option>
                           {jobPositions.map((jp) => (
-                            <option key={jp.id} value={jp.id}>
+                            <option key={jp.id} value={String(jp.id)}>
                               {jp.position_name}
                             </option>
                           ))}
@@ -727,7 +762,7 @@ export default function DirectPosition() {
                         <label>Department</label>
                         <select
                           className="position-select"
-                          value={editForm.department_id}
+                          value={editForm.department_id || ""}
                           onChange={(e) =>
                             setEditForm({
                               ...editForm,
@@ -735,8 +770,9 @@ export default function DirectPosition() {
                             })
                           }
                         >
+                          <option value="">-- Select Department --</option>
                           {departments.map((d) => (
-                            <option key={d.id} value={d.id}>
+                            <option key={d.id} value={String(d.id)}>
                               {d.department_name}
                             </option>
                           ))}
@@ -902,9 +938,20 @@ export default function DirectPosition() {
                       </select>
                     </div>
 
+                    <div className="dp-form-item full-width" style={{ marginTop: "15px" }}>
+                      <label>Reason for Change (Required)</label>
+                      <textarea
+                        className="position-select"
+                        style={{ height: "80px", resize: "vertical" }}
+                        placeholder="Please specify why this change is being made..."
+                        value={bulkReason}
+                        onChange={(e) => setBulkReason(e.target.value)}
+                      />
+                    </div>
+
                     <div
                       className="modal-actions"
-                      style={{ justifyContent: "space-between" }}
+                      style={{ justifyContent: "space-between", marginTop: "20px" }}
                     >
                       <button
                         className="btn-cancel"
@@ -917,7 +964,7 @@ export default function DirectPosition() {
                         onClick={executeBulkAction}
                         disabled={loading || !bulkValue}
                       >
-                        Confirm Update
+                        {loading ? "Sending..." : "Send Request"}
                       </button>
                     </div>
                   </div>

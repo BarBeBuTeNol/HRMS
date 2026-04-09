@@ -293,6 +293,18 @@ class UserRepository {
       fields.push("email = ?");
       values.push(data.email);
     }
+    if (data.role_id !== undefined) {
+      fields.push("role_id = ?");
+      values.push(data.role_id);
+    }
+    if (data.department_id !== undefined) {
+      fields.push("department_id = ?");
+      values.push(data.department_id);
+    }
+    if (data.status !== undefined) {
+      fields.push("status = ?");
+      values.push(data.status);
+    }
 
     // If no fields to update, return early
     if (fields.length === 0) return true;

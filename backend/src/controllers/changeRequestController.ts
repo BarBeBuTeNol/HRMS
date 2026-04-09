@@ -161,14 +161,14 @@ export const approveChangeRequest = async (req: Request, res: Response) => {
       )
     ) {
       const dbFieldMap: any = {
-        jobPosition: "job_position_id",
+        jobPosition: "position_id",
         employmentStatus: "employment_status",
         departmentId: "department_id", // Note: this is in users or emp_info? Usually emp_info for history, users for current. Assuming emp_info here based on previous code.
       };
       const dbField = dbFieldMap[fieldName] || fieldName;
       await pool.query(
-        `UPDATE emp_info SET ${dbField} = ? WHERE user_id = ? AND id = (SELECT MAX(id) FROM emp_info WHERE user_id = ?)`,
-        [newValue, targetId, targetId],
+        `UPDATE emp_info SET ${dbField} = ? WHERE user_id = ? ORDER BY id DESC LIMIT 1`,
+        [newValue, targetId],
       );
     }
     // Add other cases as needed...

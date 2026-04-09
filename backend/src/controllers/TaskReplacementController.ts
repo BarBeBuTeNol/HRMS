@@ -92,14 +92,20 @@ export const getReplacementCandidates = async (req: Request, res: Response) => {
         
         const { rows } = await userRepository.findAll({ limit: 10000, offset: 0, status: 'Active' } as any);
         
-        // Filter out self
-        const candidates = rows.filter((u: any) => u.id !== requesterId).map((u: any) => ({
-            id: u.id,
-            first_name: u.first_name,
-            last_name: u.last_name,
-            username: u.username,
-            department: u.department_name
-        }));
+        // Find the requester's department
+        const requester = rows.find((u: any) => u.id === requesterId);
+        const reqDept = requester ? requester.department_name : null;
+
+        // Filter out self and MUST match department
+        const candidates = rows
+            .filter((u: any) => u.id !== requesterId && (u.department_name === reqDept || !reqDept))
+            .map((u: any) => ({
+                id: u.id,
+                first_name: u.first_name,
+                last_name: u.last_name,
+                username: u.username,
+                department: u.department_name
+            }));
 
         res.json(candidates);
     } catch (error: any) {

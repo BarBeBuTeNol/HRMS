@@ -88,6 +88,40 @@ const RequestLeaveHead = () => {
       return;
     }
 
+    if (formData.endDate < formData.startDate) {
+      Swal.fire({
+        icon: "warning",
+        title: "Invalid Dates",
+        text: "End Date cannot be before Start Date.",
+        background: "#1e293b",
+        color: "#fff",
+        confirmButtonColor: "#c5a059"
+      });
+      return;
+    }
+
+    const isOverlap = leaveHistory.some((l) => {
+      if (l.status && l.status.toLowerCase() === "rejected") return false;
+      if (l.status && l.status.toLowerCase() === "cancelled") return false;
+      
+      const existingStart = new Date(l.start_date).toISOString().split("T")[0];
+      const existingEnd = new Date(l.end_date).toISOString().split("T")[0];
+      
+      return formData.startDate <= existingEnd && formData.endDate >= existingStart;
+    });
+
+    if (isOverlap) {
+      Swal.fire({
+        icon: "error",
+        title: "Overlapping Leave",
+        text: "You already have a pending or approved leave request during these dates.",
+        background: "#1e293b",
+        color: "#fff",
+        confirmButtonColor: "#ef4444"
+      });
+      return;
+    }
+
     // Append file info to reason since DB doesn't have evidence column yet
     let finalReason = formData.reason;
     if (formData.evidenceFile) {
@@ -231,7 +265,9 @@ const RequestLeaveHead = () => {
                     name="startDate"
                     className="head-form-input"
                     value={formData.startDate}
+                    min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0]}
                     onChange={handleChange}
+                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
                   />
                 </div>
                 <div className="head-form-group flex-1">
@@ -241,7 +277,9 @@ const RequestLeaveHead = () => {
                     name="endDate"
                     className="head-form-input"
                     value={formData.endDate}
+                    min={formData.startDate || new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0]}
                     onChange={handleChange}
+                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
                   />
                 </div>
               </div>

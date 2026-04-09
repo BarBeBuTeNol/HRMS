@@ -10,13 +10,11 @@ import {
   FaInfoCircle,
 } from "react-icons/fa";
 import "./LeaveApproval.css";
+import Swal from "sweetalert2";
 
 const LeaveApproval = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showRejectModal, setShowRejectModal] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState(null);
-  const [rejectionReason, setRejectionReason] = useState("");
 
   const userId = localStorage.getItem("userId");
 
@@ -37,41 +35,92 @@ const LeaveApproval = () => {
   };
 
   const handleApprove = async (id) => {
-    if (!window.confirm("Confirm approval?")) return;
-    try {
-      await api.put(`/leave-requests/${id}/status`, {
-        status: "approved",
-      });
-      alert("Approved successfully");
-      fetchRequests();
-    } catch (error) {
-      console.error("Error approving:", error);
-      alert("Failed to approve");
+    const result = await Swal.fire({
+      title: "Approve Request?",
+      text: "Are you sure you want to approve this leave request?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#c5a059",
+      cancelButtonColor: "#64748b",
+      confirmButtonText: "Yes, Approve!",
+      cancelButtonText: "Cancel",
+      background: "#1e293b",
+      color: "#fff",
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await api.put(`/leave-requests/${id}/status`, {
+          status: "approved",
+        });
+        Swal.fire({
+          title: "Approved!",
+          text: "The leave request has been approved.",
+          icon: "success",
+          background: "#1e293b",
+          color: "#fff",
+          confirmButtonColor: "#c5a059",
+        });
+        fetchRequests();
+      } catch (error) {
+        console.error("Error approving:", error);
+        Swal.fire({
+          title: "Error!",
+          text: "Failed to approve request.",
+          icon: "error",
+          background: "#1e293b",
+          color: "#fff",
+          confirmButtonColor: "#c5a059",
+        });
+      }
     }
   };
 
-  const openRejectModal = (request) => {
-    setSelectedRequest(request);
-    setRejectionReason("");
-    setShowRejectModal(true);
-  };
+  const handleRejectAction = async (request) => {
+    const result = await Swal.fire({
+      title: "Reject Leave Request",
+      text: `Please provide a reason for rejecting ${request.employeeName}'s request.`,
+      input: "textarea",
+      inputPlaceholder: "Type your reason here...",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#64748b",
+      confirmButtonText: "Reject Request",
+      background: "#1e293b",
+      color: "#fff",
+      inputValidator: (value) => {
+        if (!value.trim()) {
+          return "You need to write a reason!";
+        }
+      },
+    });
 
-  const handleReject = async () => {
-    if (!rejectionReason.trim()) {
-      alert("Please provide a reason for rejection.");
-      return;
-    }
-    try {
-      await api.put(`/leave-requests/${selectedRequest.id}/status`, {
-        status: "rejected",
-        rejection_reason: rejectionReason,
-      });
-      alert("Rejected request.");
-      setShowRejectModal(false);
-      fetchRequests();
-    } catch (error) {
-      console.error("Error rejecting:", error);
-      alert("Failed to reject");
+    if (result.isConfirmed) {
+      try {
+        await api.put(`/leave-requests/${request.id}/status`, {
+          status: "rejected",
+          rejection_reason: result.value,
+        });
+        Swal.fire({
+          title: "Rejected!",
+          text: "The request has been rejected.",
+          icon: "success",
+          background: "#1e293b",
+          color: "#fff",
+          confirmButtonColor: "#c5a059",
+        });
+        fetchRequests();
+      } catch (error) {
+        console.error("Error rejecting:", error);
+        Swal.fire({
+          title: "Error!",
+          text: "Failed to reject request.",
+          icon: "error",
+          background: "#1e293b",
+          color: "#fff",
+          confirmButtonColor: "#c5a059",
+        });
+      }
     }
   };
 
@@ -215,7 +264,7 @@ const LeaveApproval = () => {
                 <div className="action-footer">
                   <button
                     className="action-btn reject"
-                    onClick={() => openRejectModal(req)}
+                    onClick={() => handleRejectAction(req)}
                   >
                     <FaTimes /> Reject
                   </button>
@@ -231,35 +280,7 @@ const LeaveApproval = () => {
           </div>
         )}
 
-        {/* Rejection Modal */}
-        {showRejectModal && (
-          <div className="modal-glass-overlay">
-            <div className="modal-glass-content">
-              <h2>Confirm Rejection</h2>
-              <p style={{ color: 'var(--la-text-sub)', marginBottom: '1rem' }}>
-                Please provide a reason for rejecting <strong>{selectedRequest?.employeeName}</strong>'s request.
-              </p>
-              <textarea
-                className="modal-textarea"
-                value={rejectionReason}
-                onChange={(e) => setRejectionReason(e.target.value)}
-                placeholder="Reason is required..."
-                rows={4}
-              />
-              <div className="modal-glass-actions">
-                <button
-                  className="btn-glass-cancel"
-                  onClick={() => setShowRejectModal(false)}
-                >
-                  Cancel
-                </button>
-                <button className="btn-glass-confirm" onClick={handleReject}>
-                  Reject Request
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+
       </main>
     </div>
   );

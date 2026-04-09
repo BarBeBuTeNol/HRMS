@@ -183,6 +183,17 @@ class HeadDashboardRepository {
     return [...shifts, ...tasks];
   }
 
+  async getDepartmentApprovedLeaves(deptId: number) {
+    const [leaves] = await pool.query<RowDataPacket[]>(
+      `SELECT lr.user_id, lr.start_date, lr.end_date 
+       FROM leave_requests lr
+       JOIN users u ON lr.user_id = u.id
+       WHERE u.department_id = ? AND lr.status = 'Approved'`,
+      [deptId],
+    );
+    return leaves;
+  }
+
   // --- New Methods for Task Assignment Page ---
 
   async getAllProjects() {

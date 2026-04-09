@@ -93,13 +93,14 @@ class HeadDashboardController {
 
       const deptId = deptStats.departmentId;
 
-      // 2. Fetch Work and Employees
-      const [workItems, employees] = await Promise.all([
+      // 2. Fetch Work, Employees, and Leaves
+      const [workItems, employees, leaves] = await Promise.all([
         HeadDashboardRepository.getDepartmentWork(deptId),
         HeadDashboardRepository.getDepartmentEmployees(deptId),
+        HeadDashboardRepository.getDepartmentApprovedLeaves(deptId)
       ]);
 
-      res.json({ workItems, employees });
+      res.json({ workItems, employees, leaves });
     } catch (error: any) {
       console.error("Error fetching delegation data:", error);
       res

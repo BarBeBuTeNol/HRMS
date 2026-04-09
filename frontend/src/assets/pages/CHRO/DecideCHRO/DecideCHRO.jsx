@@ -9,6 +9,21 @@ import "./DecideCHRO.css";
 import ConfirmationModal from "../../../Component/popup_notifications/popup_notifications-chro/ConfirmationModal";
 import CustomSelect from "../../../Component/CustomSelect/CustomSelect";
 
+const translateFieldName = (field) => {
+  const map = {
+    department_id: "แผนก",
+    role_id: "สิทธิ์การใช้งาน",
+    status: "สถานะ",
+    jobPosition: "ตำแหน่งงาน",
+    firstName: "ชื่อ",
+    lastName: "นามสกุล",
+    email: "อีเมล",
+    salary: "เงินเดือน",
+    employmentStatus: "ประเภทการจ้างงาน"
+  };
+  return map[field] || field;
+};
+
 const DecideCHRO = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -55,6 +70,10 @@ const DecideCHRO = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState("latest");
   const [viewMode, setViewMode] = useState("grid");
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // ---------- Utils ----------
   const mapType = (title = "") => {
@@ -131,7 +150,7 @@ const DecideCHRO = () => {
             requestId: c.id,
             type: "change_request",
             title: "คำขอเปลี่ยนแปลงข้อมูล/ยกเลิกจ้าง",
-            message: `ขอเปลี่ยนแปลงข้อมูลของ ${c.target_user_name} (${c.field_name})`,
+            message: `ขอเปลี่ยนแปลงข้อมูลของ ${c.target_user_name} (${translateFieldName(c.field_name)})`,
             sender: c.requester_name,
             timestamp: c.created_at,
             status: c.status.toLowerCase(),
@@ -609,6 +628,17 @@ const DecideCHRO = () => {
     return arr;
   }, [notifications, search, typeFilter, statusFilter, sortOrder]);
 
+  // Pagination Logic
+  const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filtered.slice(start, start + itemsPerPage);
+  }, [filtered, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1); // Reset page on filter change
+  }, [search, typeFilter, statusFilter, sortOrder]);
+
   if (loading) {
     return (
       <CHROLayout>
@@ -754,7 +784,7 @@ const DecideCHRO = () => {
           </div>
         ) : viewMode === "grid" ? (
           <div className="decide-chro-requests">
-            {filtered.map((n) => {
+            {paginatedData.map((n) => {
               const t = mapType(n.title);
               const isRead = statusKey(n) !== "unread";
               const sKey = statusKey(n);
@@ -836,8 +866,8 @@ const DecideCHRO = () => {
                             <span className="decide-chro-info-label">
                               ประเภท:
                             </span>
-                            <span className="decide-chro-info-value">
-                              {n.changeData.field_name}
+                            <span className="decide-chro-info-value" style={{color: '#ffd166', fontWeight: 'bold'}}>
+                              {translateFieldName(n.changeData.field_name)}
                             </span>
                           </div>
                           <div className="decide-chro-info-item">
@@ -988,7 +1018,7 @@ const DecideCHRO = () => {
         ) : (
           <div className="decide-chro-list">
             {/* List view implementation similar to grid but simpler */}
-            {filtered.map((n) => {
+            {paginatedData.map((n) => {
               const t = mapType(n.title);
               const isRead = statusKey(n) !== "unread";
               const sKey = statusKey(n);
@@ -1015,6 +1045,45 @@ const DecideCHRO = () => {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* Pagination Controls */}
+        {filtered.length > 0 && totalPages > 1 && (
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', gap: '10px' }}>
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="decide-chro-btn"
+              style={{
+                padding: '8px 16px',
+                background: currentPage === 1 ? '#334155' : 'transparent',
+                border: '1px solid #475569',
+                color: '#f8fafc',
+                borderRadius: '8px',
+                cursor: currentPage === 1 ? 'not-allowed' : 'pointer'
+              }}
+            >
+              ย้อนกลับ
+            </button>
+            <span style={{ display: 'flex', alignItems: 'center', color: '#e2e8f0' }}>
+              หน้า {currentPage} จาก {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="decide-chro-btn"
+              style={{
+                padding: '8px 16px',
+                background: currentPage === totalPages ? '#334155' : 'transparent',
+                border: '1px solid #475569',
+                color: '#f8fafc',
+                borderRadius: '8px',
+                cursor: currentPage === totalPages ? 'not-allowed' : 'pointer'
+              }}
+            >
+              ถัดไป
+            </button>
           </div>
         )}
 
@@ -1122,20 +1191,20 @@ const DecideCHRO = () => {
                       </span>
                     </div>
                     <div className="decide-chro-info-item">
-                      <span className="decide-chro-info-label">Field:</span>
-                      <span className="decide-chro-info-value modal-value">
-                        {selectedNotification.changeData.field_name}
+                      <span className="decide-chro-info-label">ข้อมูลที่ขอเปลี่ยน:</span>
+                      <span className="decide-chro-info-value modal-value" style={{color: '#ffd166', fontWeight: 'bold'}}>
+                        {translateFieldName(selectedNotification.changeData.field_name)}
                       </span>
                     </div>
                     <div className="decide-chro-info-grid-2">
                       <div>
-                        <small>Old Value</small>
+                        <small>ข้อมูลเดิม (Old Value)</small>
                         <div className="old-value-box">
                           {selectedNotification.changeData.old_value || "-"}
                         </div>
                       </div>
                       <div>
-                        <small>New Value</small>
+                        <small>ข้อมูลใหม่ (New Value)</small>
                         <div className="new-value-box">
                           {selectedNotification.changeData.new_value}
                         </div>
@@ -1259,24 +1328,79 @@ const DecideCHRO = () => {
 
         {/* DELETE CONFIRMATION MODAL (EXCLUSIVE) */}
         {deleteModalOpen && (
-          <div className="decide-chro-modal-overlay">
-            <div className="decide-chro-modal decide-chro-delete-modal">
-              <span className="decide-chro-delete-icon">🗑️</span>
-              <h2 className="decide-chro-delete-title">ยืนยันการลบข้อมูล</h2>
-              <p className="decide-chro-delete-text">
+          <div className="decide-chro-modal-overlay" onClick={cancelDelete} style={{ zIndex: 3000 }}>
+            <div 
+              className="decide-chro-modal" 
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                maxWidth: '420px',
+                textAlign: 'center',
+                padding: '40px 30px',
+                borderRadius: '24px',
+                background: 'linear-gradient(145deg, #1e293b, #0f172a)',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(51, 65, 85, 0.5)',
+                animation: 'slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                color: '#f8fafc'
+              }}
+            >
+              <div style={{
+                width: '80px',
+                height: '80px',
+                background: 'radial-gradient(circle, rgba(239,68,68,0.2) 0%, rgba(239,68,68,0.05) 100%)',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 24px',
+                fontSize: '40px',
+                boxShadow: 'inset 0 0 20px rgba(239, 68, 68, 0.1)',
+                border: '1px solid rgba(239, 68, 68, 0.2)'
+              }}>
+                🗑️
+              </div>
+              <h2 style={{ fontSize: '26px', fontWeight: '700', marginBottom: '12px', letterSpacing: '-0.02em' }}>ยืนยันการลบข้อมูล</h2>
+              <p style={{ color: '#94a3b8', fontSize: '16px', lineHeight: '1.6', marginBottom: '36px' }}>
                 คุณแน่ใจหรือไม่ที่จะลบรายการนี้? <br />
-                การกระทำนี้ไม่สามารถย้อนกลับได้
+                <span style={{ color: '#ef4444', fontWeight: '500', display: 'inline-block', marginTop: '8px' }}>การกระทำนี้ไม่สามารถย้อนกลับได้</span>
               </p>
-              <div className="decide-chro-delete-actions">
+              <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
                 <button
-                  className="decide-chro-btn decide-chro-btn-cancel-delete"
                   onClick={cancelDelete}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '12px',
+                    background: 'rgba(51, 65, 85, 0.4)',
+                    border: '1px solid rgba(71, 85, 105, 0.5)',
+                    color: '#e2e8f0',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    flex: 1,
+                    transition: 'all 0.2s ease',
+                    backdropFilter: 'blur(10px)'
+                  }}
+                  onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(71, 85, 105, 0.6)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                  onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(51, 65, 85, 0.4)'; e.currentTarget.style.transform = 'translateY(0)'; }}
                 >
                   ยกเลิก
                 </button>
                 <button
-                  className="decide-chro-btn decide-chro-btn-confirm-delete"
                   onClick={confirmDelete}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '12px',
+                    background: 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)',
+                    border: 'none',
+                    color: '#ffffff',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    flex: 1,
+                    boxShadow: '0 10px 20px -10px #ef4444',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 15px 25px -10px #ef4444'; }}
+                  onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 10px 20px -10px #ef4444'; }}
                 >
                   ยืนยันลบ
                 </button>

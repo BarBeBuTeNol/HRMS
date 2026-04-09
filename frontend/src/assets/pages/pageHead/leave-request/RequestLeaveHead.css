@@ -100,6 +100,15 @@
   transition: all 0.2s;
 }
 
+.head-form-input[type="date"]::-webkit-calendar-picker-indicator {
+  display: none;
+  -webkit-appearance: none;
+}
+
+.head-form-input[type="date"] {
+  cursor: pointer;
+}
+
 .head-form-input:focus,
 .head-form-select:focus,
 .head-form-textarea:focus {

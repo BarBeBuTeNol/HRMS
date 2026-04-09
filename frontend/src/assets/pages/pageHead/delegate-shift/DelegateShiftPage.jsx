@@ -30,6 +30,7 @@ const DelegateShiftPage = () => {
 
   const [shifts, setShifts] = useState([]);
   const [staffList, setStaffList] = useState([]);
+  const [leaves, setLeaves] = useState([]);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -52,14 +53,16 @@ const DelegateShiftPage = () => {
       if (!user || !user.id) return;
 
       const response = await api.get(`/head/delegation-data/${user.id}`);
-      const { workItems, employees } = response.data;
+      const { workItems, employees, leaves } = response.data;
+      
+      if (leaves) setLeaves(leaves);
 
       const formattedShifts = workItems.map((item) => ({
         id: item.id,
         employee: `${item.first_name} ${item.last_name}`,
         type: item.type, 
         title: item.title,
-        date: item.work_date ? item.work_date.split("T")[0] : "N/A",
+        date: item.work_date ? new Date(item.work_date).toISOString().split('T')[0] : "N/A", // Using standard YYYY-MM-DD
         status: "Active",
         original_user_id: item.user_id,
         image: item.profile_image_url || null
@@ -70,7 +73,7 @@ const DelegateShiftPage = () => {
         id: emp.id,
         name: `${emp.first_name} ${emp.last_name}`,
         role: emp.position_name || "Employee",
-        status: "Available", // Logic placeholder
+        status: "Available", 
         image: emp.profile_image_url || null,
       }));
       setStaffList(formattedStaff);
@@ -90,16 +93,38 @@ const DelegateShiftPage = () => {
     return matchesName && matchesDate;
   });
 
-  const filteredStaff = staffList.filter(
-    (s) =>
-      s.name.toLowerCase().includes(filterName.toLowerCase()) ||
-      s.role.toLowerCase().includes(filterName.toLowerCase())
-  );
+  const filteredStaff = staffList
+    .map((s) => {
+      let status = "Available";
+      if (selectedTask && selectedTask.date !== "N/A") {
+         const tDate = selectedTask.date;
+         // Check Leave
+         const onLeave = leaves.some(l => {
+            if (l.user_id !== s.id) return false;
+            const start = new Date(l.start_date).toISOString().split('T')[0];
+            const end = new Date(l.end_date).toISOString().split('T')[0];
+            return tDate >= start && tDate <= end;
+         });
+         if (onLeave) status = "Leave";
+
+         // Check workItems (Busy)
+         else if (shifts.some(w => w.original_user_id === s.id && w.date === tDate)) {
+            status = "Busy";
+         }
+      }
+      return { ...s, status };
+    })
+    .filter((s) => s.status === "Available") // Hide unavailable staff
+    .filter(
+      (s) =>
+        s.name.toLowerCase().includes(filterName.toLowerCase()) ||
+        s.role.toLowerCase().includes(filterName.toLowerCase())
+    );
 
   const handleTaskSelect = (task) => setSelectedTask(task);
   
   const handleReplacementSelect = (staff) => {
-    if (staff.status === "Busy") return;
+    if (staff.status !== "Available") return;
     setSelectedReplacement(staff);
   };
 
