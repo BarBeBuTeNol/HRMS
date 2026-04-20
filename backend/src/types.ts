@@ -10,4 +10,6 @@ export type DbUser = {
   role_id: number;
   department_id: number | null;
   department?: string;
+  failed_login_attempts?: number;
+  locked_until?: Date | string | null;
 };

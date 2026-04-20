@@ -332,9 +332,9 @@ const ShowLog = () => {
                   <tr>
                     <th width="15%">Created At</th>
                     <th width="10%">Action</th>
-                    <th width="15%">User</th>
-                    <th width="12%">IP Address</th>
-                    <th width="13%">Target</th>
+                    <th width="20%">User</th>
+                    <th width="10%">IP Address</th>
+                    <th width="15%">Target</th>
                     <th width="10%">Severity</th>
                     <th width="20%">Details</th>
                   </tr>
@@ -392,7 +392,7 @@ const ShowLog = () => {
                       </tr>
                       {expandedRow === log.id && (
                         <tr className="sl-expanded-details">
-                          <td colSpan={6}>
+                          <td colSpan={7}>
                             <div className="sl-details-content">
                               <strong>Full Details:</strong>
                               <br />
@@ -405,7 +405,7 @@ const ShowLog = () => {
                   ))}
                   {!loading && logs.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="sl-empty-state">
+                      <td colSpan={7} className="sl-empty-state">
                         No logs found matching your criteria.
                       </td>
                     </tr>

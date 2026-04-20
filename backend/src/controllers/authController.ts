@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 import authRepository from "../repository/authRepository";
 import userRepository from "../repository/userRepository";
 
@@ -20,10 +21,56 @@ export const login = async (req: Request, res: Response) => {
     // 🔍 LOG 2: เช็กผลลัพธ์จาก DB
     console.log("DB RESULT:", user ? [user] : []);
 
-    // Check if user exists AND password matches (Plaintext check to match original SQL behavior)
-    // Note: In a production environment with hashed passwords, use bcrypt.compare here.
-    if (!user || user.password !== password) {
+    // Check if user exists
+    if (!user) {
       return res.status(401).json({ ok: false, message: "Invalid credentials" });
+    }
+
+    // Check if account is locked
+    if (user.locked_until) {
+      const lockTime = new Date(user.locked_until).getTime();
+      const now = new Date().getTime();
+      if (lockTime > now) {
+        const minutesLeft = Math.ceil((lockTime - now) / 60000);
+        return res.status(403).json({ 
+          ok: false, 
+          message: `Account is locked due to multiple failed login attempts. Please try again in ${minutesLeft} minute(s).` 
+        });
+      }
+    }
+
+    // Check if password matches
+    let isMatch = false;
+    if (user.password && user.password.startsWith('$2')) {
+      // It's a bcrypt hash
+      isMatch = await bcrypt.compare(password, user.password);
+    } else {
+      // Fallback for plain text (legacy users)
+      isMatch = user.password === password;
+    }
+
+    if (!isMatch) {
+      // Increment failed attempts
+      await authRepository.incrementFailedAttempts(user.id);
+      
+      const newAttempts = (user.failed_login_attempts || 0) + 1;
+      if (newAttempts >= 3) {
+        await authRepository.lockAccount(user.id, 15);
+        return res.status(403).json({ 
+          ok: false, 
+          message: "Account has been locked due to 3 failed login attempts. Please try again in 15 minutes." 
+        });
+      }
+
+      return res.status(401).json({ 
+        ok: false, 
+        message: `Invalid credentials. Attempt ${newAttempts} of 3.` 
+      });
+    }
+
+    // Reset failed attempts upon successful login
+    if ((user.failed_login_attempts && user.failed_login_attempts > 0) || user.locked_until) {
+        await authRepository.resetFailedAttempts(user.id);
     }
 
     const { password: _pw, ...userData } = user;

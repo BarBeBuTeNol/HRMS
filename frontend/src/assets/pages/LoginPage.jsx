@@ -1,6 +1,7 @@
 // src/assets/pages/LoginPage.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 import api from "../../services/api";
 import logoImage from "../hrms-logo.png";
 import "./LoginPage.css";
@@ -9,6 +10,7 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -102,15 +104,23 @@ const LoginPage = () => {
 
           <div className="input-group">
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder=" "
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               className="hrms-input"
               id="password"
+              style={{ paddingRight: "45px" }}
             />
             <label htmlFor="password">Password</label>
+            <button
+              type="button"
+              className="password-toggle-btn"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
           </div>
 
           {error && <div className="hrms-error-message">{error}</div>}
