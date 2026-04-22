@@ -62,31 +62,36 @@ const LoginPage = () => {
             setError(`Invalid user role (${roleName})`);
         }
       } else {
-        setError(res.data?.message || "Invalid username or password");
-        handleFailedAttempt();
+        const currentAttempts = failedAttempts + 1;
+        setFailedAttempts(currentAttempts);
+        
+        if (currentAttempts >= 3) {
+          setIsLocked(true);
+          setError("กรุณาติดต่อที่ Email นี้นะ thanupongphichit@gmail.com");
+        } else {
+          setError(res.data?.message || "Invalid username or password");
+        }
       }
     } catch (err) {
       console.error("Login failed:", err);
-      // ✅ Show error from backend if available
-      if (err.response && err.response.data && err.response.data.message) {
+      
+      const currentAttempts = failedAttempts + 1;
+      setFailedAttempts(currentAttempts);
+
+      if (currentAttempts >= 3 || err.response?.status === 403) {
+        setIsLocked(true);
+        setError("กรุณาติดต่อที่ Email นี้นะ thanupongphichit@gmail.com");
+      } else if (err.response?.data?.message) {
         setError(err.response.data.message);
       } else {
         setError("Server connection error");
       }
-      handleFailedAttempt();
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFailedAttempt = () => {
-    const newAttempts = failedAttempts + 1;
-    setFailedAttempts(newAttempts);
-    if (newAttempts >= 3) {
-      setIsLocked(true);
-      setError("กรุณาติดต่อที่ Email นี้นะ thanupongphichit@gmail.com");
-    }
-  };
+
 
   return (
     <div className="hrms-login-page">

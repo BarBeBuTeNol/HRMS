@@ -26,7 +26,7 @@ class AuthRepository {
 
   async incrementFailedAttempts(userId: number): Promise<void> {
     await pool.query(
-      `UPDATE users SET failed_login_attempts = failed_login_attempts + 1 WHERE id = ?`,
+      `UPDATE users SET failed_login_attempts = IFNULL(failed_login_attempts, 0) + 1 WHERE id = ?`,
       [userId]
     );
   }
