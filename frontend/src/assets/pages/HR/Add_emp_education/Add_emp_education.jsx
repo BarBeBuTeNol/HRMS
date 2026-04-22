@@ -260,16 +260,42 @@ const AddEmpEducation = () => {
 
   const handleSave = async () => {
     try {
+      let currentEduList = [...educationList];
+      // Auto-add if user typed but forgot to click Add
+      if (newEducation.level || newEducation.university || newEducation.major) {
+        if (newEducation.level && newEducation.university && newEducation.major) {
+          if (currentEduList.length < 5) {
+            currentEduList.push({ ...newEducation, id: Date.now() });
+            setEducationList(currentEduList);
+            setNewEducation({ level: "", university: "", major: "" });
+          } else {
+             setErrorPopup({
+              isOpen: true,
+              title: "Limit Exceeded",
+              message: "You can only add up to 5 education entries. Please remove one before saving.",
+            });
+            return;
+          }
+        } else {
+          setErrorPopup({
+            isOpen: true,
+            title: "Missing Information",
+            message: "Please fill in all education fields or clear them before saving.",
+          });
+          return;
+        }
+      }
+
       // Use FormData for file uploads
       const formData = new FormData();
       formData.append("userId", userId);
       // We send the list as a JSON string. Backend must parse this.
-      formData.append("educationList", JSON.stringify(educationList));
+      formData.append("educationList", JSON.stringify(currentEduList));
       // Keeping legacy fields for compatibility if needed, or sending empty/first item
-      if (educationList.length > 0) {
-        formData.append("educationLevel", educationList[0].level);
-        formData.append("institution", educationList[0].university);
-        formData.append("program", educationList[0].major);
+      if (currentEduList.length > 0) {
+        formData.append("educationLevel", currentEduList[0].level);
+        formData.append("institution", currentEduList[0].university);
+        formData.append("program", currentEduList[0].major);
       } else {
         formData.append("educationLevel", "");
         formData.append("institution", "");

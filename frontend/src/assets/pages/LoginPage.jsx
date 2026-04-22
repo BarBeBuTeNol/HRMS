@@ -13,9 +13,15 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [isLocked, setIsLocked] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    if (isLocked) {
+       setError("กรุณาติดต่อที่ Email นี้นะ thanupongphichit@gmail.com");
+       return;
+    }
     setError("");
     setLoading(true);
 
@@ -57,6 +63,7 @@ const LoginPage = () => {
         }
       } else {
         setError(res.data?.message || "Invalid username or password");
+        handleFailedAttempt();
       }
     } catch (err) {
       console.error("Login failed:", err);
@@ -66,8 +73,18 @@ const LoginPage = () => {
       } else {
         setError("Server connection error");
       }
+      handleFailedAttempt();
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleFailedAttempt = () => {
+    const newAttempts = failedAttempts + 1;
+    setFailedAttempts(newAttempts);
+    if (newAttempts >= 3) {
+      setIsLocked(true);
+      setError("กรุณาติดต่อที่ Email นี้นะ thanupongphichit@gmail.com");
     }
   };
 

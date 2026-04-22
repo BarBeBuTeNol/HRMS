@@ -181,6 +181,15 @@ export const createUser = async (req: Request, res: Response) => {
       roleId,
     );
 
+    // ✅ Create initial emp_info record with the empId
+    if (empId) {
+      const pool = require("../config/db").default || require("../config/db");
+      await pool.query(
+        `INSERT INTO emp_info (user_id, emp_code, created_at, updated_at) VALUES (?, ?, NOW(), NOW())`,
+        [newUserId, empId]
+      );
+    }
+
     await userRepository.logAction(
       newUserId,
       "Create User",
