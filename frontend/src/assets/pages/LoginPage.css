@@ -315,7 +315,7 @@
   transform: translateY(-50%);
   background: none;
   border: none;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.7); /* Changed to make it clearer */
   cursor: pointer;
   padding: 0;
   display: flex;
@@ -326,7 +326,7 @@
 }
 
 .password-toggle-btn:hover {
-  color: var(--primary-color);
+  color: #fff;
   transform: translateY(-50%) scale(1.1);
 }
 

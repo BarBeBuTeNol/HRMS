@@ -11,10 +11,39 @@ const LoginPage = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(() => {
+    const lockedUntil = localStorage.getItem("lockedUntil");
+    if (lockedUntil && new Date().getTime() < parseInt(lockedUntil, 10)) {
+      return "กรุณาติดต่อที่ Email นี้นะ thanupongphichit@gmail.com";
+    }
+    return "";
+  });
   const [loading, setLoading] = useState(false);
-  const [failedAttempts, setFailedAttempts] = useState(0);
-  const [isLocked, setIsLocked] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(() => {
+    const lockedUntil = localStorage.getItem("lockedUntil");
+    if (lockedUntil && new Date().getTime() > parseInt(lockedUntil, 10)) {
+      localStorage.removeItem("lockedUntil");
+      localStorage.removeItem("failedAttempts");
+      return 0;
+    }
+    const saved = localStorage.getItem("failedAttempts");
+    return saved ? parseInt(saved, 10) : 0;
+  });
+
+  const [isLocked, setIsLocked] = useState(() => {
+    const lockedUntil = localStorage.getItem("lockedUntil");
+    if (lockedUntil && new Date().getTime() < parseInt(lockedUntil, 10)) {
+      return true;
+    }
+    return false;
+  });
+
+  const handleLock = () => {
+    setIsLocked(true);
+    const unlockTime = new Date().getTime() + 15 * 60 * 1000; // 15 mins
+    localStorage.setItem("lockedUntil", unlockTime.toString());
+    setError("กรุณาติดต่อที่ Email นี้นะ thanupongphichit@gmail.com");
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -33,6 +62,10 @@ const LoginPage = () => {
       });
 
       if (res.data?.ok && res.data?.user) {
+        // Clear login attempts on success
+        localStorage.removeItem("failedAttempts");
+        localStorage.removeItem("lockedUntil");
+        
         const user = res.data.user;
 
         // ✅ Keep user data in localStorage
@@ -64,10 +97,10 @@ const LoginPage = () => {
       } else {
         const currentAttempts = failedAttempts + 1;
         setFailedAttempts(currentAttempts);
+        localStorage.setItem("failedAttempts", currentAttempts.toString());
         
         if (currentAttempts >= 3) {
-          setIsLocked(true);
-          setError("กรุณาติดต่อที่ Email นี้นะ thanupongphichit@gmail.com");
+          handleLock();
         } else {
           setError(res.data?.message || "Invalid username or password");
         }
@@ -77,10 +110,10 @@ const LoginPage = () => {
       
       const currentAttempts = failedAttempts + 1;
       setFailedAttempts(currentAttempts);
+      localStorage.setItem("failedAttempts", currentAttempts.toString());
 
       if (currentAttempts >= 3 || err.response?.status === 403) {
-        setIsLocked(true);
-        setError("กรุณาติดต่อที่ Email นี้นะ thanupongphichit@gmail.com");
+        handleLock();
       } else if (err.response?.data?.message) {
         setError(err.response.data.message);
       } else {

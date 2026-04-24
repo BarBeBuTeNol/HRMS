@@ -16,6 +16,7 @@ app.use(
     origin: [
       "https://hrms-frontend.ghostkk10.workers.dev",
       "http://localhost:5173",
+      "http://localhost:8788", // สำหรับทดสอบบน Wrangler local
     ], // ใส่ทั้ง URL จริง และ URL ตอนเทสในเครื่อง
     credentials: true,
   }),
