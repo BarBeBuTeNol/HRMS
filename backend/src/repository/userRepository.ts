@@ -254,13 +254,19 @@ class UserRepository {
         return false; // User not found
       }
 
-      await connection.query("DELETE FROM user_sessions WHERE user_id = ?", [
-        id,
-      ]);
+      await connection.query("DELETE FROM activity_logs WHERE user_id = ?", [id]);
+      await connection.query("DELETE FROM user_sessions WHERE user_id = ?", [id]);
       await connection.query("DELETE FROM user_logs WHERE user_id = ?", [id]);
-      await connection.query("DELETE FROM education_info WHERE user_id = ?", [
-        id,
-      ]);
+      
+      await connection.query("DELETE FROM leave_requests WHERE user_id = ?", [id]);
+      await connection.query("DELETE FROM notifications WHERE user_id = ?", [id]);
+      await connection.query("DELETE FROM task_assignments WHERE user_id = ?", [id]);
+      await connection.query("DELETE FROM task_replacements WHERE original_user_id = ? OR replacement_user_id = ?", [id, id]);
+      await connection.query("DELETE FROM work_schedules WHERE user_id = ?", [id]);
+      await connection.query("DELETE FROM change_requests WHERE requester_id = ? OR target_user_id = ? OR approver_id = ?", [id, id, id]);
+      await connection.query("DELETE FROM announcements WHERE posted_by = ?", [id]);
+
+      await connection.query("DELETE FROM education_info WHERE user_id = ?", [id]);
       await connection.query("DELETE FROM emp_info WHERE user_id = ?", [id]);
       await connection.query("DELETE FROM user_detail WHERE user_id = ?", [id]);
       await connection.query("DELETE FROM users WHERE id = ?", [id]);
