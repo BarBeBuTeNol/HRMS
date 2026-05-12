@@ -34,8 +34,11 @@ const Sidebar_HR = () => {
   }, [location.pathname]);
 
   const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
-  const displayUsername = currentUser.username || "Guest";
-  const displayRole = currentUser.role || "HR";
+  const displayUsername = currentUser.first_name
+    ? `${currentUser.first_name} ${currentUser.last_name || ""}`
+    : currentUser.username || "Guest";
+  const displayRole = localStorage.getItem("userRole") || currentUser.role || "HR";
+  const displayPosition = currentUser.position || "Human Resources";
 
   const handleLogout = () => {
     localStorage.clear();
@@ -113,15 +116,9 @@ const Sidebar_HR = () => {
             <img
               src={currentUser.profile_image_url}
               alt="Profile"
-              style={{
-                width: "40px",
-                height: "40px",
-                borderRadius: "50%",
-                objectFit: "cover",
-              }}
             />
           ) : (
-            <FaUserCircle />
+            displayUsername.charAt(0).toUpperCase()
           )}
         </div>
 
@@ -133,8 +130,12 @@ const Sidebar_HR = () => {
               exit={{ opacity: 0 }}
               className="hr-user-info"
             >
-              <div className="hr-user-name">{displayUsername}</div>
-              <div className="hr-user-role">{displayRole}</div>
+              <div className="hr-user-name" title={displayUsername}>{displayUsername}</div>
+              <div className="hr-user-position" title={displayPosition}>{displayPosition}</div>
+              <div className="hr-user-role-badge">
+                <span className="hr-role-dot"></span>
+                {displayRole}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

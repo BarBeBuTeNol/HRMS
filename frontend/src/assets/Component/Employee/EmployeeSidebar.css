@@ -48,32 +48,58 @@
 .emp-profile-section {
   padding: 24px 20px;
   display: flex;
-  align-items: center;
-  gap: 16px;
   min-height: 80px;
-}
-
-.emp-avatar-wrapper {
   position: relative;
-  /* Always ensure circle shape even if user collapsed */
-  min-width: 48px;
 }
 
-.emp-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px; /* Squircle style */
+.emp-profile-clickable {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  cursor: pointer;
+  border-radius: 12px;
+  padding: 6px;
+  transition: background 0.2s;
+  box-sizing: border-box;
+}
+
+.emp-profile-clickable:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.emp-sidebar-avatar-wrapper {
+  position: relative;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  max-width: 40px;
+  max-height: 40px;
+  aspect-ratio: 1/1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.emp-sidebar-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
   object-fit: cover;
   border: 2px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  display: block;
+  aspect-ratio: 1/1;
 }
 
 .emp-status-indicator {
   position: absolute;
-  bottom: -2px;
-  right: -2px;
-  width: 14px;
-  height: 14px;
+  bottom: 0;
+  right: 0;
+  width: 12px;
+  height: 12px;
   background: var(--emp-success);
   border: 2px solid var(--emp-sidebar-bg);
   border-radius: 50%;
@@ -82,22 +108,55 @@
 .emp-user-info {
   display: flex;
   flex-direction: column;
-  white-space: nowrap;
+  white-space: normal;
   overflow: hidden;
+  flex: 1;
 }
 
 .emp-user-name {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   margin: 0;
   color: white;
   letter-spacing: 0.3px;
+  white-space: normal;
+  word-break: break-word;
 }
 
-.emp-user-role {
+.emp-user-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.emp-user-position {
   font-size: 0.75rem;
   color: var(--emp-text-secondary);
-  margin: 2px 0 0 0;
+  margin: 0;
+  font-weight: 500;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.2;
+}
+
+.emp-user-dot {
+  display: none;
+}
+
+.emp-user-department {
+  font-size: 0.65rem;
+  color: var(--emp-accent-color);
+  margin: 0;
+  font-weight: 600;
+  background: rgba(99, 102, 241, 0.15);
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.2;
 }
 
 .emp-divider {
@@ -275,10 +334,9 @@
     flex-direction: row;
     align-items: center;
     padding: 10px;
-    z-index: 50; /* Lower z-index so content can scroll if needed, but sticky header might need higher */
+    z-index: 9999; /* Higher z-index to stay above page content */
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    overflow-x: auto;
-    overflow-y: hidden;
+    overflow: visible; /* Allow popup to extend beyond sidebar */
   }
 
   .emp-toggle-btn {
@@ -296,7 +354,7 @@
     display: none; /* Hide text info on mobile to save space */
   }
 
-  .emp-avatar {
+  .emp-sidebar-avatar-wrapper {
     width: 40px;
     height: 40px;
   }
@@ -368,5 +426,84 @@
   .emp-menu-item.active {
     background: rgba(255, 255, 255, 0.1);
     color: var(--emp-accent-color);
+  }
+
+  /* Mobile Profile Popup Styling */
+  .emp-mobile-profile-popup {
+    position: absolute;
+    top: 60px;
+    left: 10px;
+    background: var(--emp-sidebar-bg);
+    border: 1px solid var(--emp-divider);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    width: 260px;
+    animation: popupFadeIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  }
+
+  @keyframes popupFadeIn {
+    0% {
+      opacity: 0;
+      transform: translateY(-10px) scale(0.95);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .emp-mobile-popup-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .emp-mobile-popup-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    object-fit: cover;
+    border: 2px solid var(--emp-accent-color);
+  }
+
+  .emp-mobile-popup-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .emp-mobile-popup-name {
+    margin: 0;
+    font-size: 1.05rem;
+    color: white;
+    font-weight: 600;
+  }
+
+  .emp-mobile-popup-role-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: var(--emp-text-secondary);
+  }
+
+  .emp-role-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--emp-accent-color);
+    border-radius: 50%;
+  }
+
+  .emp-mobile-popup-department {
+    margin: 4px 0 0 0;
+    font-size: 0.75rem;
+    color: var(--emp-accent-color);
+    background: rgba(99, 102, 241, 0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    width: fit-content;
   }
 }

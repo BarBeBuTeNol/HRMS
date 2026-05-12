@@ -26,7 +26,11 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
     avatar: user.profile_pic || user.profile_image_url || null
   };
 
-  const avatarUrl = profile.avatar || `https://ui-avatars.com/api/?name=${profile.name}&background=c5a059&color=fff&bold=true`;
+  const isHR = profile.role.toLowerCase().includes("hr") || profile.role.toLowerCase().includes("human");
+  const themeClass = isHR ? "theme-hr" : "theme-chro";
+  const themeColorURL = isHR ? "3b82f6" : "c5a059";
+
+  const avatarUrl = profile.avatar || `https://ui-avatars.com/api/?name=${profile.name}&background=${themeColorURL}&color=fff&bold=true`;
 
   return (
     <AnimatePresence>
@@ -38,7 +42,7 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
         onClick={onClose}
       >
         <motion.div
-          className="profile-modal-content"
+          className={`profile-modal-content ${themeClass}`}
           initial={{ scale: 0.9, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0, y: 20 }}

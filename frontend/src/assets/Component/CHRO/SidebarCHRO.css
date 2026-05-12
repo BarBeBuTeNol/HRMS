@@ -82,52 +82,9 @@
   transition: transform 0.3s;
 }
 
-/* Logo Section */
-.chro-logo-section {
-  height: 90px; /* Slightly taller header */
-  display: flex;
-  align-items: center;
-  padding: 0 24px;
-  gap: 16px;
-  white-space: nowrap;
-}
-
-.chro-sidebar.closed .chro-logo-section {
-  padding: 0;
-  justify-content: center;
-}
-
-.chro-logo-icon {
-  width: 44px;
-  height: 44px;
-  background: linear-gradient(135deg, var(--chro-primary), #6366f1);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.4rem;
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
-  min-width: 44px;
-  color: white;
-}
-
-.chro-logo-text h2 {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 800;
-  letter-spacing: -0.5px;
-  background: linear-gradient(to right, #fff, #cbd5e1);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: #fff;
-}
-.chro-logo-text span {
-  font-size: 0.75rem;
-  color: var(--chro-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  font-weight: 600;
+/* Header User Profile */
+.chro-sidebar-header {
+  padding: 28px 16px 16px 16px;
 }
 
 .chro-divider {
@@ -209,29 +166,92 @@
   box-shadow: -2px 0 10px rgba(139, 92, 246, 0.5);
 }
 
-/* User Profile Footer */
+/* Sidebar Footer */
 .chro-sidebar-footer {
-  padding: 24px;
-  border-top: 1px solid var(--chro-border);
+  padding: 20px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
   flex-direction: column;
   gap: 16px;
-  background: rgba(0, 0, 0, 0.2);
+  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.3));
+}
+
+/* Brand inside Footer */
+.chro-footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.05);
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+.chro-footer-brand:hover {
+  opacity: 1;
+}
+
+.chro-footer-brand .brand-icon {
+  font-size: 1.4rem;
+  color: var(--chro-primary);
+}
+
+.chro-footer-brand .brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.5px;
+  line-height: 1;
+}
+
+.brand-subtitle {
+  font-size: 0.65rem;
+  color: var(--chro-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 2px;
 }
 
 .chro-user-profile {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px;
+  gap: 14px;
+  padding: 12px;
   background: rgba(255, 255, 255, 0.03);
-  border-radius: 14px;
-  transition: all 0.2s;
-  border: 1px solid transparent;
+  border-radius: 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
 }
+
+.chro-user-profile::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
 .chro-user-profile:hover {
-  border-color: rgba(255, 255, 255, 0.05);
-  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(139, 92, 246, 0.3);
+  background: rgba(139, 92, 246, 0.05);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(139, 92, 246, 0.15);
+}
+
+.chro-user-profile:hover::before {
+  opacity: 1;
 }
 
 .chro-sidebar.closed .chro-user-profile {
@@ -240,38 +260,82 @@
   padding: 0;
   margin-bottom: 10px;
   border: none;
+  box-shadow: none;
 }
 
 .chro-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #f43f5e, #be123c);
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
   color: white;
-  font-size: 1.1rem;
-  box-shadow: 0 4px 10px rgba(244, 63, 94, 0.3);
+  font-size: 1.2rem;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.chro-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 14px;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.1);
 }
 
 .chro-user-info {
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+  z-index: 1;
 }
 
 .chro-user-name {
   font-size: 0.95rem;
-  font-weight: 600;
-  color: #fff;
+  font-weight: 700;
+  color: #f8fafc;
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
+  letter-spacing: 0.3px;
 }
 
-.chro-user-role {
-  font-size: 0.75rem;
-  color: var(--chro-text-muted);
+.chro-user-role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  background: rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #c4b5fd;
+  width: fit-content;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.role-dot {
+  width: 6px;
+  height: 6px;
+  background-color: #34d399; /* emerald green for active status */
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.6);
+  animation: pulse-dot 2s infinite;
+}
+
+@keyframes pulse-dot {
+  0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.4); }
+  70% { box-shadow: 0 0 0 4px rgba(52, 211, 153, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
 }
 
 .chro-logout-btn {
@@ -347,7 +411,7 @@
     padding: 0 10px !important;
     background: var(--chro-bg-dark) !important;
     box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
-    overflow: hidden !important; /* Prevent vertical scroll on bar */
+    overflow: visible !important; /* Allow popup to overflow */
     z-index: 5000;
   }
   
@@ -372,16 +436,126 @@
   /* 1. Hide Desktop Elements */
   .chro-logo-section, 
   .chro-divider, 
-  .chro-user-info, 
-  .chro-active-indicator {
+  .chro-active-indicator,
+  .chro-footer-brand {
     display: none !important;
   }
 
-  /* 2. Avatar (Left) */
-  .chro-sidebar-footer {
+  /* 2. User Profile (Left) */
+  .chro-sidebar-header {
     order: -1 !important;
     padding: 0 !important;
-    margin: 0 10px 0 10px !important;
+    margin: 0 10px 0 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    flex-shrink: 0 !important;
+  }
+
+  .chro-user-profile {
+    padding: 4px 8px !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+  
+  .chro-avatar {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 10px !important;
+    margin: 0 !important;
+    font-size: 0.9rem !important;
+  }
+
+  .desktop-only {
+    display: none !important;
+  }
+
+  /* Mobile Profile Popup */
+  .chro-mobile-profile-popup {
+    position: absolute !important;
+    top: 60px !important;
+    left: 10px !important;
+    background: rgba(15, 23, 42, 0.95) !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(139, 92, 246, 0.3) !important;
+    border-radius: 16px !important;
+    padding: 16px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(139, 92, 246, 0.1) !important;
+    z-index: 6000 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 200px !important;
+    animation: slideDownFade 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+
+  @keyframes slideDownFade {
+    0% { opacity: 0; transform: translateY(-10px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  .mobile-popup-content {
+    display: flex !important;
+    align-items: center !important;
+    gap: 16px !important;
+  }
+
+  .popup-avatar {
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 14px !important;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-weight: 700 !important;
+    color: white !important;
+    font-size: 1.4rem !important;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4) !important;
+  }
+  .popup-avatar img {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 14px !important;
+    object-fit: cover !important;
+  }
+
+  .popup-info {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+  }
+
+  .popup-name {
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    color: #fff !important;
+    white-space: nowrap !important;
+  }
+
+  .popup-role {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    font-size: 0.75rem !important;
+    color: #c4b5fd !important;
+    text-transform: uppercase !important;
+    font-weight: 600 !important;
+  }
+
+  .popup-status {
+    font-size: 0.7rem !important;
+    color: #34d399 !important; /* Green */
+  }
+
+  /* 3. Footer / Logout (Right) */
+  .chro-sidebar-footer {
+    order: 3 !important;
+    padding: 0 !important;
+    margin: 0 0 0 10px !important;
     border: none !important;
     background: transparent !important;
     width: auto !important;
@@ -389,19 +563,17 @@
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
-    gap: 8px !important;
   }
 
-  /* Logout Button */
   .chro-logout-btn {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    min-width: 40px !important;
-    height: 40px !important;
+    min-width: 38px !important;
+    height: 38px !important;
     padding: 0 !important;
     margin: 0 !important;
-    border-radius: 12px !important;
+    border-radius: 10px !important;
     background: rgba(239, 68, 68, 0.1) !important;
     color: #ef4444 !important;
     border: 1px solid rgba(239, 68, 68, 0.3) !important;
@@ -418,22 +590,6 @@
   .chro-logout-btn svg {
     margin: 0 !important;
     font-size: 1.2rem !important;
-  }
-  
-  .chro-user-profile {
-    padding: 0 !important;
-    background: transparent !important;
-    border: none !important;
-    margin: 0 !important;
-    display: flex !important;
-  }
-  
-  .chro-avatar {
-    width: 40px !important;
-    height: 40px !important;
-    border-radius: 12px !important;
-    margin: 0 !important;
-    font-size: 0.9rem !important;
   }
 
   /* 3. Horizontal Menu (Right/Fill) */

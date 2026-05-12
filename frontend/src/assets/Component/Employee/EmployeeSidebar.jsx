@@ -20,12 +20,23 @@ import LoadingEmp from "../loading/loading-emp/LoadingEmp";
 
 const EmployeeSidebar = ({ onToggle }) => {
   const [open, setOpen] = useState(true);
+  const [showMobileProfile, setShowMobileProfile] = useState(false);
 
   const handleToggle = () => {
     const nextState = !open;
     setOpen(nextState);
     if (onToggle) onToggle(nextState);
   };
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (!e.target.closest('.emp-profile-section')) {
+        setShowMobileProfile(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
   const [loading, setLoading] = useState(true);
   const sidebarRef = useRef(null);
 
@@ -46,6 +57,8 @@ const EmployeeSidebar = ({ onToggle }) => {
   // Fallback defaults if data is missing
   const displayName = currentUser.username || currentUser.name || "Employee";
   const displayRole = currentUser.role || "Staff Member";
+  const displayPosition = currentUser.position || displayRole;
+  const displayDepartment = currentUser.department || "General Department";
   const displayAvatar =
     currentUser.profile_image_url ||
     currentUser.avatar ||
@@ -170,26 +183,56 @@ const EmployeeSidebar = ({ onToggle }) => {
         {/* --- Profile Header --- */}
         <div className="emp-profile-section">
           <motion.div
-            className="emp-avatar-wrapper"
-            whileHover={{ scale: 1.05 }}
+            className="emp-profile-clickable"
+            onClick={() => {
+              if (window.innerWidth <= 768) {
+                setShowMobileProfile(!showMobileProfile);
+              }
+            }}
+            whileHover={{ scale: 1.02 }}
           >
-            <img src={displayAvatar} alt="Profile" className="emp-avatar" />
-            <span className="emp-status-indicator"></span>
+            <div className="emp-sidebar-avatar-wrapper">
+              <img src={displayAvatar} alt="Profile" className="emp-sidebar-avatar" />
+              <span className="emp-status-indicator"></span>
+            </div>
+
+            <AnimatePresence>
+              {open && (
+                <motion.div
+                  initial={{ opacity: 0, width: 0 }}
+                  animate={{ opacity: 1, width: "auto" }}
+                  exit={{ opacity: 0, width: 0 }}
+                  className="emp-user-info"
+                >
+                  <h3 className="emp-user-name">{displayName}</h3>
+                  <div className="emp-user-details">
+                    <p className="emp-user-position">{displayPosition}</p>
+                    <span className="emp-user-dot">•</span>
+                    <p className="emp-user-department">{displayDepartment}</p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
 
-          <AnimatePresence>
-            {open && (
-              <motion.div
-                initial={{ opacity: 0, width: 0 }}
-                animate={{ opacity: 1, width: "auto" }}
-                exit={{ opacity: 0, width: 0 }}
-                className="emp-user-info"
-              >
-                <h3 className="emp-user-name">{displayName}</h3>
-                <p className="emp-user-role">{displayRole}</p>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* Mobile Profile Popup */}
+          {showMobileProfile && window.innerWidth <= 768 && (
+            <div className="emp-mobile-profile-popup">
+              <div className="emp-mobile-popup-content">
+                <div className="emp-mobile-popup-avatar-wrapper">
+                  <img src={displayAvatar} alt="Profile" className="emp-mobile-popup-avatar" />
+                </div>
+                <div className="emp-mobile-popup-info">
+                  <h3 className="emp-mobile-popup-name">{displayName}</h3>
+                  <div className="emp-mobile-popup-role-badge">
+                    <span className="emp-role-dot"></span>
+                    {displayPosition}
+                  </div>
+                  <p className="emp-mobile-popup-department">{displayDepartment}</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="emp-divider" />

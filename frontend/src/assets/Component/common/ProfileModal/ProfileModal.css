@@ -11,7 +11,24 @@
   padding: 1.5rem;
 }
 
+:root {
+  --modal-theme-chro: #c5a059;
+  --modal-theme-chro-bg: rgba(197, 160, 89, 0.15);
+  --modal-theme-chro-border: rgba(197, 160, 89, 0.3);
+  --modal-theme-chro-glow: rgba(197, 160, 89, 0.4);
+  
+  --modal-theme-hr: #3b82f6; /* Blue 500 */
+  --modal-theme-hr-bg: rgba(59, 130, 246, 0.15);
+  --modal-theme-hr-border: rgba(59, 130, 246, 0.3);
+  --modal-theme-hr-glow: rgba(59, 130, 246, 0.4);
+}
+
 .profile-modal-content {
+  --theme-main: var(--modal-theme-chro);
+  --theme-bg: var(--modal-theme-chro-bg);
+  --theme-border: var(--modal-theme-chro-border);
+  --theme-glow: var(--modal-theme-chro-glow);
+
   background: #0f172a; /* Deep Navy Base */
   width: 100%;
   max-width: 450px;
@@ -21,6 +38,16 @@
   position: relative;
   border: 1px solid rgba(255, 255, 255, 0.1);
   font-family: "Onest", "Outfit", sans-serif;
+  max-height: 90vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.profile-modal-content.theme-hr {
+  --theme-main: var(--modal-theme-hr);
+  --theme-bg: var(--modal-theme-hr-bg);
+  --theme-border: var(--modal-theme-hr-border);
+  --theme-glow: var(--modal-theme-hr-glow);
 }
 
 .profile-close-btn {
@@ -56,7 +83,7 @@
 .profile-banner {
   height: 100%;
   background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-  border-bottom: 2px solid #c5a059;
+  border-bottom: 2px solid var(--theme-main);
 }
 
 .profile-avatar-container {
@@ -73,8 +100,8 @@
   position: absolute;
   inset: -6px;
   border-radius: 50%;
-  border: 4px solid #c5a059;
-  box-shadow: 0 0 15px rgba(197, 160, 89, 0.4);
+  border: 4px solid var(--theme-main);
+  box-shadow: 0 0 15px var(--theme-glow);
 }
 
 .premium-avatar-img {
@@ -110,9 +137,9 @@
   display: inline-flex;
   align-items: center;
   padding: 0.35rem 1rem;
-  background: rgba(197, 160, 89, 0.15);
-  color: #c5a059;
-  border: 1px solid rgba(197, 160, 89, 0.3);
+  background: var(--theme-bg);
+  color: var(--theme-main);
+  border: 1px solid var(--theme-border);
   border-radius: 99px;
   font-size: 0.75rem;
   font-weight: 700;
@@ -141,7 +168,7 @@
 }
 
 .prem-detail-card:hover {
-  border-color: rgba(197, 160, 89, 0.3);
+  border-color: var(--theme-border);
 }
 
 .prem-detail-card.full {
@@ -149,7 +176,7 @@
 }
 
 .prem-icon {
-  color: #c5a059;
+  color: var(--theme-main);
   font-size: 1.2rem;
   flex-shrink: 0;
 }
@@ -185,4 +212,16 @@
   color: #475569;
   font-size: 0.75rem;
   font-style: italic;
+}
+
+@media (max-width: 480px) {
+  .premium-details-grid {
+    grid-template-columns: 1fr;
+  }
+  .prem-detail-card.full {
+    grid-column: 1;
+  }
+  .profile-body-premium {
+    padding: 60px 1.5rem 2rem;
+  }
 }
