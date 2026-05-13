@@ -74,7 +74,7 @@ const tables = {
         "description TEXT",
         "start_date DATE",
         "end_date DATE",
-        "event_type ENUM('Holiday','Company Event','Meeting','Training')",
+        "event_type ENUM('Holiday','Company Event','Meeting','Training','holiday','event','meeting','training')",
         "is_all_day TINYINT(1)",
         "created_by INT",
         "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"

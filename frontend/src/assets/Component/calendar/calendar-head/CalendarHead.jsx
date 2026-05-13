@@ -96,11 +96,34 @@ const CalendarHead = () => {
     e.preventDefault();
     try {
       const response = await api.post("/calendar", newEvent);
-      setEvents([...events, { ...newEvent, id: response.data.id }]);
+      
+      // Update local state with the new event
+      setEvents([...events, { 
+        ...newEvent, 
+        id: response.data.id 
+      }]);
+      
       setIsAddModalOpen(false);
       setNewEvent({ title: "", date: "", type: "holiday", description: "" });
+
+      Swal.fire({
+        title: "Success",
+        text: "Event created successfully",
+        icon: "success",
+        timer: 1500,
+        showConfirmButton: false,
+        background: "#1e293b",
+        color: "#fff"
+      });
     } catch (error) {
       console.error("Error adding event", error);
+      Swal.fire({
+        title: "Error",
+        text: "Failed to create event. Please check the information and try again.",
+        icon: "error",
+        background: "#1e293b",
+        color: "#fff"
+      });
     }
   };
 
