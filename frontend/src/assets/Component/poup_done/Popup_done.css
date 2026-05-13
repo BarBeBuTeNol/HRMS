@@ -37,10 +37,13 @@
 }
 
 .popup-icon-chro {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   font-size: 4rem;
-  color: #e2e8f0;
+  color: #fbbf24; /* Adjusted to match yellow color in screenshot */
   margin-bottom: 20px;
-  filter: drop-shadow(0 0 10px rgba(226, 232, 240, 0.5));
+  filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.4));
 }
 
 .popup-title-chro {
@@ -99,6 +102,9 @@
 }
 
 .popup-icon-head {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   font-size: 3.5rem;
   color: #c5a059;
   margin-bottom: 20px;
@@ -161,6 +167,9 @@
 }
 
 .popup-icon-hr {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   font-size: 3.5rem;
   color: #34d399;
   margin-bottom: 15px;
@@ -218,6 +227,9 @@
 }
 
 .popup-icon-emp {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   font-size: 3rem;
   color: #818cf8;
   margin-bottom: 15px;

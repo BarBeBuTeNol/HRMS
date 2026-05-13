@@ -187,11 +187,11 @@ router.get("/for-head/:headId", async (req, res) => {
 
     // หา department ของหัวหน้า
     const [[head]]: any = await pool.query(
-      `SELECT department_id FROM users WHERE id = ? AND role_id = 4`,
+      `SELECT department_id FROM users WHERE id = ?`,
       [headId],
     );
 
-    if (!head) return res.status(404).json({ message: "ไม่พบหัวหน้า" });
+    if (!head || !head.department_id) return res.status(404).json({ message: "User or department not found" });
 
     // ดึงคำขอลา (pending) ของพนักงานในแผนกเดียวกัน
     // พร้อมข้อมูลพนักงาน + Conflict Check
@@ -276,11 +276,11 @@ router.get("/stats/analytics/:headId", async (req, res) => {
 
     // 1. Get Head's Department
     const [[head]]: any = await pool.query(
-      `SELECT department_id FROM users WHERE id = ? AND role_id = 4`,
+      `SELECT department_id FROM users WHERE id = ?`,
       [headId],
     );
 
-    if (!head) return res.status(404).json({ message: "Head not found" });
+    if (!head || !head.department_id) return res.status(404).json({ message: "User or department not found" });
 
     // 2. Get All Employees in Department
     const [employees]: any = await pool.query(
