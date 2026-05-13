@@ -727,7 +727,7 @@ function MemberActionModal({ isOpen, onClose, data, type }) {
                             <input 
                                 type="date" 
                                 className="modal-input" 
-                                min={new Date().toISOString().split("T")[0]}
+                                min={new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0]}
                                 style={{ fontSize: '1rem', padding: '1rem' }}
                                 value={dueDate}
                                 onChange={(e) => setDueDate(e.target.value)}
@@ -801,11 +801,11 @@ function MemberActionModal({ isOpen, onClose, data, type }) {
     };
 
     return createPortal(
-        <div className="modal-overlay" onClick={onClose} style={{ zIndex: 99999, display: 'flex', opacity: 1, visibility: 'visible' }}>
+        <div className="modal-overlay" onClick={onClose} style={{ zIndex: 1040, display: 'flex', opacity: 1, visibility: 'visible' }}>
             <div 
                 className="modal-container"
                 onClick={(e) => e.stopPropagation()}
-                style={{ opacity: 1, transform: 'none', zIndex: 100000 }}
+                style={{ opacity: 1, transform: 'none', zIndex: 1050 }}
             >
                 <button className="modal-close-btn" onClick={onClose}>
                     <X size={20} />
