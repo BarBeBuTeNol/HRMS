@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import HeadSidebar from "../../../Component/Head/HeadSidebar";
+import Swal from 'sweetalert2';
 import "./TeamPerformanceHead.css";
 
 const TeamPerformanceHead = () => {
@@ -548,12 +549,72 @@ const formatDate = (dateString) => {
 function MemberActionModal({ isOpen, onClose, data, type }) {
     // State for Priority (Assignment)
     const [priority, setPriority] = useState('Medium');
+    const [taskTitle, setTaskTitle] = useState('');
+    const [dueDate, setDueDate] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
             setPriority('Medium');
+            setTaskTitle('');
+            setDueDate('');
         }
     }, [isOpen]);
+
+    const handleAssignTask = async () => {
+        if (!taskTitle.trim() || !dueDate) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Incomplete Information',
+                text: 'Please enter a Task Title and select a Due Date.',
+                background: '#1e293b',
+                color: '#fff'
+            });
+            return;
+        }
+
+        try {
+            setIsSubmitting(true);
+            const userStr = localStorage.getItem("user") || localStorage.getItem("currentUser");
+            const user = userStr ? JSON.parse(userStr) : null;
+            const headId = user?.id || user?.userId;
+
+            const description = `${priority} Priority Task`;
+
+            const res = await api.post('/task_assignments', {
+                user_id: data.id,
+                task_name: taskTitle,
+                description: description,
+                deadline: dueDate
+            });
+
+            if (res.data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Task Assigned',
+                    text: `Task has been assigned to ${data.first_name} successfully.`,
+                    background: '#1e293b',
+                    color: '#fff',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                onClose();
+            } else {
+                throw new Error(res.data.message || 'Failed to assign task');
+            }
+        } catch (error) {
+            console.error('Error assigning task:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message || 'Something went wrong while assigning the task.',
+                background: '#1e293b',
+                color: '#fff'
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     if (!isOpen || !data) return null;
 
@@ -629,7 +690,14 @@ function MemberActionModal({ isOpen, onClose, data, type }) {
                         
                         <div className="form-group" style={{ marginTop: '1.5rem' }}>
                             <label style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8' }}>Task Title</label>
-                            <input type="text" className="modal-input" placeholder="e.g. Update Documentation" style={{ fontSize: '1rem', padding: '1rem' }}/>
+                            <input 
+                                type="text" 
+                                className="modal-input" 
+                                placeholder="e.g. Update Documentation" 
+                                style={{ fontSize: '1rem', padding: '1rem' }}
+                                value={taskTitle}
+                                onChange={(e) => setTaskTitle(e.target.value)}
+                            />
                         </div>
                         <div className="form-group">
                             <label style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8' }}>Priority Level</label>
@@ -661,10 +729,19 @@ function MemberActionModal({ isOpen, onClose, data, type }) {
                                 className="modal-input" 
                                 min={new Date().toISOString().split("T")[0]}
                                 style={{ fontSize: '1rem', padding: '1rem' }}
+                                value={dueDate}
+                                onChange={(e) => setDueDate(e.target.value)}
                             />
                         </div>
                          <div className="mt-8">
-                            <button className="modal-btn-primary w-full" style={{ padding: '1rem', fontSize: '1.05rem', letterSpacing: '0.5px' }}>Confirm Assignment</button>
+                            <button 
+                                className="modal-btn-primary w-full" 
+                                style={{ padding: '1rem', fontSize: '1.05rem', letterSpacing: '0.5px' }}
+                                onClick={handleAssignTask}
+                                disabled={isSubmitting}
+                            >
+                                {isSubmitting ? 'Assigning...' : 'Confirm Assignment'}
+                            </button>
                          </div>
                     </div>
                 );
