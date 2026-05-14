@@ -605,6 +605,9 @@
   transition: all 0.2s ease;
   font-size: 0.95rem;
   border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .modal-btn.primary {

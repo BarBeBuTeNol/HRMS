@@ -261,8 +261,10 @@ const TaskAssignmentHead = () => {
   // Filtered Tasks for Display
   const filteredTasks = (allTasks || []).filter(task => {
       const matchesStatus = filterStatus === "All" || task.status === filterStatus;
-      const matchesSearch = task.task_name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                            (task.first_name + " " + task.last_name)?.toLowerCase().includes(searchTerm.toLowerCase());
+      const taskNameSafe = task.task_name || "";
+      const fullNameSafe = `${task.first_name || ""} ${task.last_name || ""}`;
+      const matchesSearch = taskNameSafe.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                            fullNameSafe.toLowerCase().includes(searchTerm.toLowerCase());
       return matchesStatus && matchesSearch;
   });
 
@@ -351,6 +353,7 @@ const TaskAssignmentHead = () => {
                     type="date"
                     className="form-input"
                     value={newTask.deadline}
+                    min={new Date().toISOString().split("T")[0]}
                     style={{ colorScheme: "dark" }}
                     onChange={(e) =>
                       setNewTask({ ...newTask, deadline: e.target.value })
@@ -561,15 +564,15 @@ const TaskAssignmentHead = () => {
 
                         {/* 4. Priority */}
                         <div className="col-priority">
-                             <span className={`priority-tag priority-${task.priority.toLowerCase()}`}>
-                                {task.priority}
+                             <span className={`priority-tag priority-${(task.priority || 'Medium').toLowerCase()}`}>
+                                {task.priority || 'Medium'}
                              </span>
                         </div>
 
                         {/* 5. Status */}
                         <div className="col-status">
-                             <div className={`status-pill status-${task.status.toLowerCase().replace(" ", "-")}`}>
-                                {task.status}
+                             <div className={`status-pill status-${(task.status || 'Pending').toLowerCase().replace(" ", "-")}`}>
+                                {task.status || 'Pending'}
                              </div>
                         </div>
 

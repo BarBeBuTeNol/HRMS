@@ -18,6 +18,7 @@ import {
 } from "react-icons/fa";
 import EmployeeSidebar from "../../../Component/Employee/EmployeeSidebar";
 import "./ShiftRequestsPage.css";
+import PopupDoneEmp from "../../../Component/poup_done/poup_done-emp/PopupDoneEmp";
 
 // Animation Variants
 const containerVariants = {
@@ -45,6 +46,7 @@ const ShiftRequestsPage = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
   const [formData, setFormData] = useState({
     type: "task", // 'task' or 'shift'
@@ -108,8 +110,7 @@ const ShiftRequestsPage = () => {
 
       await api.post("/replacements", payload);
 
-      // Simple alert for now, could be a toast in production
-      alert("✔️ ส่งคำขอสำเร็จ! ระบบได้บันทึกรายการของคุณแล้ว");
+      setShowSuccessPopup(true);
 
       setFormData({ ...formData, itemId: "", replacementId: "", reason: "" });
       fetchInitialData();
@@ -490,6 +491,13 @@ const ShiftRequestsPage = () => {
           )}
         </motion.div>
       </main>
+
+      <PopupDoneEmp
+        isOpen={showSuccessPopup}
+        onClose={() => setShowSuccessPopup(false)}
+        title="ส่งคำขอสำเร็จ"
+        message="ระบบได้บันทึกรายการคำขอเปลี่ยนกะ/งานของคุณเรียบร้อยแล้ว"
+      />
     </div>
   );
 };

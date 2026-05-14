@@ -10,16 +10,29 @@ import {
   Clock,
   Coffee,
   X,
-  MapPin,
+  RefreshCw,
+  User,
+  MessageSquare,
+  Send,
+  Loader2
 } from "lucide-react";
 import api from "../../../../services/api";
 import EmployeeSidebar from "../../../Component/Employee/EmployeeSidebar";
 import "./MySchedulePage.css"; // Import the new CSS
+import PopupDoneEmp from "../../../Component/poup_done/poup_done-emp/PopupDoneEmp";
 
 const MySchedulePage = () => {
   const [currentDate, setCurrentDate] = useState(dayjs());
   const [schedule, setSchedule] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null); // For Modal
+  
+  // Swap Request States
+  const [candidates, setCandidates] = useState([]);
+  const [selectedReplacement, setSelectedReplacement] = useState("");
+  const [swapReason, setSwapReason] = useState("");
+  const [isSubmittingSwap, setIsSubmittingSwap] = useState(false);
+  const [showSwapForm, setShowSwapForm] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
   // --- Fetch Data ---
   useEffect(() => {
@@ -39,6 +52,18 @@ const MySchedulePage = () => {
     };
     fetchData();
   }, [currentDate]);
+
+  useEffect(() => {
+    const fetchCandidates = async () => {
+      try {
+        const res = await api.get("/replacements/candidates");
+        setCandidates(res.data || []);
+      } catch (error) {
+        console.error("Failed to fetch candidates", error);
+      }
+    };
+    fetchCandidates();
+  }, []);
 
   const daysInMonth = currentDate.daysInMonth();
   const firstDayOfMonth = currentDate.startOf("month").day();
@@ -80,6 +105,37 @@ const MySchedulePage = () => {
 
   const handleEventClick = (eventData, type) => {
     setSelectedEvent({ ...eventData, dataType: type });
+    setShowSwapForm(false);
+    setSelectedReplacement("");
+    setSwapReason("");
+  };
+
+  const handleRequestSwap = async () => {
+    if (!selectedReplacement || !swapReason) {
+      alert("Please select a replacement and provide a reason.");
+      return;
+    }
+
+    setIsSubmittingSwap(true);
+    try {
+      const payload = {
+        replacement_id: selectedReplacement,
+        reason: swapReason,
+        shift_id: selectedEvent.id,
+        task_id: null
+      };
+
+      await api.post("/replacements", payload);
+      
+      setShowSuccessPopup(true);
+      setShowSwapForm(false);
+      // Optional: Refresh data if needed, but swap request is just a request
+    } catch (error) {
+      console.error("Failed to submit swap request", error);
+      alert("Error: " + (error.response?.data?.message || "Failed to send request"));
+    } finally {
+      setIsSubmittingSwap(false);
+    }
   };
 
   const handleDayClick = (item) => {
@@ -277,31 +333,86 @@ const MySchedulePage = () => {
                     {dayjs(selectedEvent.date).format("dddd, D MMMM YYYY")}
                   </p>
 
-                  <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                    {selectedEvent.dataType === "shift" && (
-                      <div
-                        style={{
-                          background: "rgba(255,255,255,0.03)",
-                          padding: "16px",
-                          borderRadius: "12px",
-                          display: "flex",
-                          gap: "12px",
-                          alignItems: "center",
-                        }}
-                      >
-                        <MapPin size={20} color="rgba(255,255,255,0.5)" />
-                        <div>
-                          <h4 className="ec-info-label">Location</h4>
-                          <p className="ec-info-value">Head Office, Floor 3</p>
+                  {selectedEvent.dataType === "shift" && selectedEvent.shift !== "Day Off" && (
+                    <div className="ec-swap-container">
+                      {!showSwapForm ? (
+                        <button 
+                          className="ec-swap-toggle-btn"
+                          onClick={() => setShowSwapForm(true)}
+                        >
+                          <RefreshCw size={18} />
+                          <span>Request Shift Swap</span>
+                        </button>
+                      ) : (
+                        <div className="ec-swap-form">
+                          <div className="ec-form-divider"></div>
+                          <h3 className="ec-swap-form-title">Shift Swap Request</h3>
+                          
+                          <div className="ec-input-group">
+                            <label><User size={14} /> Replacement Candidate</label>
+                            <select 
+                              value={selectedReplacement}
+                              onChange={(e) => setSelectedReplacement(e.target.value)}
+                              className="ec-select"
+                            >
+                              <option value="">-- Select Employee --</option>
+                              {candidates.map(c => (
+                                <option key={c.id} value={c.id}>
+                                  {c.first_name} {c.last_name} ({c.position_name || "Staff"})
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div className="ec-input-group">
+                            <label><MessageSquare size={14} /> Reason</label>
+                            <textarea 
+                              value={swapReason}
+                              onChange={(e) => setSwapReason(e.target.value)}
+                              placeholder="Why do you need to swap?"
+                              className="ec-textarea"
+                            />
+                          </div>
+
+                          <div className="ec-swap-actions">
+                            <button 
+                              className="ec-cancel-btn"
+                              onClick={() => setShowSwapForm(false)}
+                              disabled={isSubmittingSwap}
+                            >
+                              Cancel
+                            </button>
+                            <button 
+                              className="ec-submit-btn"
+                              onClick={handleRequestSwap}
+                              disabled={isSubmittingSwap}
+                            >
+                              {isSubmittingSwap ? (
+                                <Loader2 className="animate-spin" size={18} />
+                              ) : (
+                                <Send size={18} />
+                              )}
+                              <span>Send Request</span>
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
+                      )}
+                    </div>
+                  )}
+
+
                 </motion.div>
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
+
+      <PopupDoneEmp
+        isOpen={showSuccessPopup}
+        onClose={() => setShowSuccessPopup(false)}
+        title="Request Sent"
+        message="Your shift swap request has been submitted successfully and is awaiting approval."
+      />
+    </div>
       </div>
     </div>
   );
