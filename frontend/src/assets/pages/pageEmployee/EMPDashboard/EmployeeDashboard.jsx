@@ -313,7 +313,7 @@ const EmployeeDashboard = () => {
               }}
               whileTap={{ scale: 0.95 }}
             >
-              <RefreshCw size={20} /> Update Profile
+              <RefreshCw size={20} /> My Profile
             </motion.div>
           </Link>
           <Link to="/employee/shift-requests">
