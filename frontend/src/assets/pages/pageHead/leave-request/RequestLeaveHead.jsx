@@ -122,6 +122,30 @@ const RequestLeaveHead = () => {
       return;
     }
 
+    // Validate Quota
+    const sDate = new Date(formData.startDate);
+    const eDate = new Date(formData.endDate);
+    sDate.setHours(0, 0, 0, 0);
+    eDate.setHours(0, 0, 0, 0);
+    const diffTime = Math.abs(eDate - sDate);
+    const requestedDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+    const matchSummary = leaveSummary.find((item) => item.type === formData.leaveType);
+    if (matchSummary) {
+      const remainingQuota = matchSummary.limit - matchSummary.used;
+      if (requestedDays > remainingQuota) {
+        Swal.fire({
+          icon: "error",
+          title: "Quota Exceeded",
+          text: `จำนวนวันลาที่คุณระบุ (${requestedDays} วัน) เกินโควตาคงเหลือของคุณ (${remainingQuota} วัน) ของประเภท ${formData.leaveType} กรุณาตรวจสอบวันลาอีกครั้ง`,
+          background: "#1e293b",
+          color: "#fff",
+          confirmButtonColor: "#ef4444"
+        });
+        return;
+      }
+    }
+
     // Append file info to reason since DB doesn't have evidence column yet
     let finalReason = formData.reason;
     if (formData.evidenceFile) {

@@ -50,6 +50,7 @@ import NotificationHR from "./assets/pages/HR/NotificationHR/NotificationHR";
 import CreateAnnouncement from "./assets/pages/HR/CreateAnnouncement/CreateAnnouncement";
 import Announcements from "./assets/pages/HR/Announcements/Announcements";
 import Leave_info from "./assets/pages/HR/Leave_info/Leave_info";
+import LeaveStaticPage from "./assets/pages/HR/Leave_static/LeaveStaticPage";
 import AddDepartment from "./assets/pages/HR/add_department/add_department";
 import CalendarHR from "./assets/Component/calendar/calendar-hr/CalendarHR";
 
@@ -132,6 +133,7 @@ function App() {
       />
       <Route path="/hr/show-emp" element={<Show_emp />} />
       <Route path="/hr/show-leave" element={<Show_leave />} />
+      <Route path="/hr/leave-statistics" element={<LeaveStaticPage />} />
       <Route path="/hr/show-static-switch" element={<Show_static_switch />} />
       <Route path="/hr/notifications" element={<NotificationHR />} />
       <Route path="/hr/create-announcement" element={<CreateAnnouncement />} />

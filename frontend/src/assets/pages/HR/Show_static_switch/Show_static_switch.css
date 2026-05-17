@@ -197,6 +197,24 @@
 .chart-container {
   min-height: 250px;
   position: relative;
+  min-width: 0;
+  width: 100%;
+}
+
+/* Loading State for Analytics */
+.loading-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  color: #94a3b8;
+  font-size: 18px;
+  font-weight: 500;
+  background: rgba(30, 41, 59, 0.4);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 .chart-legend-custom {

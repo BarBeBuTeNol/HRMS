@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from "react";
+ import React, { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   AreaChart,
@@ -32,6 +33,7 @@ import {
   FaHourglassHalf,
   FaCheckCircle,
   FaTrophy,
+  FaCalendarCheck,
 } from "react-icons/fa";
 
 const COLORS = [
@@ -56,8 +58,10 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 const Show_static_switch = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("stats");
   const [loading, setLoading] = useState(true);
+  const [loadingStats, setLoadingStats] = useState(true);
   const [statsData, setStatsData] = useState({
     topSwappers: [],
     topHelpers: [],
@@ -107,11 +111,14 @@ const Show_static_switch = () => {
   }, [filters]);
 
   const fetchStats = async () => {
+    setLoadingStats(true);
     try {
       const res = await api.get("/reports/swaps/stats");
       setStatsData(res.data);
     } catch (err) {
       console.error("Error fetching stats:", err);
+    } finally {
+      setLoadingStats(false);
     }
   };
 
@@ -177,6 +184,11 @@ const Show_static_switch = () => {
     },
   };
 
+  const hasSwapVolume = statsData.swapVolume && statsData.swapVolume.some(d => d.count > 0);
+  const hasDeptHeatmap = statsData.deptHeatmap && statsData.deptHeatmap.length > 0;
+  const hasTopSwappers = statsData.topSwappers && statsData.topSwappers.length > 0;
+  const hasTopHelpers = statsData.topHelpers && statsData.topHelpers.length > 0;
+
   return (
     <HRLayout>
       <div className="static-wrapper">
@@ -202,20 +214,30 @@ const Show_static_switch = () => {
                 <FaExchangeAlt /> Recent Swaps
               </button>
             </div>
+            <button
+              className="export-btn"
+              style={{ padding: "8px 16px", height: "100%", background: "rgba(59, 130, 246, 0.1)", color: "#60a5fa", borderColor: "rgba(59, 130, 246, 0.2)" }}
+              onClick={() => navigate("/hr/leave-statistics")}
+            >
+              <FaCalendarCheck /> Leave Statistics
+            </button>
           </div>
         </div>
 
         {/* Summary Widgets - Always Visible or only on Dashboard? Let's keep distinct */}
         <AnimatePresence mode="wait">
           {activeTab === "stats" ? (
-            <motion.div
-              key="stats"
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              exit={{ opacity: 0 }}
-              className="dashboard-container"
-            >
+            loadingStats ? (
+              <div className="loading-state">Loading Analytics...</div>
+            ) : (
+              <motion.div
+                key="stats"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                exit={{ opacity: 0 }}
+                className="dashboard-container"
+              >
               {/* Summary Row */}
               <div className="summary-row">
                 <motion.div
@@ -283,63 +305,70 @@ const Show_static_switch = () => {
                     <div className="card-badge">Monthly</div>
                   </div>
                   <div className="chart-container">
-                    <ResponsiveContainer width="100%" height={300}>
-                      <AreaChart data={statsData.swapVolume}>
-                        <defs>
-                          <linearGradient
-                            id="colorCount"
-                            x1="0"
-                            y1="0"
-                            x2="0"
-                            y2="1"
-                          >
-                            <stop
-                              offset="5%"
-                              stopColor="#60A5FA"
-                              stopOpacity={0.4}
-                            />
-                            <stop
-                              offset="95%"
-                              stopColor="#60A5FA"
-                              stopOpacity={0}
-                            />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid
-                          strokeDasharray="3 3"
-                          stroke="rgba(255,255,255,0.05)"
-                          vertical={false}
-                        />
-                        <XAxis
-                          dataKey="month"
-                          stroke="#94A3B8"
-                          tick={{ fontSize: 12 }}
-                          tickLine={false}
-                          axisLine={false}
-                        />
-                        <YAxis
-                          stroke="#94A3B8"
-                          tick={{ fontSize: 12 }}
-                          tickLine={false}
-                          axisLine={false}
-                        />
-                        <Tooltip
-                          content={<CustomTooltip />}
-                          cursor={{
-                            stroke: "rgba(255,255,255,0.2)",
-                            strokeWidth: 1,
-                          }}
-                        />
-                        <Area
-                          type="monotone"
-                          dataKey="count"
-                          stroke="#60A5FA"
-                          strokeWidth={3}
-                          fillOpacity={1}
-                          fill="url(#colorCount)"
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
+                    {hasSwapVolume ? (
+                      <ResponsiveContainer width="99%" height={300}>
+                        <AreaChart data={statsData.swapVolume}>
+                          <defs>
+                            <linearGradient
+                              id="colorCount"
+                              x1="0"
+                              y1="0"
+                              x2="0"
+                              y2="1"
+                            >
+                              <stop
+                                offset="5%"
+                                stopColor="#60A5FA"
+                                stopOpacity={0.4}
+                              />
+                              <stop
+                                offset="95%"
+                                stopColor="#60A5FA"
+                                stopOpacity={0}
+                              />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke="rgba(255,255,255,0.05)"
+                            vertical={false}
+                          />
+                          <XAxis
+                            dataKey="month"
+                            stroke="#94A3B8"
+                            tick={{ fontSize: 12 }}
+                            tickLine={false}
+                            axisLine={false}
+                          />
+                          <YAxis
+                            stroke="#94A3B8"
+                            tick={{ fontSize: 12 }}
+                            tickLine={false}
+                            axisLine={false}
+                          />
+                          <Tooltip
+                            content={<CustomTooltip />}
+                            cursor={{
+                              stroke: "rgba(255,255,255,0.2)",
+                              strokeWidth: 1,
+                            }}
+                          />
+                          <Area
+                            type="monotone"
+                            dataKey="count"
+                            stroke="#60A5FA"
+                            strokeWidth={3}
+                            fillOpacity={1}
+                            fill="url(#colorCount)"
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '300px', color: '#64748b', flexDirection: 'column', gap: '10px' }}>
+                        <FaChartLine size={48} opacity={0.2} />
+                        <span style={{ fontStyle: 'italic' }}>No application trends available</span>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
 
@@ -351,42 +380,51 @@ const Show_static_switch = () => {
                     </h3>
                   </div>
                   <div className="chart-container">
-                    <ResponsiveContainer width="100%" height={250}>
-                      <PieChart>
-                        <Pie
-                          data={statsData.deptHeatmap}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={90}
-                          paddingAngle={5}
-                          dataKey="count"
-                          nameKey="department_name"
-                          stroke="none"
-                        >
+                    {hasDeptHeatmap ? (
+                      <>
+                        <ResponsiveContainer width="99%" height={250}>
+                          <PieChart>
+                            <Pie
+                              data={statsData.deptHeatmap}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={60}
+                              outerRadius={90}
+                              paddingAngle={5}
+                              dataKey="count"
+                              nameKey="department_name"
+                              stroke="none"
+                            >
+                              {statsData.deptHeatmap.map((entry, index) => (
+                                <Cell
+                                  key={`cell-${index}`}
+                                  fill={COLORS[index % COLORS.length]}
+                                />
+                              ))}
+                            </Pie>
+                            <Tooltip />
+                          </PieChart>
+                        </ResponsiveContainer>
+                        <div className="chart-legend-custom">
                           {statsData.deptHeatmap.map((entry, index) => (
-                            <Cell
-                              key={`cell-${index}`}
-                              fill={COLORS[index % COLORS.length]}
-                            />
+                            <div key={index} className="legend-item">
+                              <span
+                                className="dot"
+                                style={{
+                                  background: COLORS[index % COLORS.length],
+                                }}
+                              ></span>
+                              <span>{entry.department_name}</span>
+                            </div>
                           ))}
-                        </Pie>
-                        <Tooltip />
-                      </PieChart>
-                    </ResponsiveContainer>
-                    <div className="chart-legend-custom">
-                      {statsData.deptHeatmap.slice(0, 3).map((entry, index) => (
-                        <div key={index} className="legend-item">
-                          <span
-                            className="dot"
-                            style={{
-                              background: COLORS[index % COLORS.length],
-                            }}
-                          ></span>
-                          <span>{entry.department_name}</span>
                         </div>
-                      ))}
-                    </div>
+                      </>
+                    ) : (
+                      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '250px', color: '#64748b', flexDirection: 'column', gap: '10px' }}>
+                        <FaBuilding size={48} opacity={0.2} />
+                        <span style={{ fontStyle: 'italic' }}>No department data available</span>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
 
@@ -397,35 +435,42 @@ const Show_static_switch = () => {
                     </h3>
                   </div>
                   <div className="chart-container">
-                    <ResponsiveContainer width="100%" height={250}>
-                      <BarChart
-                        layout="vertical"
-                        data={statsData.topSwappers}
-                        barSize={15}
-                      >
-                        <XAxis type="number" hide />
-                        <YAxis
-                          dataKey="name"
-                          type="category"
-                          width={100}
-                          tick={{ fill: "#CBD5E1", fontSize: 12 }}
-                          axisLine={false}
-                          tickLine={false}
-                        />
-                        <Tooltip
-                          cursor={{ fill: "rgba(255,255,255,0.05)" }}
-                          contentStyle={{
-                            backgroundColor: "#1e293b",
-                            borderColor: "#334155",
-                          }}
-                        />
-                        <Bar
-                          dataKey="count"
-                          fill="#F87171"
-                          radius={[0, 10, 10, 0]}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
+                    {hasTopSwappers ? (
+                      <ResponsiveContainer width="99%" height={250}>
+                        <BarChart
+                          layout="vertical"
+                          data={statsData.topSwappers}
+                          barSize={15}
+                        >
+                          <XAxis type="number" hide />
+                          <YAxis
+                            dataKey="name"
+                            type="category"
+                            width={100}
+                            tick={{ fill: "#CBD5E1", fontSize: 12 }}
+                            axisLine={false}
+                            tickLine={false}
+                          />
+                          <Tooltip
+                            cursor={{ fill: "rgba(255,255,255,0.05)" }}
+                            contentStyle={{
+                              backgroundColor: "#1e293b",
+                              borderColor: "#334155",
+                            }}
+                          />
+                          <Bar
+                            dataKey="count"
+                            fill="#F87171"
+                            radius={[0, 10, 10, 0]}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '250px', color: '#64748b', flexDirection: 'column', gap: '10px' }}>
+                        <FaUserClock size={48} opacity={0.2} />
+                        <span style={{ fontStyle: 'italic' }}>No top requesters available</span>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
 
@@ -436,40 +481,47 @@ const Show_static_switch = () => {
                     </h3>
                   </div>
                   <div className="chart-container">
-                    <ResponsiveContainer width="100%" height={250}>
-                      <BarChart
-                        layout="vertical"
-                        data={statsData.topHelpers}
-                        barSize={15}
-                      >
-                        <XAxis type="number" hide />
-                        <YAxis
-                          dataKey="name"
-                          type="category"
-                          width={100}
-                          tick={{ fill: "#CBD5E1", fontSize: 12 }}
-                          axisLine={false}
-                          tickLine={false}
-                        />
-                        <Tooltip
-                          cursor={{ fill: "rgba(255,255,255,0.05)" }}
-                          contentStyle={{
-                            backgroundColor: "#1e293b",
-                            borderColor: "#334155",
-                          }}
-                        />
-                        <Bar
-                          dataKey="count"
-                          fill="#34D399"
-                          radius={[0, 10, 10, 0]}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
+                    {hasTopHelpers ? (
+                      <ResponsiveContainer width="99%" height={250}>
+                        <BarChart
+                          layout="vertical"
+                          data={statsData.topHelpers}
+                          barSize={15}
+                        >
+                          <XAxis type="number" hide />
+                          <YAxis
+                            dataKey="name"
+                            type="category"
+                            width={100}
+                            tick={{ fill: "#CBD5E1", fontSize: 12 }}
+                            axisLine={false}
+                            tickLine={false}
+                          />
+                          <Tooltip
+                            cursor={{ fill: "rgba(255,255,255,0.05)" }}
+                            contentStyle={{
+                              backgroundColor: "#1e293b",
+                              borderColor: "#334155",
+                            }}
+                          />
+                          <Bar
+                            dataKey="count"
+                            fill="#34D399"
+                            radius={[0, 10, 10, 0]}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '250px', color: '#64748b', flexDirection: 'column', gap: '10px' }}>
+                        <FaCheckDouble size={48} opacity={0.2} />
+                        <span style={{ fontStyle: 'italic' }}>No top helpers available</span>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               </div>
             </motion.div>
-          ) : (
+          ) ) : (
             <motion.div
               key="list"
               initial={{ opacity: 0, y: 10 }}

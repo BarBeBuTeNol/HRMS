@@ -196,6 +196,27 @@ const RequestLeavePage = () => {
       return;
     }
 
+    // Validate Quota
+    const sDate = new Date(formData.startDate);
+    const eDate = new Date(formData.endDate);
+    sDate.setHours(0, 0, 0, 0);
+    eDate.setHours(0, 0, 0, 0);
+    const diffTime = Math.abs(eDate - sDate);
+    const requestedDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+    const matchBalance = balances.find((b) => b.type === formData.leaveType);
+    if (matchBalance) {
+      const remainingQuota = matchBalance.limit - matchBalance.used;
+      if (requestedDays > remainingQuota) {
+        setPopupTitle("Quota Exceeded");
+        setPopupMessage(
+          `จำนวนวันลาที่คุณระบุ (${requestedDays} วัน) เกินโควตาคงเหลือของคุณ (${remainingQuota} วัน) กรุณาตรวจสอบวันลาอีกครั้ง`
+        );
+        setShowWarningPopup(true);
+        return;
+      }
+    }
+
     setSubmitting(true);
     setShowSendingPopup(true); // Open Sending Popup
     try {

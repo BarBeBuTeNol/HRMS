@@ -13,6 +13,42 @@ router.post("/", async (req, res) => {
     // Determine initial status (default to 'pending')
     const initialStatus = (status === 'approved' || status === 'Approved') ? 'approved' : 'pending';
 
+    // Validate Quota to prevent negative balances
+    const sDate = new Date(start_date);
+    const eDate = new Date(end_date);
+    const diffTime = Math.abs(eDate.getTime() - sDate.getTime());
+    const requestedDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+    const [[leaveTypeRecord]]: any = await pool.query(
+      "SELECT default_quota FROM leave_types WHERE name = ?",
+      [leave_type]
+    );
+
+    if (leaveTypeRecord) {
+      const quotaLimit = leaveTypeRecord.default_quota;
+
+      const [[usageRecord]]: any = await pool.query(
+        `SELECT SUM(DATEDIFF(end_date, start_date) + 1) as used_days
+         FROM leave_requests
+         WHERE user_id = ? 
+           AND leave_type = ?
+           AND status = 'approved'
+           AND YEAR(start_date) = YEAR(CURDATE())`,
+        [user_id, leave_type]
+      );
+
+      const usedDays = usageRecord?.used_days ? parseInt(usageRecord.used_days) : 0;
+      const remainingQuota = quotaLimit - usedDays;
+
+      if (initialStatus === 'pending' && requestedDays > remainingQuota) {
+        console.warn(`⚠️ Blocked leave request: User ${user_id} requested ${requestedDays} days of ${leave_type}, but only ${remainingQuota} remain.`);
+        return res.status(400).json({
+          success: false,
+          message: `จำนวนวันลาที่คุณระบุ (${requestedDays} วัน) เกินโควตาคงเหลือของคุณ (${remainingQuota} วัน) ของประเภท ${leave_type} กรุณาตรวจสอบวันลาอีกครั้ง`
+        });
+      }
+    }
+
     // 1) insert leave request
     console.log(`➡️ Inserting leave request with status: ${initialStatus}...`);
     const [result] = await pool.query<ResultSetHeader>(
@@ -354,7 +390,7 @@ router.get("/stats/analytics/:headId", async (req, res) => {
         (leaveTypeCount[leave.leave_type] || 0) + 1;
 
       // Monthly Trend (Sum of Days)
-      const monthKey = new Date(leave.start_date).toLocaleString("default", {
+      const monthKey = new Date(leave.start_date).toLocaleString("en-US", {
         month: "short",
       });
       monthlyTrend[monthKey] = (monthlyTrend[monthKey] || 0) + days;
@@ -442,6 +478,124 @@ router.get("/stats/analytics/:headId", async (req, res) => {
     res
       .status(500)
       .json({ message: "Internal server error", error: error.message });
+  }
+});
+
+// GET: สถิติการลาแบบรวมสำหรับ HR
+router.get("/stats/hr-analytics", async (req, res) => {
+  try {
+    // 1. KPI: Total Pending
+    const [[{ pendingCount }]]: any = await pool.query(
+      `SELECT COUNT(*) as pendingCount FROM leave_requests WHERE status = 'pending'`
+    );
+
+    // 2. KPI & Charts: All Approved Leaves
+    const [approvedLeaves]: any = await pool.query(
+      `SELECT lr.user_id, lr.leave_type, lr.start_date, lr.end_date, u.department_id, d.department_name
+       FROM leave_requests lr
+       JOIN users u ON lr.user_id = u.id
+       LEFT JOIN departments d ON u.department_id = d.id
+       WHERE lr.status = 'approved'`
+    );
+
+    // Get Holidays
+    let holidays: any[] = [];
+    try {
+      const [holidayRows]: any = await pool.query(`SELECT start_date, end_date FROM holiday_calendar`);
+      holidays = holidayRows;
+    } catch (err) {
+      console.warn("Could not fetch holiday_calendar", err);
+    }
+
+    const calculateLeaveDays = (start: string | Date, end: string | Date) => {
+      let startDate = new Date(start);
+      let endDate = new Date(end);
+      let count = 0;
+      let curDate = new Date(startDate);
+      while (curDate <= endDate) {
+        const isHoliday = holidays.some((h: any) => {
+          const hStart = new Date(h.start_date);
+          const hEnd = new Date(h.end_date);
+          return curDate >= hStart && curDate <= hEnd;
+        });
+        if (!isHoliday) {
+          count++;
+        }
+        curDate.setDate(curDate.getDate() + 1);
+      }
+      return count;
+    };
+
+    let thisMonthLeaveDays = 0;
+    const leaveTypeCount: Record<string, number> = {};
+    const deptLeaveCount: Record<string, number> = {};
+    const monthlyTrend: Record<string, number> = {};
+
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+
+    approvedLeaves.forEach((leave: any) => {
+      const days = calculateLeaveDays(leave.start_date, leave.end_date);
+      
+      const s = new Date(leave.start_date);
+      if (s.getMonth() === currentMonth && s.getFullYear() === currentYear) {
+        thisMonthLeaveDays += days;
+      }
+
+      leaveTypeCount[leave.leave_type] = (leaveTypeCount[leave.leave_type] || 0) + days;
+      
+      const deptName = leave.department_name || 'Unknown';
+      deptLeaveCount[deptName] = (deptLeaveCount[deptName] || 0) + days;
+
+      if (s.getFullYear() === currentYear) {
+        const monthKey = s.toLocaleString("en-US", { month: "short" });
+        monthlyTrend[monthKey] = (monthlyTrend[monthKey] || 0) + days;
+      }
+    });
+
+    const monthsOrder = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const lineData = monthsOrder.map((m) => ({
+      name: m,
+      days: monthlyTrend[m] || 0,
+    }));
+
+    const pieData = Object.keys(deptLeaveCount).map((key) => ({
+      name: key,
+      value: deptLeaveCount[key],
+    }));
+
+    const leaveTypeStats = Object.keys(leaveTypeCount).map((key) => ({
+      name: key,
+      days: leaveTypeCount[key],
+    }));
+
+    // 3. Recent Leaves Table
+    const [recentLeaves]: any = await pool.query(
+      `SELECT lr.id, u.first_name, u.last_name, d.department_name, lr.leave_type, lr.start_date, lr.end_date, lr.reason, lr.status
+       FROM leave_requests lr
+       JOIN users u ON lr.user_id = u.id
+       LEFT JOIN departments d ON u.department_id = d.id
+       WHERE lr.status = 'approved'
+       ORDER BY lr.created_at DESC
+       LIMIT 10`
+    );
+
+    res.json({
+      kpi: {
+        totalPending: pendingCount,
+        thisMonthUsedDays: thisMonthLeaveDays,
+        leaveTypeStats
+      },
+      charts: {
+        leavesByDepartment: pieData,
+        monthlyLeaveTrends: lineData
+      },
+      recentLeaves
+    });
+
+  } catch (error: any) {
+    console.error("❌ Error in GET /stats/hr-analytics:", error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
   }
 });
 
