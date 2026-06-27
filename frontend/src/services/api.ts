@@ -1,4 +1,5 @@
 import axios from "axios";
+import Swal from "sweetalert2";
 
 // ✅ แก้ไขให้ดึงค่าจาก .env อย่างถูกต้อง
 const api = axios.create({
@@ -31,13 +32,29 @@ api.interceptors.response.use(
       localStorage.removeItem("userId");
 
       if (isLoggedOutElsewhere) {
-        alert("บัญชีของคุณมีการเข้าสู่ระบบจากอุปกรณ์อื่น ระบบได้นำคุณออกจากระบบแล้ว");
+        Swal.fire({
+          title: "ตรวจพบการเข้าสู่ระบบซ้อน",
+          text: "บัญชีของคุณมีการเข้าสู่ระบบจากอุปกรณ์อื่น ระบบได้นำคุณออกจากระบบเพื่อความปลอดภัย",
+          icon: "warning",
+          confirmButtonText: "ตกลง",
+          confirmButtonColor: "#d33",
+          allowOutsideClick: false,
+        }).then(() => {
+          // พากลับไปที่ Root URL (ซึ่ง React Router จะพาไปหน้าล็อกอินโดยไม่เกิดปัญหา 404 บนเซิร์ฟเวอร์จริง)
+          window.location.href = "/";
+        });
       } else {
-        alert("เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่");
+        Swal.fire({
+          title: "เซสชันหมดอายุ",
+          text: "กรุณาเข้าสู่ระบบใหม่อีกครั้ง",
+          icon: "info",
+          confirmButtonText: "ตกลง",
+          confirmButtonColor: "#3085d6",
+          allowOutsideClick: false,
+        }).then(() => {
+          window.location.href = "/";
+        });
       }
-
-      // พากลับไปหน้า Login
-      window.location.href = "/login";
     }
     return Promise.reject(error);
   }
