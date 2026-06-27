@@ -33,24 +33,33 @@ api.interceptors.response.use(
 
       if (isLoggedOutElsewhere) {
         Swal.fire({
-          title: "ตรวจพบการเข้าสู่ระบบซ้อน",
-          text: "บัญชีของคุณมีการเข้าสู่ระบบจากอุปกรณ์อื่น ระบบได้นำคุณออกจากระบบเพื่อความปลอดภัย",
+          title: '<span style="font-family: \'Sarabun\', \'Inter\', sans-serif; font-weight: 700; color: #1e293b; font-size: 20px;">ตรวจพบการเข้าสู่ระบบซ้อน</span>',
+          html: '<div style="font-family: \'Sarabun\', \'Inter\', sans-serif; font-size: 14px; color: #64748b; line-height: 1.6; margin-top: 10px;">บัญชีของคุณมีการเข้าสู่ระบบจากอุปกรณ์อื่นในเวลาเดียวกัน<br/><span style="color: #ef4444; font-weight: 600;">ระบบได้ดำเนินการออกจากระบบเครื่องนี้เพื่อความปลอดภัย</span></div>',
           icon: "warning",
-          confirmButtonText: "ตกลง",
-          confirmButtonColor: "#d33",
+          iconColor: "#ef4444",
+          confirmButtonText: "ตกลง (รับทราบ)",
+          confirmButtonColor: "#ef4444",
+          background: "#ffffff",
+          customClass: {
+            popup: "custom-swal-popup-border"
+          },
           allowOutsideClick: false,
+          allowEscapeKey: false,
         }).then(() => {
           // พากลับไปที่ Root URL (ซึ่ง React Router จะพาไปหน้าล็อกอินโดยไม่เกิดปัญหา 404 บนเซิร์ฟเวอร์จริง)
           window.location.href = "/";
         });
       } else {
         Swal.fire({
-          title: "เซสชันหมดอายุ",
-          text: "กรุณาเข้าสู่ระบบใหม่อีกครั้ง",
+          title: '<span style="font-family: \'Sarabun\', \'Inter\', sans-serif; font-weight: 700; color: #1e293b; font-size: 20px;">เซสชันหมดอายุ</span>',
+          html: '<div style="font-family: \'Sarabun\', \'Inter\', sans-serif; font-size: 14px; color: #64748b; line-height: 1.6; margin-top: 10px;">กรุณาเข้าสู่ระบบใหม่อีกครั้งเพื่อความปลอดภัยในการใช้งาน</div>',
           icon: "info",
+          iconColor: "#3b82f6",
           confirmButtonText: "ตกลง",
-          confirmButtonColor: "#3085d6",
+          confirmButtonColor: "#3b82f6",
+          background: "#ffffff",
           allowOutsideClick: false,
+          allowEscapeKey: false,
         }).then(() => {
           window.location.href = "/";
         });
