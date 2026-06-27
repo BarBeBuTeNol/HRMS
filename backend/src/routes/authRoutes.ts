@@ -56,18 +56,31 @@ router.post("/login", async (req, res) => {
       }
     }
 
-    // 3. ✅ Update User Session for Real-time Status (Only)
+    // 3. Generate JWT Token first so we can save it in the user session
+    const jwt = require("jsonwebtoken");
+    const token = jwt.sign(
+      {
+        id: user.id,
+        role: user.role_name, // Ensure this matches middleware expectation
+        username: user.username,
+      },
+      process.env.JWT_SECRET || "fallback-secret-key-change-me",
+      { expiresIn: "1d" },
+    );
+
+    // 4. ✅ Update User Session for Real-time Status and track active token
     const ip =
       (req.headers["x-forwarded-for"] as string) ||
       req.socket.remoteAddress ||
       "";
     await pool.query(
-      `INSERT INTO user_sessions (user_id, ip_address, last_activity)
-       VALUES (?, ?, NOW())
+      `INSERT INTO user_sessions (user_id, ip_address, last_activity, token)
+       VALUES (?, ?, NOW(), ?)
        ON DUPLICATE KEY UPDATE 
        ip_address = VALUES(ip_address),
-       last_activity = NOW()`,
-      [user.id, ip],
+       last_activity = NOW(),
+       token = VALUES(token)`,
+      [user.id, ip, token],
     );
 
     // ✅ บันทึกการกระทำ (User Log)
@@ -88,18 +101,6 @@ router.post("/login", async (req, res) => {
     } catch (logErr) {
       console.error("[AUTH] Failed to log login action:", logErr);
     }
-
-    // 4. Generate JWT Token
-    const jwt = require("jsonwebtoken");
-    const token = jwt.sign(
-      {
-        id: user.id,
-        role: user.role_name, // Ensure this matches middleware expectation
-        username: user.username,
-      },
-      process.env.JWT_SECRET || "fallback-secret-key-change-me",
-      { expiresIn: "1d" },
-    );
 
     // 5. ส่งข้อมูลกลับ (ไม่ส่ง password)
     const { password: _pw, ...safeUser } = user;

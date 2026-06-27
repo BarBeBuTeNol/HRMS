@@ -12,4 +12,35 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// จัดการกรณี Token หมดอายุ หรือถูกเตะออกจากการล็อกอินซ้อน
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // หากเป็น endpoint ล็อกอิน ให้ปล่อยผ่าน ไม่ต้องดักจับเพื่อ redirect
+    if (error.config && error.config.url && error.config.url.includes("/auth/login")) {
+      return Promise.reject(error);
+    }
+
+    if (error.response && error.response.status === 401) {
+      const message = error.response.data?.message || "";
+      const isLoggedOutElsewhere = message.includes("another device") || error.response.data?.code === "LOGGED_IN_ELSEWHERE";
+
+      // ลบ Session ในเบราว์เซอร์
+      localStorage.removeItem("token");
+      localStorage.removeItem("currentUser");
+      localStorage.removeItem("userId");
+
+      if (isLoggedOutElsewhere) {
+        alert("บัญชีของคุณมีการเข้าสู่ระบบจากอุปกรณ์อื่น ระบบได้นำคุณออกจากระบบแล้ว");
+      } else {
+        alert("เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่");
+      }
+
+      // พากลับไปหน้า Login
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;

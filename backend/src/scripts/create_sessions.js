@@ -17,6 +17,7 @@ async function createTable() {
         user_id INT PRIMARY KEY,
         last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         ip_address VARCHAR(45),
+        token VARCHAR(500),
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
       )
     `);

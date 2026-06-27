@@ -177,7 +177,8 @@ const tables = {
     user_sessions: [
         "user_id INT PRIMARY KEY",
         "last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
-        "ip_address VARCHAR(45)"
+        "ip_address VARCHAR(45)",
+        "token VARCHAR(500)"
     ],
     users: [
         "id INT AUTO_INCREMENT PRIMARY KEY",
