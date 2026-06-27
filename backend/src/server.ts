@@ -29,6 +29,8 @@ import changeRequestRoutes from "./routes/changeRequestRoutes";
 import calendarRoutes from "./routes/calendarRoutes";
 import taskReplacementRoutes from "./routes/taskReplacementRoutes";
 
+import { requireAuth } from "./middlewares/authMiddleware";
+
 dotenv.config();
 
 const app = express();
@@ -75,6 +77,10 @@ app.get("/", (_req, res) =>
 
 // ✅ 4. Mount API Routes
 app.use("/api/auth", authRoutes);
+
+// Protect all other API routes globally to enforce concurrent login check (kick-out)
+app.use(requireAuth);
+
 app.use("/api/users", userRoutes);
 app.use("/api/users", profileRoutes);
 app.use("/api/leave-requests", leaveRoutes);
